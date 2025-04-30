@@ -4,5 +4,30 @@
 }
 div{
     border: 1px solid black;
-    min-height:50px
+}
+
+.banner {
+    background-image: url(/images/placeholder.JPG);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+
+
+    padding: 350px 0px;
+
+    position: relative;
+}
+
+.banner>.row {
+    text-shadow: 0px 0px 5px gray;
+}
+
+.banner>.row>p {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.container{
+ height: 350px;
 }
