@@ -9,3 +9,6 @@ Stappenplan: https://docs.google.com/document/d/12gScTBVi9michjFTmYL5vSS0L5EnAzp
 Backlog: https://docs.google.com/spreadsheets/d/1S2Goq7ls0bQwH7NQN76MSuVDS2K5s1_xtRPooi15ybg/edit?gid=0#gid=0
 
 Scope bestand zie discord pinned messages
+
+
+Bootstraps info: https://getbootstrap.com/docs/5.3/layout/breakpoints/
