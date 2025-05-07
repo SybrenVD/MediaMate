@@ -29,34 +29,39 @@ router.get("/category/:type", function (req, res) {
       title: "Games",
       cta: "Discover Exciting Games",
       shortDescription: "Explore a curated list of top games",
-      items: [
-        { name: "Halo", description: "A sci-fi FPS with rich lore.", image: "https://via.placeholder.com/300x200" },
-        { name: "Zelda", description: "Adventure in a magical world.", image: "https://via.placeholder.com/300x200" },
-        { name: "Minecraft", description: "Build and explore endless worlds.", image: "https://via.placeholder.com/300x200" },
-        { name: "Super Mario", description: "Classic platforming fun.", image: "https://via.placeholder.com/300x200" }
-      ]
-    },
-    books: {
-      title: "Books",
-      cta: "Explore Great Reads",
-      shortDescription: "Browse a hand-picked list of top books",
-      items: [
-        { name: "1984", description: "Dystopian classic by George Orwell.", image: "https://via.placeholder.com/300x200" },
-        { name: "Dune", description: "Epic sci-fi adventure.", image: "https://via.placeholder.com/300x200" },
-        { name: "The Hobbit", description: "A journey through Middle-earth.", image: "https://via.placeholder.com/300x200" },
-        { name: "Harry Potter", description: "Magic and mystery at Hogwarts.", image: "https://via.placeholder.com/300x200" }
-      ]
-    },
-    movies: {
-      title: "Movies",
-      cta: "Watch Blockbuster Films",
-      shortDescription: "Check out the most loved movies",
-      items: [
-        { name: "Inception", description: "A mind-bending thriller.", image: "https://via.placeholder.com/300x200" },
-        { name: "The Matrix", description: "Enter the digital world.", image: "https://via.placeholder.com/300x200" },
-        { name: "Interstellar", description: "Explore space and time.", image: "https://via.placeholder.com/300x200" },
-        { name: "The Dark Knight", description: "Gotham's greatest hero.", image: "https://via.placeholder.com/300x200" }
-      ]
+      card: {
+        title: "Title",
+        description: "Description",
+        img: "/images/placeholder.jpg"
+      }
+    //   items: [
+    //     { name: "Halo", description: "A sci-fi FPS with rich lore.", image: "https://via.placeholder.com/300x200" },
+    //     { name: "Zelda", description: "Adventure in a magical world.", image: "https://via.placeholder.com/300x200" },
+    //     { name: "Minecraft", description: "Build and explore endless worlds.", image: "https://via.placeholder.com/300x200" },
+    //     { name: "Super Mario", description: "Classic platforming fun.", image: "https://via.placeholder.com/300x200" }
+    //   ]
+    // },
+    // books: {
+    //   title: "Books",
+    //   cta: "Explore Great Reads",
+    //   shortDescription: "Browse a hand-picked list of top books",
+    //   items: [
+    //     { name: "1984", description: "Dystopian classic by George Orwell.", image: "https://via.placeholder.com/300x200" },
+    //     { name: "Dune", description: "Epic sci-fi adventure.", image: "https://via.placeholder.com/300x200" },
+    //     { name: "The Hobbit", description: "A journey through Middle-earth.", image: "https://via.placeholder.com/300x200" },
+    //     { name: "Harry Potter", description: "Magic and mystery at Hogwarts.", image: "https://via.placeholder.com/300x200" }
+    //   ]
+    // },
+    // movies: {
+    //   title: "Movies",
+    //   cta: "Watch Blockbuster Films",
+    //   shortDescription: "Check out the most loved movies",
+    //   items: [
+    //     { name: "Inception", description: "A mind-bending thriller.", image: "https://via.placeholder.com/300x200" },
+    //     { name: "The Matrix", description: "Enter the digital world.", image: "https://via.placeholder.com/300x200" },
+    //     { name: "Interstellar", description: "Explore space and time.", image: "https://via.placeholder.com/300x200" },
+    //     { name: "The Dark Knight", description: "Gotham's greatest hero.", image: "https://via.placeholder.com/300x200" }
+    //   ]
     }
   };
 
