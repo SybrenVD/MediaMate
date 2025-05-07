@@ -151,7 +151,8 @@ router.post("/contact", function (req, res)
   res.render("contact", {
     title: "Contact",
     successMessage: `Thanks for contacting us, ${name}!`
-
+  
+});
 });
   
 module.exports = router;
