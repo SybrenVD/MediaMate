@@ -60,4 +60,36 @@ router.get("/games", function (req, res) {
     games
   });
 });
+
+router.get("/books", function (req, res) {
+  const books = [
+    {
+      name: "1984",
+      description: "A dystopian novel about surveillance and totalitarianism.",
+      image: "https://via.placeholder.com/300x200"
+    },
+    {
+      name: "To Kill a Mockingbird",
+      description: "A story of justice and moral growth in the American South.",
+      image: "https://via.placeholder.com/300x200"
+    },
+    {
+      name: "The Hobbit",
+      description: "An epic fantasy adventure through Middle-earth.",
+      image: "https://via.placeholder.com/300x200"
+    },
+    {
+      name: "Pride and Prejudice",
+      description: "A classic romance exploring class and character.",
+      image: "https://via.placeholder.com/300x200"
+    }
+  ];
+
+  res.render("books", {
+    title: "Books",
+    cta: "Discover Timeless Books",
+    shortDescription: "Explore a curated list of must-read books",
+    books
+  });
+});
 module.exports = router;
