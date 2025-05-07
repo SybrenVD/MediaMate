@@ -20,15 +20,6 @@ h4 {
     font-size: 24px;
 }
 
-.card p {
-    font-weight: 500;
-    color: #757575;
-}
-
-img {
-    height: 250px;
-    width: 245px;
-}
 
 .banner {
     background-image: url(/images/placeholder.jpg);
@@ -56,6 +47,16 @@ img {
     background-color: hsla(351, 70%, 38%, 0.80);
     max-width: 18rem;
     height: auto;
+}
+
+.card p {
+    font-weight: 500;
+    color: #757575;
+}
+
+.card img {
+    height: 250px;
+    width: 245px;
 }
 
 .card-img-top {
