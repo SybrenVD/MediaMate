@@ -92,4 +92,36 @@ router.get("/books", function (req, res) {
     books
   });
 });
+
+router.get("/movies", function (req, res) {
+  const movies = [
+    {
+      name: "Inception",
+      description: "A mind-bending thriller about dreams within dreams.",
+      image: "https://via.placeholder.com/300x200"
+    },
+    {
+      name: "The Godfather",
+      description: "A cinematic classic exploring family, power, and loyalty.",
+      image: "https://via.placeholder.com/300x200"
+    },
+    {
+      name: "The Matrix",
+      description: "A hacker discovers the shocking truth about his reality.",
+      image: "https://via.placeholder.com/300x200"
+    },
+    {
+      name: "Titanic",
+      description: "A tragic love story set aboard a doomed ocean liner.",
+      image: "https://via.placeholder.com/300x200"
+    }
+  ];
+
+  res.render("movies", {
+    title: "Movies",
+    cta: "Explore Iconic Movies",
+    shortDescription: "Dive into a curated list of must-watch films",
+    movies
+  });
+});
 module.exports = router;
