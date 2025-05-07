@@ -1,23 +1,48 @@
 <div class="container mt-5">
 
-  <!-- Row for search bar -->
-  <div class="row mb-2">
-    <div class="col-12 d-flex justify-content-end">
-      <form class="d-flex" role="search">
-        <div class="input-group input-group-sm">
-          <span class="input-group-text bg-white border-2 border-danger rounded-start">
-            <i class="bi bi-search text-danger"></i>
-          </span>
-          <input 
-            class="form-control border-2 border-danger rounded-end" 
-            type="search" 
-            placeholder="Find your {{title}}" 
-            aria-label="Search"
-          >
+  <header>
+    <section class="hero">
+      <div class="banner">
+        <div class="container text-center">
+
+          <!-- 🔺 Search bar moved here -->
+          <div class="row mb-2">
+            <div class="col-12 d-flex justify-content-end">
+              <form class="d-flex" role="search">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-white border-2 border-danger rounded-start">
+                    <i class="bi bi-search text-danger"></i>
+                  </span>
+                  <input 
+                    class="form-control border-2 border-danger rounded-end" 
+                    type="search" 
+                    placeholder="Find your {{title}}" 
+                    aria-label="Search"
+                  >
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="row p-2">
+            <h2>{{hero.cta}}</h2>
+          </div>
+          <div class="row pb-5">
+            <p>{{hero.shortDescription}}</p>
+          </div>
+
         </div>
-      </form>
-    </div>
-  </div>
+      </div>
+    </section>
+  </header>
+
+</div>
+            </div>
+        </div>
+    </section>
+</header>
+  <!-- Row for search bar -->
+  
 
   <!-- CTA and short description -->
   <h1 class="text-center">{{cta}}</h1>
@@ -32,7 +57,7 @@
 
       <!-- Bootstrap Grid for cards -->
       <div class="row justify-content-center">
-        {{!-- {{#each items}}
+        {{#each items}}
           <div class="col">
             <div class="card h-100" style="background-color: #a71d32; color: white;">
               <img src="{{this.image}}" class="card-img-top" alt="{{this.name}}" style="min-height: 250px; object-fit: cover;">
@@ -42,11 +67,11 @@
               </div>
             </div>
           </div>
-        {{/each}} --}}
+        {{/each}}
+        {{!-- {{>card}}
         {{>card}}
         {{>card}}
-        {{>card}}
-        {{>card}}
+        {{>card}} --}}
       </div>
 
       <!-- "View All" Button -->
