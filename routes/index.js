@@ -75,4 +75,34 @@ router.get("/category/:type", function (req, res) {
     ...pageData
   });
 });
+
+
+
+// Contact Page - GET
+
+router.get("/contact", function (req, res) {
+  res.render("contact", {
+    title: "Contact"
+  });
+});
+
+// Contact Page - POST
+
+router.post("/contact", function (req, res) 
+{
+  
+  const { name, email, message } = req.body;
+
+  console.log("Contact form submitted:");
+  console.log("Name:", name);
+  console.log("Email:", email);
+  console.log("Message:", message);
+
+  res.render("contact", {
+    title: "Contact",
+    successMessage: `Thanks for contacting us, ${name}!`
+
+});
+});
+
 module.exports = router;
