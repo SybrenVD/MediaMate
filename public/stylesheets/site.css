@@ -1,3 +1,11 @@
+.container{
+ min-height: 350px;
+}
+
+body {
+    background-color: #231F20;
+}
+
 /* .row{
     border: 1px solid red;
 
@@ -7,9 +15,6 @@ div{
     min-height: 30px;
 } */
 
-body {
-    background-color: #231F20;
-}
 
 h3 {
     color: hsla(351, 70%, 38%, 0.8);
@@ -47,6 +52,7 @@ h4 {
     background-color: hsla(351, 70%, 38%, 0.80);
     max-width: 18rem;
     height: auto;
+    flex: 0 0 auto
 }
 
 .card p {
@@ -63,6 +69,40 @@ h4 {
     aspect-ratio: 5 / 4;
 }
 
-.container{
- min-height: 350px;
+.card-slider {
+    position: relative;
+    padding: 0 50px;
+    margin: 0 auto;
+    width: 100%
+}
+
+.card-container {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 10px 0;
+}
+
+.arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    font-size: 4rem;
+    font-weight: 500;
+    color: hsla(351, 70%, 38%, 0.80);
+    background-color: transparent;
+}
+
+.arrow-left {
+    left: 10px;
+}
+
+.arrow-right {
+    right: 10px;
+}
+
+#test {
+    border: 1px solid red;
 }
