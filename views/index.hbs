@@ -21,12 +21,15 @@
         <div class="row text-start ps-0 p-4 ">
             <h3>Most Viewed</h3>
         </div>
-        <div class="row justify-content-center">
-            {{>card}}
-            {{>card}}
-            {{>card}}
-            {{>card}}
-        </div>
+        {{>scrollable}}
+    </div>
+</section>
 
+<section class="best-rated">
+    <div class="container overflow-hidden text-center my-5">
+        <div class="row text-start ps-0 p-4 ">
+            <h3>Best Rated</h3>
+        </div>
+        {{>scrollable}}
     </div>
 </section>
