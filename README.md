@@ -16,3 +16,5 @@ Scope bestand zie discord pinned messages
 Bootstraps info: https://getbootstrap.com/docs/5.3/layout/breakpoints/
 
 Data-Eerste Onderzoek: https://docs.google.com/document/d/1bKXyK4fcDUAj1pM9ff3vG1WSFUU2QbOW5SffxLx0Aa4/edit?usp=sharing
+
+Meer info databank: https://docs.google.com/document/d/1M1tXWlTDRDakBXS7_oY1cRr5YyLWNDccqY5VoCWHEJQ/edit?usp=sharing
