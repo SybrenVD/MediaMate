@@ -75,4 +75,141 @@ router.get("/category/:type", function (req, res) {
     ...pageData
   });
 });
+
+
+router.get("/faq", function (req, res, next) {
+  res.render("faq", {
+    title: "FAQ",
+    cta: "Frequently Asked Questions",
+    shortDescription: "Find answers to common questions below",
+    faqs: [
+      {
+        question: "What is MediaMate?",
+        answer: "MediaMate is a platform to discover top games, books, and movies."
+      },
+      {
+        question: "Is MediaMate free to use?",
+        answer: "Yes, it's completely free to browse and explore content."
+      },
+      {
+        question: "How often is content updated?",
+        answer: "New content is added weekly to keep things fresh."
+      },
+      {
+        question: "Can I create an account?",
+        answer: "Currently, you can browse without an account. Account features are coming soon."
+      },
+      {
+        question: "How do you choose which media to feature?",
+        answer: "We curate content based on popularity, reviews, and community feedback."
+      },
+      {
+        question: "Can I suggest content to be added?",
+        answer: "Yes! Reach out via our contact form to suggest games, books, or movies."
+      },
+      {
+        question: "Is MediaMate available on mobile?",
+        answer: "Yes, the site is fully responsive and works great on phones and tablets."
+      },
+      {
+        question: "Does MediaMate have ads?",
+        answer: "No, we currently do not display any ads on the platform."
+      },
+      {
+        question: "What browsers are supported?",
+        answer: "MediaMate works on all modern browsers including Chrome, Firefox, Safari, and Edge."
+      },
+      {
+        question: "Who is behind MediaMate?",
+        answer: "MediaMate is built by a small team of developers and media enthusiasts."
+      }
+    ]
+  });
+});
+
+
+// Login Page - GET
+router.get("/login", function (req, res) 
+{
+  res.render("login", {
+    title: "Login"
+  });
+});
+
+
+// Login Page - POST
+router.post("/login", function (req, res) 
+{
+  const { username, password } = req.body;
+
+  console.log("Login attempt:");
+  console.log("Username:", username);
+  console.log("Password:", password);
+
+
+  // Fake Control
+  if (username === "admin" && password === "1234") 
+    {
+    res.send("Login successful!");
+  } else {
+    res.render("login", {
+      title: "Login",
+      errorMessage: "Invalid username or password"
+    });
+  }
+});
+
+
+// Register Page - GET
+
+router.get("/register", function (req, res) {
+  res.render("register", {
+    title: "Register"
+  });
+});
+
+// Register Page - POST
+
+router.post("/register", function (req, res) {
+  const { username, email, password } = req.body;
+
+  console.log("Registration attempt:");
+  console.log("Username:", username);
+  console.log("Email:", email);
+  console.log("Password:", password);
+
+  res.render("register", {
+    title: "Register",
+    successMessage: `Welcome, ${username}! Your account has been created.`
+  });
+});
+
+
+// Contact Page - GET
+
+router.get("/contact", function (req, res) {
+  res.render("contact", {
+    title: "Contact"
+  });
+});
+
+// Contact Page - POST
+
+router.post("/contact", function (req, res) 
+{
+  
+  const { name, email, message } = req.body;
+
+  console.log("Contact form submitted:");
+  console.log("Name:", name);
+  console.log("Email:", email);
+  console.log("Message:", message);
+
+  res.render("contact", {
+    title: "Contact",
+    successMessage: `Thanks for contacting us, ${name}!`
+  
+});
+});
+  
 module.exports = router;
