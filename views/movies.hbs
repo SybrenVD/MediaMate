@@ -1,0 +1,52 @@
+<div class="container mt-5">
+
+  <!-- Row for search bar -->
+  <div class="row mb-2">
+    <div class="col-12 d-flex justify-content-end">
+      <form class="d-flex" role="search">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-white border-2 border-danger rounded-start">
+            <i class="bi bi-search text-danger"></i>
+          </span>
+          <input 
+            class="form-control border-2 border-danger rounded-end" 
+            type="search" 
+            placeholder="Find your movie" 
+            aria-label="Search"
+          >
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CTA and short description -->
+  <h1 class="text-center">{{cta}}</h1>
+  <p class="text-center text-muted">{{shortDescription}}</p>
+
+  <!-- Full-width background for "Top Rated" section -->
+  <div class="bg-dark text-white p-4 mt-4" style="margin-left: -15px; margin-right: -15px;">
+    <div class="container" style="min-height: 100vh;">
+      <h2 class="text-start text-danger">Top Rated</h2>
+
+      <!-- Movie Cards -->
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mt-4">
+        {{#each movies}}
+          <div class="col">
+            <div class="card h-100" style="background-color: #a71d32; color: white;">
+              <img src="{{this.image}}" class="card-img-top" alt="{{this.name}}" style="min-height: 250px; object-fit: cover;">
+              <div class="card-body">
+                <h5 class="card-title" style="color: black;">{{this.name}}</h5>
+                <p class="card-text" style="color: #808080;">{{this.description}}</p>
+              </div>
+            </div>
+          </div>
+        {{/each}}
+      </div>
+
+      <!-- "View All" Button -->
+      <div class="text-center mt-4">
+        <a href="#" class="btn btn-outline-danger text-danger">View All</a>
+      </div>
+    </div>
+  </div>
+</div>
