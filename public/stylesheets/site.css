@@ -1,33 +1,68 @@
-.row{
+/* .row{
     border: 1px solid red;
 
 }
 div{
     border: 1px solid black;
+    min-height: 30px;
+} */
+
+body {
+    background-color: #231F20;
 }
 
+h3 {
+    color: hsla(351, 70%, 38%, 0.8);
+    font-size: 36px;
+}
+
+h4 {
+    font-size: 24px;
+}
+
+
 .banner {
-    background-image: url(/images/placeholder.JPG);
+    background-image: url(/images/placeholder.jpg);
     background-size: cover;
     background-repeat: no-repeat;
     background-attachment: fixed;
     background-position: center;
 
 
-    padding: 350px 0px;
+    padding: 200px 0px;
 
     position: relative;
 }
 
-.banner>.row {
-    text-shadow: 0px 0px 5px gray;
+.banner h2 {
+    font-size: 64px;
 }
 
-.banner>.row>p {
-    font-size: 18px;
+.banner p {
+    font-size: 28px;
+    font-weight: 400;
+}
+
+.card {
+    background-color: hsla(351, 70%, 38%, 0.80);
+    max-width: 18rem;
+    height: auto;
+}
+
+.card p {
     font-weight: 500;
+    color: #757575;
+}
+
+.card img {
+    height: 250px;
+    width: auto;
+}
+
+.card-img-top {
+    aspect-ratio: 5 / 4;
 }
 
 .container{
- height: 350px;
+ min-height: 350px;
 }
