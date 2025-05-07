@@ -66,3 +66,7 @@ h4 {
 .container{
  min-height: 350px;
 }
+
+.faq p {
+    color: hsla(351, 70%, 38%, 0.80);
+}

@@ -75,4 +75,55 @@ router.get("/category/:type", function (req, res) {
     ...pageData
   });
 });
+
+router.get("/faq", function (req, res, next) {
+  res.render("faq", {
+    title: "FAQ",
+    cta: "Frequently Asked Questions",
+    shortDescription: "Find answers to common questions below",
+    faqs: [
+      {
+        question: "What is MediaMate?",
+        answer: "MediaMate is a platform to discover top games, books, and movies."
+      },
+      {
+        question: "Is MediaMate free to use?",
+        answer: "Yes, it's completely free to browse and explore content."
+      },
+      {
+        question: "How often is content updated?",
+        answer: "New content is added weekly to keep things fresh."
+      },
+      {
+        question: "Can I create an account?",
+        answer: "Currently, you can browse without an account. Account features are coming soon."
+      },
+      {
+        question: "How do you choose which media to feature?",
+        answer: "We curate content based on popularity, reviews, and community feedback."
+      },
+      {
+        question: "Can I suggest content to be added?",
+        answer: "Yes! Reach out via our contact form to suggest games, books, or movies."
+      },
+      {
+        question: "Is MediaMate available on mobile?",
+        answer: "Yes, the site is fully responsive and works great on phones and tablets."
+      },
+      {
+        question: "Does MediaMate have ads?",
+        answer: "No, we currently do not display any ads on the platform."
+      },
+      {
+        question: "What browsers are supported?",
+        answer: "MediaMate works on all modern browsers including Chrome, Firefox, Safari, and Edge."
+      },
+      {
+        question: "Who is behind MediaMate?",
+        answer: "MediaMate is built by a small team of developers and media enthusiasts."
+      }
+    ]
+  });
+});
+
 module.exports = router;
