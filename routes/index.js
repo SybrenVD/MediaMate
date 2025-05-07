@@ -128,6 +128,63 @@ router.get("/faq", function (req, res, next) {
 });
 
 
+// Login Page - GET
+router.get("/login", function (req, res) 
+{
+  res.render("login", {
+    title: "Login"
+  });
+});
+
+
+// Login Page - POST
+router.post("/login", function (req, res) 
+{
+  const { username, password } = req.body;
+
+  console.log("Login attempt:");
+  console.log("Username:", username);
+  console.log("Password:", password);
+
+
+  // Fake Control
+  if (username === "admin" && password === "1234") 
+    {
+    res.send("Login successful!");
+  } else {
+    res.render("login", {
+      title: "Login",
+      errorMessage: "Invalid username or password"
+    });
+  }
+});
+
+
+// Register Page - GET
+
+router.get("/register", function (req, res) {
+  res.render("register", {
+    title: "Register"
+  });
+});
+
+// Register Page - POST
+
+router.post("/register", function (req, res) {
+  const { username, email, password } = req.body;
+
+  console.log("Registration attempt:");
+  console.log("Username:", username);
+  console.log("Email:", email);
+  console.log("Password:", password);
+
+  res.render("register", {
+    title: "Register",
+    successMessage: `Welcome, ${username}! Your account has been created.`
+  });
+});
+
+
 // Contact Page - GET
 
 router.get("/contact", function (req, res) {
