@@ -1,17 +1,37 @@
-.row{
+/* .row{
     border: 1px solid red;
 
 }
 div{
     border: 1px solid black;
-}
-
-/* body {
-    background-color: #231F20;
+    min-height: 30px;
 } */
 
+body {
+    background-color: #231F20;
+}
+
+h3 {
+    color: hsla(351, 70%, 38%, 0.8);
+    font-size: 36px;
+}
+
+h4 {
+    font-size: 24px;
+}
+
+.card p {
+    font-weight: 500;
+    color: #757575;
+}
+
+img {
+    height: 250px;
+    width: 245px;
+}
+
 .banner {
-    background-image: url(/images/placeholder3.png);
+    background-image: url(/images/placeholder.jpg);
     background-size: cover;
     background-repeat: no-repeat;
     background-attachment: fixed;
@@ -32,6 +52,16 @@ div{
     font-weight: 400;
 }
 
+.card {
+    background-color: hsla(351, 70%, 38%, 0.80);
+    max-width: 18rem;
+    height: auto;
+}
+
+.card-img-top {
+    aspect-ratio: 5 / 4;
+}
+
 .container{
- height: 350px;
+ min-height: 350px;
 }
