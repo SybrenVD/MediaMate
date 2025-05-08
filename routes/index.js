@@ -229,5 +229,43 @@ router.get('/community', function (req, res) {
     title: 'Community'
   });
 });
-  
+    
+//GET FavList Page
+router.get("/favList",function(req, res){
+  res.render("fav-list",{
+    title: "Favourite"
+  });
+});
+
+//toevoegen pagina
+const addedItems = []; // tijdelijk opgeslagen inhoud
+
+//get add route
+router.get("/add", function (req, res) {
+  res.render("add", {
+    title: "Toevoegen"
+  });
+});
+
+
+//post add route
+router.post("/add", function (req, res) {
+  const { type, title, description, image } = req.body;
+
+  if (!type || !title || !description) {
+    return res.render("add", {
+      title: "Add",
+      errorMessage: "All fields are required."
+    });
+  }
+
+
+  addedItems.push({ type, title, description, image });
+  console.log("New item added:", { type, title, description, image });
+
+  res.render("add", {
+    title: "Add",
+    successMessage: `The ${type} "${title}" was added successfully!`
+  });
+});
 module.exports = router;
