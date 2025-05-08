@@ -1,0 +1,87 @@
+<div class="container mt-5 p-4 rounded" style="background-color: hsla(351, 70%, 38%, 0.8); color: black;">
+  <h1 class="text-center mb-4">Your Dashboard</h1>
+
+  <h3>Welcome, {{@root.session.user}}</h3>
+
+  <hr />
+
+  <!-- Chats Section -->
+  <h4> Chats</h4>
+
+  <div class="accordion mb-4" id="chatAccordion">
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingAdmin">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdmin" aria-expanded="true" aria-controls="collapseAdmin">
+          Chat with Admin
+        </button>
+      </h2>
+      <div id="collapseAdmin" class="accordion-collapse collapse show" aria-labelledby="headingAdmin" data-bs-parent="#chatAccordion">
+        <div class="accordion-body">
+          <ul>
+            <li><strong>You:</strong> Hello, can I request something?</li>
+            <li><strong>Admin:</strong> Sure! What do you need?</li>
+            <li><strong>You:</strong> I’d like to add a sci-fi book.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingBot">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBot" aria-expanded="false" aria-controls="collapseBot">
+          Chat with MediaMateBot
+        </button>
+      </h2>
+      <div id="collapseBot" class="accordion-collapse collapse" aria-labelledby="headingBot" data-bs-parent="#chatAccordion">
+        <div class="accordion-body">
+          <ul>
+            <li><strong>You:</strong> Suggest a movie.</li>
+            <li><strong>Bot:</strong> Try “Inception” — a mind-bending thriller.</li>
+            <li><strong>You:</strong> Thanks!</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <hr />
+
+  <!-- Favorites Section -->
+  <h4> Favorites</h4>
+  <ul>
+    <li>The Matrix (Movie)</li>
+    <li>Zelda (Game)</li>
+    <li>Dune (Book)</li>
+  </ul>
+
+  <hr />
+
+  <!-- Requests Section -->
+  <h4> Your Requests</h4>
+  <ul>
+    <li>Add more sci-fi content – <em>Status:</em> Pending</li>
+    <li>Enable dark mode – <em>Status:</em> Completed</li>
+  </ul>
+
+  <div class="text-center mt-4">
+    <a href="/add" class="btn btn-light"> Add New Content</a>
+   
+     {{#if items.length}}
+        <hr />
+        <h4 class="mt-4"> My Added Content</h4>
+        <ul>
+    
+    {{#each items}}
+    
+      <li><strong>{{type}}:</strong> {{title}}</li>
+    
+    {{/each}}
+    
+    </ul>
+    
+    {{/if}}
+
+  </div>
+</div>

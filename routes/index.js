@@ -1,6 +1,27 @@
 var express = require("express");
 var router = express.Router();
 
+//toevoegen pagina
+const addedItems = []; // tijdelijk opgeslagen inhoud
+
+//user-page
+function isAuthenticated(req, res, next) {
+  if (req.session && req.session.user) {
+    return next(); // login
+  }
+  res.redirect("/login");
+}
+
+//user-page get
+router.get("/user", isAuthenticated, function (req, res) {
+  res.render("user", {
+    title: "Your Profile",
+    items: addedItems
+  });
+});
+
+
+
 /* GET home page. */
 router.get("/", function (req, res, next) {
   res.render("index",
@@ -237,35 +258,56 @@ router.get("/favList",function(req, res){
   });
 });
 
-//toevoegen pagina
-const addedItems = []; // tijdelijk opgeslagen inhoud
+
 
 //get add route
 router.get("/add", function (req, res) {
+  const userItems = addedItems.filter(item => item.username === req.session.user);
+
   res.render("add", {
-    title: "Toevoegen"
+    title: "Add",
+    items: userItems
   });
 });
+
+
 
 
 //post add route
 router.post("/add", function (req, res) {
   const { type, title, description, image } = req.body;
 
-  if (!type || !title || !description) {
+  if (!type || !title || !description || !image) {
     return res.render("add", {
       title: "Add",
-      errorMessage: "All fields are required."
+      errorMessage: "All fields are required.",
+      items: addedItems
     });
   }
 
 
-  addedItems.push({ type, title, description, image });
-  console.log("New item added:", { type, title, description, image });
+  //only user
+  addedItems.push({
+    username: req.session.user,
+    type,
+    title,
+    description,
+    image
+  });
+  
+
+  const userItems = addedItems.filter(item => item.username === req.session.user);
 
   res.render("add", {
     title: "Add",
-    successMessage: `The ${type} "${title}" was added successfully!`
+    successMessage: `The ${type} "${title}" was added successfully!`,
+    items: userItems
   });
+
+  
 });
+
+
+
+
 module.exports = router;

@@ -46,6 +46,22 @@
     <div class="text-center">
       <button type="submit" class="btn btn-light">Add Content</button>
     </div>
+
+    {{#if items.length}}
+  
+  <hr />
+  <h4 class="mt-4"> Previously Added Content</h4>
+  
+  <ul>
+    
+    {{#each items}}
+      <li><strong>{{type}}:</strong> {{title}}</li>
+    {{/each}}
+  
+  </ul>
+      
+      {{/if}}
+
   </form>
 </div>
 
