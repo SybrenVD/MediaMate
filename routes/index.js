@@ -4,6 +4,9 @@ var router = express.Router();
 //toevoegen pagina
 const addedItems = []; // tijdelijk opgeslagen inhoud
 
+const requests = []; // Her request: { username, title, description, status }
+
+
 //user-page
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
@@ -14,11 +17,19 @@ function isAuthenticated(req, res, next) {
 
 //user-page get
 router.get("/user", isAuthenticated, function (req, res) {
+  const userRequests = requests.filter(r => r.username === req.session.user);
+
   res.render("user", {
     title: "Your Profile",
-    items: addedItems
+    user: {
+      username: req.session.user,
+      fullName: "John Doe", 
+      email: "user@example.com" 
+    },
+    requests: userRequests
   });
 });
+
 
 
 
@@ -261,47 +272,36 @@ router.get("/favList",function(req, res){
 
 
 //get add route
-router.get("/add", function (req, res) {
-  const userItems = addedItems.filter(item => item.username === req.session.user);
-
+router.get("/add", isAuthenticated, function (req, res) {
   res.render("add", {
-    title: "Add",
-    items: userItems
+    title: "Request"
   });
 });
 
 
-
-
 //post add route
-router.post("/add", function (req, res) {
+router.post("/add", isAuthenticated, function (req, res) {
   const { type, title, description, image } = req.body;
 
-  if (!type || !title || !description || !image) {
+  if (!type || !title || !description) {
     return res.render("add", {
-      title: "Add",
-      errorMessage: "All fields are required.",
-      items: addedItems
+      title: "Request",
+      errorMessage: "All fields are required."
     });
   }
 
-
-  //only user
-  addedItems.push({
+  requests.push({
     username: req.session.user,
     type,
     title,
     description,
-    image
+    image,
+    status: "Pending"
   });
-  
-
-  const userItems = addedItems.filter(item => item.username === req.session.user);
 
   res.render("add", {
-    title: "Add",
-    successMessage: `The ${type} "${title}" was added successfully!`,
-    items: userItems
+    title: "Request",
+    successMessage: "Your request has been received."
   });
 
   
