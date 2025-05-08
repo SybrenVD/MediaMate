@@ -106,3 +106,11 @@ h4 {
 #test {
     border: 1px solid red;
 }
+
+/*Probeer het te veranderen hier in de css-bestand volgende keer, niet in de element zelf :D*/
+.nav-link{
+    color: red;
+}
+.nav-link:hover{
+    color: red;
+}
