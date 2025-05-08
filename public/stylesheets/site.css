@@ -103,6 +103,8 @@ h4 {
     right: 10px;
 }
 
-#test {
-    border: 1px solid red;
+.search {
+    position: absolute;
+    top: 35px;
+    right: 35px;
 }
