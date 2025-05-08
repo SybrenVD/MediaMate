@@ -150,14 +150,25 @@ router.post("/login", function (req, res)
   // Fake Control
   if (username === "admin" && password === "1234") 
     {
-    res.send("Login successful!");
-  } else {
+    req.session.user = username;
+    return res.redirect("/");
+    }
+
+   else 
+   {
     res.render("login", {
       title: "Login",
       errorMessage: "Invalid username or password"
     });
   }
 });
+
+//logout
+router.get("/logout", function (req, res) {
+  req.session.destroy();
+  res.redirect("/");
+});
+
 
 
 // Register Page - GET
@@ -183,6 +194,7 @@ router.post("/register", function (req, res) {
     successMessage: `Welcome, ${username}! Your account has been created.`
   });
 });
+
 
 
 // Contact Page - GET
@@ -212,6 +224,10 @@ router.post("/contact", function (req, res)
 });
 });
 
+router.get('/community', function (req, res) {
+  res.render('community', {
+    title: 'Community'
+    
 //GET FavList Page
 router.get("/favList",function(req, res){
   res.render("fav-list",{
