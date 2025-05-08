@@ -117,6 +117,9 @@ h4 {
 .nav-link{
     color: red;
 }
+.nav-link:after{
+    background-color: #757575;;
+}
 .nav-link:hover{
     color: red;
 }
