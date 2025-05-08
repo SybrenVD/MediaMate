@@ -1,35 +1,71 @@
 <header>
-    <section class="hero">
-        <div class="banner">
-            <div class="container text-center">
-                    <div class="row p-2">
-                        <h2>{{hero.cta}}</h2>
-                    </div>
-                <div class="row pb-5">
-                    <p>{{hero.shortDescription}}</p>
-                </div>
-                <div class="row p-2 pt-4">
-                    <p>Hier komt de zoekbalk</p>
-                </div>
-            </div>
+  <section class="hero">
+    <div class="banner" style="background-image: url('{{banner}}'); background-size: cover; background-position: center; height: 600px; display: flex; justify-content: center; align-items: center;">
+      <div class="container text-center" style="z-index: 2;">
+
+        <!-- Title with blur -->
+        <div class="row p-2" style="position: relative; z-index: 3;">
+          <div class="hero-text mx-auto">
+            <h2 class="m-0">{{hero.cta}}</h2>
+          </div>
         </div>
-    </section>
+
+        <!-- Description with smaller blur -->
+        <div class="row pb-3" style="position: relative; z-index: 3;">
+          <div class="hero-desc mx-auto">
+            <p class="m-0">{{hero.shortDescription}}</p>
+          </div>
+        </div>
+
+        <!-- Placeholder for search -->
+        <div class="row p-2 pt-4">
+          <p>Hier komt de zoekbalk</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
 </header>
 
 <section class="most-viewed">
-    <div class="container overflow-hidden text-center my-5">
-        <div class="row text-start ps-0 p-4 ">
-            <h3>Most Viewed</h3>
-        </div>
-        {{>slider}}
+  <div class="container overflow-hidden text-center my-5">
+    <div class="row text-start ps-0 p-4">
+      <h3>Most Viewed</h3>
     </div>
+    {{>slider}}
+  </div>
 </section>
 
 <section class="best-rated">
-    <div class="container overflow-hidden text-center my-5">
-        <div class="row text-start ps-0 p-4 ">
-            <h3>Best Rated</h3>
-        </div>
-        {{>slider}}
+  <div class="container overflow-hidden text-center my-5">
+    <div class="row text-start ps-0 p-4">
+      <h3>Best Rated</h3>
     </div>
+    {{>slider}}
+  </div>
 </section>
+
+<!-- Styles -->
+<style>
+  .hero-text {
+    backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.35);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
+    max-width: 60%;
+  }
+
+  .hero-desc {
+    backdrop-filter: blur(2px);
+    background-color: rgba(0, 0, 0, 0.25);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 5px;
+    display: inline-block;
+    max-width: 40%;
+  }
+</style>
+
+

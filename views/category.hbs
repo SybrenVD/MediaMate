@@ -1,57 +1,93 @@
-<header>
-  <section class="hero">
-    <div class="banner">
-      <div class="container text-center">
-        <div class="row mb-2">
-          <div class="search col-12 d-flex justify-content-end">
-            <form class="d-flex" role="search">
-              <div class="input-group input-group-sm">
-                <span class="input-group-text bg-white border-2 border-danger rounded-start">
-                  <i class="bi bi-search text-danger"></i>
-                </span>
-                <input class="form-control border-2 border-danger rounded-end" type="search"
-                  placeholder="Find your {{title}}" aria-label="Search">
-              </div>
-            </form>
+<div class="container-fluid p-0">
+  <header>
+    <section class="hero">
+      <div class="banner" style="background-image: url('{{hero.banner}}'); background-size: cover; background-position: center; height: 400px; display: flex; justify-content: center; align-items: center;">
+        <div class="container text-center" style="z-index: 2;">
+
+          <!-- Search bar -->
+          <div class="row mb-2">
+            <div class="search col-12 d-flex justify-content-end">
+              <form class="d-flex" role="search">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-white border-2 border-danger rounded-start">
+                    <i class="bi bi-search text-danger"></i>
+                  </span>
+                  <input 
+                    class="form-control border-2 border-danger rounded-end" 
+                    type="search" 
+                    placeholder="Find your {{title}}" 
+                    aria-label="Search"
+                  >
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Hero title (unchanged blur) -->
+          <div class="row p-1" style="position: relative; z-index: 3;">
+            <div class="hero-text mx-auto">
+              <h2 class="m-0">{{hero.cta}}</h2>
+            </div>
+          </div>
+
+          <!-- Hero description (smaller blur) -->
+          <div class="row" style="position: relative; z-index: 3;">
+            <div class="hero-desc mx-auto">
+              <p class="m-0">{{hero.shortDescription}}</p>
+            </div>
           </div>
         </div>
-
-        <div class="row p-2">
-          <h2>{{hero.cta}}</h2>
-        </div>
-        <div class="row pb-5">
-          <p>{{hero.shortDescription}}</p>
-        </div>
-
       </div>
-    </div>
-  </section>
-</header>
+    </section>
+  </header>
 
-{{!-- <section class="most-viewed">
-  <div class="container overflow-hidden text-center my-5">
-    <div class="row text-start ps-0 p-4 ">
-      <h3>Top Rated</h3>
-    </div>
-    {{>slider}}
-  </div>
-</section> --}}
-
-
-<div class="container text-center">
-  <h3 class="text-start text-danger">Top Rated</h3>
-  <div class="row justify-content-center">
-    {{#each items}}
-    <div class="col">
-      <div class="card h-100" style="background-color: #8b1d2e; color: white;">
-        <img src="{{this.image}}" class="card-img-top" alt="{{this.name}}"
-          style="min-height: 250px; object-fit: cover;">
-        <div class="card-body">
-          <h5 class="card-title" style="color: black;">{{this.name}}</h5>
-          <p class="card-text" style="color: #808080;">{{this.description}}</p>
+  <!-- Top Rated Section -->
+  <div class="container">
+    <h3 class="text-start text-danger">Top Rated</h3>
+    <div class="row justify-content-center">
+      {{#each items}}
+        <div class="col">
+          <div class="card h-100" style="background-color: #8b1d2e; color: white;">
+            <img src="{{this.image}}" class="card-img-top" alt="{{this.name}}" style="min-height: 250px; object-fit: cover;">
+            <div class="card-body">
+              <h5 class="card-title" style="color: black;">{{this.name}}</h5>
+              <p class="card-text" style="color: #808080;">{{this.description}}</p>
+            </div>
+          </div>
         </div>
-      </div>
+      {{/each}}
     </div>
-    {{/each}}
   </div>
 </div>
+
+<!-- Styles -->
+<style>
+  /* Title styling (unchanged) */
+  .hero-text {
+    backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.35);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
+    max-width: 60%;
+  }
+
+  /* Description styling (smaller) */
+  .hero-desc {
+    backdrop-filter: blur(2px);
+    background-color: rgba(0, 0, 0, 0.25);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 5px;
+    display: inline-block;
+    max-width: 40%;
+  }
+</style>
+
+
+
+
+
+
+
