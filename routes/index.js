@@ -227,6 +227,8 @@ router.post("/contact", function (req, res)
 router.get('/community', function (req, res) {
   res.render('community', {
     title: 'Community'
+  });
+});
     
 //GET FavList Page
 router.get("/favList",function(req, res){
