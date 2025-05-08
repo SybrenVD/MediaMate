@@ -103,8 +103,19 @@ h4 {
     right: 10px;
 }
 
+#test {
+    border: 1px solid red;
+}
+
 .search {
     position: absolute;
     top: 35px;
     right: 35px;
+
+/*Probeer het te veranderen hier in de css-bestand volgende keer, niet in de element zelf :D*/
+.nav-link{
+    color: red;
+}
+.nav-link:hover{
+    color: red;
 }
