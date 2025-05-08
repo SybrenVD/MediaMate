@@ -1,0 +1,42 @@
+<div class="container mt-5 text-center">
+  <h1 class="text-danger mb-5">Choose Your Community</h1>
+
+  <div class="row justify-content-center mb-5">
+    <div class="col-md-6">
+      <form class="d-flex" role="search">
+        <div class="input-group input-group-lg">
+          <span class="input-group-text bg-white border-2 border-danger rounded-start">
+            <i class="bi bi-search text-danger"></i>
+          </span>
+          <input 
+            class="form-control border-2 border-danger rounded-end" 
+            type="search" 
+            placeholder="Search for a community..." 
+            aria-label="Search"
+          >
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<div class="container">
+  <div class="row g-4">
+    {{#each (range 1 15)}}
+      <div class="col-12 col-md-4">
+        <div class="d-flex align-items-center p-3 border rounded shadow-sm" style="background-color: #8b1d2e; color: white;">
+          <img src="https://via.placeholder.com/40" alt="Icon" class="me-3 rounded-circle" style="width: 40px; height: 40px;">
+          <div>
+            <!-- Title in black -->
+            <h5 class="mb-1" style="color: black;">Community {{this}}</h5>
+            <!-- Description in light gray -->
+            <p class="mb-0 text-muted" style="color: #f1f1f1;">This is a description for Community {{this}}.</p>
+          </div>
+        </div>
+      </div>
+    {{/each}}
+  </div>
+</div>
+
+

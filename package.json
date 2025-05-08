@@ -23,6 +23,7 @@
     "body-parser": "^2.2.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-session": "^1.18.1",
     "hbs": "^4.2.0",
     "lodash": "^4.17.21",
     "mssql": "^11.0.1",
