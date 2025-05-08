@@ -27,7 +27,7 @@ router.get("/category/:type", function (req, res) {
   const dataMap = {
     games: {
       title: "Games",
-      hero: {cta: "Discover Exciting Games",        banner: "/images/placeholder.jpg",
+      hero: {cta: "Discover Exciting Games",        banner: "/images/Banner games.webp",
       shortDescription: "Explore a curated list of top games"},
       card: {
         title: "Title",
@@ -54,7 +54,7 @@ router.get("/category/:type", function (req, res) {
     },
     movies: {
       title: "Movies",
-      hero: {cta: "Watch Blockbuster Films",      banner: "/images/placeholder.jpg",
+      hero: {cta: "Watch Blockbuster Films",      banner: "/images/MovieBanner.jpg",
       shortDescription: "Check out the most loved movies"},
       items: [
         { name: "Inception", description: "A mind-bending thriller.", image: "https://via.placeholder.com/300x200" },
