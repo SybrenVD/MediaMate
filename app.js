@@ -3,6 +3,8 @@ const express = require('express');
 const path = require("path");
 const hbs = require("hbs");
 const indexRouter = require("./routes/index");
+const session = require("express-session");
+
 
 const app = express();
 
@@ -16,9 +18,23 @@ hbs.registerHelper("eq", function (a, b) {
   return a === b;
 });
 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
+
+
+app.use(session({
+  secret: 'mySecretKey123',
+  resave: false,
+  saveUninitialized: true
+}));
+
+app.use((req, res, next) => {
+  res.locals.session = req.session;
+  next();
+});
+
 
 app.use("/", indexRouter);
 
