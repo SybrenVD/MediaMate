@@ -71,15 +71,29 @@
      {{#if items.length}}
         <hr />
         <h4 class="mt-4"> My Added Content</h4>
-        <ul>
-    
-    {{#each items}}
-    
-      <li><strong>{{type}}:</strong> {{title}}</li>
-    
-    {{/each}}
-    
-    </ul>
+       
+
+       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mt-4">
+  
+  {{#each items}}
+  
+    <div class="col">
+      <div class="card h-100">
+        <img src="{{image}}" class="card-img-top" alt="{{title}}">
+        <div class="card-body">
+          <h5 class="card-title">{{title}}</h5>
+          <p class="card-text">{{description}}</p>
+        </div>
+        <div class="card-footer">
+          <small class="text-muted">{{type}}</small>
+        </div>
+      </div>
+    </div>
+  
+  {{/each}}
+
+</div>
+
     
     {{/if}}
 
