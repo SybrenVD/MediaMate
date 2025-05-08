@@ -15,7 +15,13 @@ hbs.registerHelper("isSelected", (type, key) => type == key ? "selected": "");
 hbs.registerHelper("eq", function (a, b) {
   return a === b;
 });
-
+hbs.registerHelper('range', function(start, end, options) {
+  let result = [];
+  for (let i = start; i <= end; i++) {
+    result.push(i);
+  }
+  return result;
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
