@@ -223,5 +223,11 @@ router.post("/contact", function (req, res)
   
 });
 });
+
+router.get('/community', function (req, res) {
+  res.render('community', {
+    title: 'Community'
+  });
+});
   
 module.exports = router;
