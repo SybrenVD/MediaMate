@@ -21,12 +21,28 @@
         </li>
   
 
-        <li class="nav-item">
-          <a href="/login" class="btn btn-outline-success me-2 btn-sm">Log in</a>
-        </li>
-        <li class="nav-item">
-          <a href="/register" class="btn btn-outline-secondary btn-sm">Register</a>
-        </li>
+          {{#if @root.session.user}}
+           
+            <li class="nav-item">
+              <span class="nav-link text-white">Welcome, {{@root.session.user}}</span>
+            </li>
+            
+            <li class="nav-item">
+              <a href="/logout" class="btn btn-outline-danger btn-sm ms-2">Logout</a>
+            </li>
+          
+          {{else}}
+  
+            <li class="nav-item">
+              <a href="/login" class="btn btn-outline-success me-2 btn-sm">Log in</a>
+            </li>
+  
+            <li class="nav-item">
+              <a href="/register" class="btn btn-outline-secondary btn-sm">Register</a>
+            </li>
+          
+          {{/if}}
+
 
     </ul>
   </div>
