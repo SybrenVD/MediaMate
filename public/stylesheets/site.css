@@ -48,7 +48,7 @@ h4 {
     font-weight: 400;
 }
 
-.card {
+/* .card {
     background-color: #8b1d2e;
     max-width: 18rem;
     height: auto;
@@ -82,6 +82,59 @@ h4 {
     overflow-x: auto;
     scroll-behavior: smooth;
     padding: 10px 0;
+} */
+
+.card {
+    background-color: #8b1d2e;
+    width: 18rem; /* Fixed base width for larger screens */
+    flex: 0 0 auto; /* No grow, no shrink, size based on width */
+    height: auto; /* Allow height to adjust based on content */
+    margin-right: 15px; /* Space between cards */
+}
+
+.card p {
+    font-weight: 500;
+    color: #757575;
+}
+
+.card img {
+    width: 100%; /* Image scales with card width */
+    height: auto; /* Maintain aspect ratio */
+}
+
+.card-img-top {
+    aspect-ratio: 5 / 4; /* Ensure consistent image proportions */
+}
+
+.card-slider {
+    position: relative;
+    padding: 0 50px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.card-container {
+    display: flex;
+    flex-wrap: nowrap; /* Cards stay in a single row */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    scroll-behavior: smooth;
+    padding: 10px 0;
+}
+
+/* Responsive scaling for smaller screens */
+@media (max-width: 768px) {
+    .card {
+        width: 14rem; /* Smaller width for tablets */
+    }
+}
+
+@media (max-width: 576px) {
+    .card {
+        width: 10rem; /* Even smaller for mobile */
+    }
+    .card-slider {
+        padding: 0 20px; /* Reduce padding for smaller screens */
+    }
 }
 
 .arrow {
@@ -96,11 +149,11 @@ h4 {
 }
 
 .arrow-left {
-    left: 10px;
+    left: -25px;
 }
 
 .arrow-right {
-    right: 10px;
+    right: -25px;
 }
 
 #test {

@@ -1,8 +1,8 @@
 
     <div class="card-slider">
-        <button class="arrow arrow-left"> < </button>
-        <button class="arrow arrow-right"> > </button>
-        <div class="card-container">
+        <button onclick="scrollLeft()" class="arrow arrow-left"> < </button>
+        <button onclick="scrollRight()" class="arrow arrow-right"> > </button>
+        <div class="card-container overflow-hidden">
             {{>card}}
             {{>card}}
             {{>card}}
