@@ -43,7 +43,7 @@ router.get("/category/:type", function (req, res) {
     },
     books: {
       title: "Books",
-      hero: {cta: "Explore Great Reads",          banner: "/images/placeholder.jpg",
+      hero: {cta: "Explore Great Reads",          banner: "/images/BookBanner.jpg",
       shortDescription: "Browse a hand-picked list of top books"},
       items: [
         { name: "1984", description: "Dystopian classic by George Orwell.", image: "https://via.placeholder.com/300x200" },
@@ -54,7 +54,7 @@ router.get("/category/:type", function (req, res) {
     },
     movies: {
       title: "Movies",
-      hero: {cta: "Watch Blockbuster Films",      banner: "/images/MovieBanner.jpg",
+      hero: {cta: "Watch Blockbuster Films",      banner: "/images/MovieBanner2.jpg",
       shortDescription: "Check out the most loved movies"},
       items: [
         { name: "Inception", description: "A mind-bending thriller.", image: "https://via.placeholder.com/300x200" },
