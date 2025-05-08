@@ -307,7 +307,11 @@ router.post("/add", function (req, res) {
   
 });
 
-
-
+/*GET groeplist+room */
+router.get("/chatroom", function(req,res){
+  res.render("chatgroep",{
+    title:"Chatrooms",
+  });
+});
 
 module.exports = router;
