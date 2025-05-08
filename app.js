@@ -12,6 +12,9 @@ app.set("view engine", "hbs");
 app.set("view options", { layout: "layouts/main"});
 hbs.registerPartials(path.join(__dirname, "views/partials"));
 hbs.registerHelper("isSelected", (type, key) => type == key ? "selected": "");
+hbs.registerHelper("eq", function (a, b) {
+  return a === b;
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
