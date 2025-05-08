@@ -5,13 +5,12 @@ const createError = require("http-errors");
 const express = require('express');
 const path = require("path");
 const hbs = require("hbs");
-const indexRouter = require("./routes/index");
 const session = require("express-session");
 const bodyParser = require('body-parser');
+const indexRouter = require("./routes/index");
 const importRoutes = require('./routes/import');
-const sql = require('mssql');
-const axios = require('axios');
 
+// Init Express app
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -20,11 +19,12 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "hbs");
 app.set("view options", { layout: "layouts/main"});
 hbs.registerPartials(path.join(__dirname, "views/partials"));
+
+// Handlebars helpers
 hbs.registerHelper("isSelected", (type, key) => type == key ? "selected": "");
 hbs.registerHelper("eq", function (a, b) {
   return a === b;
 });
-
 hbs.registerHelper('range', function(start, end, options) {
   let result = [];
   for (let i = start; i <= end; i++) {
@@ -33,8 +33,8 @@ hbs.registerHelper('range', function(start, end, options) {
   return result;
 });
 
+// Middleware
 app.use(bodyParser.json());
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -71,31 +71,9 @@ app.use(function(err, req, res, next) {
   res.render("error");
 });
 
-// Database configuration
-// Database configuration from .env file
-const dbConfig = {
-  server: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT),
-  user: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-  options: {
-    encrypt: false,
-    trustServerCertificate: true,
-  }
-};
-
-
-// Connecting to the database
-async function connectToDatabase() {
-  try {
-    await sql.connect(dbConfig);
-    console.log('Verbonden met de database!');
-  } catch (err) {
-    console.error('Fout bij verbinden met de database:', err);
-  }
-}
-
-connectToDatabase();
+// Start server
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`);
+});
 
 module.exports = app;
