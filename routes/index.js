@@ -43,7 +43,7 @@ router.get("/", function (req, res, next) {
         cta: "Welcome to MediaMate",
         shortDescription: "Find the best in entertainment"
       },
-      content: [
+      mostViewedContent: [
         {
           title: "The Great Gatsby",
           description: "A story about wealth and the American Dream.",
@@ -92,6 +92,59 @@ router.get("/", function (req, res, next) {
         {
           title: "Harry Potter and the Sorcerer's Stone",
           description: "A boy learns he's a wizard and goes to Hogwarts.",
+          img: "/images/placeholder.jpg"
+        }
+      ],
+
+      bestRatedContent: [
+        {
+          title: "The Hunger Games",
+          description: "Teens fight for survival in a dystopian arena.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Avatar",
+          description: "Humans colonize an alien planet and face its inhabitants.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Elder Scrolls V: Skyrim",
+          description: "An RPG where you explore and fight dragons in a fantasy world.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Jurassic Park",
+          description: "Dinosaurs are resurrected and run wild in a theme park.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Minecraft",
+          description: "A sandbox game where you build and explore virtual worlds.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Godfather",
+          description: "A mafia family's saga of crime and loyalty.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Fight Club",
+          description: "An underground fight club challenges modern society's norms.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Assassin's Creed",
+          description: "A historical action game about assassins fighting for freedom.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Pulp Fiction",
+          description: "Intertwining stories of crime and redemption.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Shining",
+          description: "A family is haunted in a secluded hotel.",
           img: "/images/placeholder.jpg"
         }
       ]
