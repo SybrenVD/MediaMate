@@ -72,16 +72,19 @@ app.use(function(err, req, res, next) {
 });
 
 // Database configuration
+// Database configuration from .env file
 const dbConfig = {
-  user: process.env.DB_USER,            // Gebruikersnaam van de database (uit .env)
-  password: process.env.DB_PASSWORD,    // Wachtwoord van de database (uit .env)
-  server: process.env.DB_SERVER,        // SQL Server adres (bijv. localhost)
-  database: process.env.DB_NAME,        // Naam van de database
+  server: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT),
+  user: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
   options: {
-    encrypt: true,                      // Altijd 'true' voor beveiliging
-    trustServerCertificate: true        // Vertrouwen op het servercertificaat (voor lokale servers)
+    encrypt: false,
+    trustServerCertificate: true,
   }
 };
+
 
 // Connecting to the database
 async function connectToDatabase() {
