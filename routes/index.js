@@ -236,5 +236,4 @@ router.get("/favList",function(req, res){
     title: "Favourite"
   });
 });
-  
 module.exports = router;
