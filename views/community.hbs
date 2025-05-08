@@ -24,17 +24,7 @@
 <div class="container">
   <div class="row g-4">
     {{#each (range 1 15)}}
-      <div class="col-12 col-md-4">
-        <div class="d-flex align-items-center p-3 border rounded shadow-sm" style="background-color: #8b1d2e; color: white;">
-          <img src="https://via.placeholder.com/40" alt="Icon" class="me-3 rounded-circle" style="width: 40px; height: 40px;">
-          <div>
-            <!-- Title in black -->
-            <h5 class="mb-1" style="color: black;">Community {{this}}</h5>
-            <!-- Description in light gray -->
-            <p class="mb-0 text-muted" style="color: #f1f1f1;">This is a description for Community {{this}}.</p>
-          </div>
-        </div>
-      </div>
+        {{>communitypartial}}
     {{/each}}
   </div>
 </div>
