@@ -43,11 +43,58 @@ router.get("/", function (req, res, next) {
         cta: "Welcome to MediaMate",
         shortDescription: "Find the best in entertainment"
       },
-      card: {
-        title: "Title",
-        description: "Description",
-        img: "/images/placeholder.jpg"
-      }
+      content: [
+        {
+          title: "The Great Gatsby",
+          description: "A story about wealth and the American Dream.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Inception",
+          description: "A thief enters dreams to steal secrets.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Witcher 3: Wild Hunt",
+          description: "An RPG where Geralt hunts monsters and searches for his daughter.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "1984",
+          description: "A dystopian world controlled by surveillance and oppression.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Dark Knight",
+          description: "Batman faces the Joker in Gotham City.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Super Mario Odyssey",
+          description: "Mario embarks on a journey to save Princess Peach.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Lord of the Rings: The Fellowship of the Ring",
+          description: "Frodo starts his quest to destroy the One Ring.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Red Dead Redemption 2",
+          description: "A cowboy story set in the American frontier.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Matrix",
+          description: "A hacker discovers reality is a simulation.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Harry Potter and the Sorcerer's Stone",
+          description: "A boy learns he's a wizard and goes to Hogwarts.",
+          img: "/images/placeholder.jpg"
+        }
+      ]
 
     });
 });
