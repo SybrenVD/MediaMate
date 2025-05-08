@@ -6,8 +6,8 @@ router.get("/", function (req, res, next) {
   res.render("index",
     {
       title: "Home",
+      banner: "/images/BannerHome.jpg",
       hero: {
-        banner: "/images/placeholder.jpg",
         cta: "Welcome to MediaMate",
         shortDescription: "Find the best in entertainment"
       },
