@@ -17,7 +17,7 @@ div{
 
 
 h3 {
-    color: hsla(351, 70%, 38%, 0.8);
+    color: #8b1d2e;
     font-size: 36px;
 }
 
@@ -49,7 +49,7 @@ h4 {
 }
 
 .card {
-    background-color: hsla(351, 70%, 38%, 0.80);
+    background-color: #8b1d2e;
     max-width: 18rem;
     height: auto;
     flex: 0 0 auto
@@ -91,7 +91,7 @@ h4 {
     border: none;
     font-size: 4rem;
     font-weight: 500;
-    color: hsla(351, 70%, 38%, 0.80);
+    color: #8b1d2e;
     background-color: transparent;
 }
 
