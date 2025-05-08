@@ -363,7 +363,8 @@ router.get('/community', function (req, res) {
 });
     
 //GET FavList Page
-router.get("/favList",function(req, res){
+router.get("/favorites", isAuthenticated, function(req, res)
+{
   res.render("fav-list",{
     title: "Favourite"
   });
