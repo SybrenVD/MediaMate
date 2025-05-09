@@ -1,0 +1,69 @@
+<div class="container-fluid p-0">
+  <!-- Image Section (Top Image Only) -->
+  <header>
+    <!-- Display the image with more space and increase size -->
+    <img src="{{item.image}}" class="img-fluid mx-auto d-block mt-5" alt="{{item.name}}" style="max-width: 100%; height: 400px; object-fit: cover;">
+  </header>
+
+  <!-- Detail Section -->
+  <div class="container my-5">
+    <!-- Back Button -->
+    <a href="/category/{{type}}" class="btn btn-outline-danger mb-4">
+      <i class="bi bi-arrow-left-circle-fill"></i> Back to {{title}}
+    </a>
+
+    <div class="row justify-content-center">
+      <!-- Details Column Wrapped in Black Box -->
+      <div class="col-md-8">
+        <div class="p-4 rounded shadow" style="background-color: black; color: #8b1d2e;">
+          <h3 class="fw-bold" style="color: #8b1d2e;">{{item.name}}</h3>
+          <hr style="border-color: #8b1d2e;">
+          <p><strong>Description:</strong> {{item.longDescription}}</p>
+          <p><strong>Release Date:</strong> {{item.releaseDate}}</p>
+
+          {{#if item.estimatedTimeToFinish}}
+            <p><strong>Estimated Time to Finish:</strong> {{item.estimatedTimeToFinish}}</p>
+          {{/if}}
+
+          {{#if item.developer}}
+            <p><strong>Developer:</strong> {{item.developer}}</p>
+          {{/if}}
+
+          {{#if item.author}}
+            <p><strong>Author:</strong> {{item.author}}</p>
+          {{/if}}
+
+          {{#if item.length}}
+            <p><strong>Length:</strong> {{item.length}}</p>
+          {{/if}}
+
+          {{#if item.director}}
+            <p><strong>Director:</strong> {{item.director}}</p>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .btn-outline-danger {
+    border-color: #8b1d2e;
+    color: #8b1d2e;
+  }
+
+  .btn-outline-danger:hover {
+    background-color: #8b1d2e;
+    color: white;
+  }
+</style>
+
+
+
+
+
+
+
+
+
+
