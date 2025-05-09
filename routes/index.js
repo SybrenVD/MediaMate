@@ -718,7 +718,6 @@ router.post("/add", isAuthenticated, function (req, res) {
   
 });
 
-<<<<<<< HEAD
 //admin-panel get
 router.get("/admin-panel", isAuthenticated, function (req, res) {
 
@@ -766,8 +765,6 @@ router.get("/admin-panel", isAuthenticated, function (req, res) {
 });
 
 
-
-=======
 /*GET groeplist+room */
 router.get("/chatroom", function(req,res){
   res.render("chatgroup",{
@@ -780,6 +777,5 @@ router.get("/chatroom", function(req,res){
     ]
   });
 });
->>>>>>> 6aa7e22859c20c71efcc92d94515d30055e97f8a
 
 module.exports = router;
