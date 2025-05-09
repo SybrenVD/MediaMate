@@ -823,15 +823,29 @@ router.get('/admin-panel/:requestID', (req, res) => {
 });
 
 /*GET groeplist+room */
-router.get("/chatroom", function(req,res){
-  res.render("chatgroup",{
-    title:"Chatrooms",
-    groups: [
-      {groupId: 0, tag: "", createrId: 0, createDate: Date.now, lidId: 0, groupName: "A", groupImg: "https://huiji-public.huijistatic.com/isaac/uploads/c/c4/Eve%27s_Mascara_Tears.png"},
-      {groupId: 1, tag: "", createrId: 0, createDate: Date.now, lidId: 0, groupName: "B", groupImg: "https://huiji-public.huijistatic.com/isaac/uploads/c/c4/Eve%27s_Mascara_Tears.png"},
-      {groupId: 2, tag: "", createrId: 0, createDate: Date.now, lidId: 0, groupName: "C", groupImg: "https://huiji-public.huijistatic.com/isaac/uploads/c/c4/Eve%27s_Mascara_Tears.png"},
-      {groupId: 3, tag: "", createrId: 0, createDate: Date.now, lidId: 0, groupName: "D", groupImg: "https://huiji-public.huijistatic.com/isaac/uploads/c/c4/Eve%27s_Mascara_Tears.png"}
-    ]
+router.get("/chatroom", function(req, res) {
+  const rooms = [
+    {chatId: 0, chatName: "A", tags: "", img: "https://huiji-public.huijistatic.com/isaac/uploads/0/04/3DS_Detailed_Pandora%27s_Box.png", creatorId: 0, membersId: 0},
+    {chatId: 1, chatName: "B", tags: "", img: "https://huiji-public.huijistatic.com/isaac/uploads/3/3b/3DS_Detailed_Converter.png", creatorId: 0, membersId: 0},
+    {chatId: 2, chatName: "C", tags: "", img: "", creatorId: 0, membersId: 0},
+    {chatId: 3, chatName: "D", tags: "", img: "", creatorId: 0, membersId: 0}
+  ];
+
+  const allMessages = {
+    0: [
+      {messageId: 0, fromId: 0, time: Date.now(), content: "Ja?", chatId: 0}
+    ],
+    1: [
+      {messageId: 0, fromId: 0, time: Date.now(), content: "...Nee?", chatId: 1}
+    ],
+    2: [],
+    3: []
+  };
+
+  res.render("chatroom", {
+    title: "Chatrooms",
+    rooms,
+    messagesByRoom: allMessages
   });
 });
 

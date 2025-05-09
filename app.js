@@ -32,6 +32,9 @@ hbs.registerHelper('range', function(start, end, options) {
   }
   return result;
 });
+hbs.registerHelper("lookup", function(obj, key) {
+  return obj[key];
+});
 
 // Middleware
 app.use(bodyParser.json());
