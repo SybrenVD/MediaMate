@@ -53,6 +53,8 @@ async function getPopularMovies() {
         }
       });
 
+      // Log de ruwe data die we ontvangen van de API
+      console.log("Received response from TMDB:", response.data); // Dit logt de volledige API-response
       allMovies.push(...response.data.results); // Add results to the allMovies array
       totalPages = response.data.total_pages;   // Get the total number of pages
       page++;
@@ -71,14 +73,18 @@ async function insertGenres(genres, pool) {
     for (const genre of genres) {
       const request = pool.request();
       request.input('GenreID', sql.Int, genre.id);
-      request.input('Name', sql.VarChar(255), genre.name);  // Add genre
+      request.input('Name', sql.VarChar(255), genre.name);
 
-      await request.query(`
+      // Log the query being executed
+      const query = `
         IF NOT EXISTS (SELECT 1 FROM Genres WHERE GenreID = @GenreID)
         BEGIN
           INSERT INTO Genres (GenreID, Name) VALUES (@GenreID, @Name)
         END
-      `);  // Insert genre if it does not already exist
+      `;
+      console.log('Executing query:', query);
+
+      await request.query(query);  
     }
   } catch (error) {
     console.error('Error inserting genres:', error.message);
@@ -96,29 +102,36 @@ async function insertMovies(movies, pool) {
       movieRequest.input('Description', sql.VarChar(300), movie.overview || '');
       movieRequest.input('ReleaseDate', sql.Date, movie.release_date || null);
 
-      // Insert movie if it doesn't already exist
-      await movieRequest.query(`
+      // Log the query being executed
+      const movieQuery = `
         IF NOT EXISTS (SELECT 1 FROM Content WHERE ContentID = @ContentID)
         BEGIN
           INSERT INTO Content (ContentID, Title, ContentType, Description, ReleaseDate)
           VALUES (@ContentID, @Title, @ContentType, @Description, @ReleaseDate)
         END
-      `);
+      `;
+      console.log('Executing movie insert query:', movieQuery);
 
-      // Insert the genre relationships of the movie into the Content_Genre table
+      await movieRequest.query(movieQuery);  // Execute the query
+
+      // Insert the genre relationships for the movie into the Content_Genre table
       const contentGenres = movie.genre_ids;
       for (const genreID of contentGenres) {
         const contentGenreRequest = pool.request();
         contentGenreRequest.input('ContentID', sql.Int, movie.id);
         contentGenreRequest.input('GenreID', sql.Int, genreID);
 
-        await contentGenreRequest.query(`
+        // Log the query being executed
+        const genreQuery = `
           IF NOT EXISTS (SELECT 1 FROM Content_Genre WHERE ContentID = @ContentID AND GenreID = @GenreID)
           BEGIN
             INSERT INTO Content_Genre (ContentID, GenreID)
             VALUES (@ContentID, @GenreID)
           END
-        `);  // Insert genre relationships
+        `;
+        console.log('Executing genre insert query:', genreQuery);
+
+        await contentGenreRequest.query(genreQuery);  // Execute the query
       }
     }
   } catch (error) {
