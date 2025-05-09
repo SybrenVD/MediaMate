@@ -722,8 +722,9 @@ router.post("/add", isAuthenticated, function (req, res) {
 router.get("/admin-panel", isAuthenticated, function (req, res) {
 
 
-  requests = [
+  const requests = [
     {
+      requestID: "1", // Added unique ID
       username: "test_user1",
       type: "Bug Report",
       title: "Login button not working",
@@ -732,6 +733,7 @@ router.get("/admin-panel", isAuthenticated, function (req, res) {
       status: "Pending"
     },
     {
+      requestID: "2", // Added unique ID
       username: "test_user2",
       type: "Feature Request",
       title: "Add dark mode",
@@ -740,6 +742,7 @@ router.get("/admin-panel", isAuthenticated, function (req, res) {
       status: "Pending"
     },
     {
+      requestID: "3", // Added unique ID
       username: "test_user3",
       type: "Feedback",
       title: "Great user interface!",
@@ -748,6 +751,7 @@ router.get("/admin-panel", isAuthenticated, function (req, res) {
       status: "Pending"
     },
     {
+      requestID: "4", // Added unique ID
       username: "test_user3",
       type: "Feedback",
       title: "Great user interface!",
@@ -756,6 +760,7 @@ router.get("/admin-panel", isAuthenticated, function (req, res) {
       status: "Accepted"
     }
   ];
+
   const pendingRequests = requests.filter(r => r.status === "Pending");
 
   res.render("admin-panel", {
@@ -764,6 +769,58 @@ router.get("/admin-panel", isAuthenticated, function (req, res) {
   });
 });
 
+router.get('/admin-panel/:requestID', (req, res) => {
+
+  const requests = [
+    {
+      requestID: "1", // Added unique ID
+      username: "test_user1",
+      type: "Bug Report",
+      title: "Login button not working",
+      description: "Clicking the login button does nothing on Chrome browser.",
+      image: "https://example.com/image1.png",
+      status: "Pending"
+    },
+    {
+      requestID: "2", // Added unique ID
+      username: "test_user2",
+      type: "Feature Request",
+      title: "Add dark mode",
+      description: "A dark mode option would be helpful for night-time browsing.",
+      image: "https://example.com/image2.png",
+      status: "Pending"
+    },
+    {
+      requestID: "3", // Added unique ID
+      username: "test_user3",
+      type: "Feedback",
+      title: "Great user interface!",
+      description: "The new dashboard layout is very intuitive and clean.",
+      image: "https://example.com/image3.png",
+      status: "Pending"
+    },
+    {
+      requestID: "4", // Added unique ID
+      username: "test_user3",
+      type: "Feedback",
+      title: "Great user interface!",
+      description: "The new dashboard layout is very intuitive and clean.",
+      image: "https://example.com/image3.png",
+      status: "Accepted"
+    }
+  ];
+
+  const requestID = req.params.requestID;
+  const foundRequest = requests.find(req => req.requestID === requestID);
+  console.log('Request ID:', req.params.requestID, typeof req.params.requestID);
+  // Query the database using requestID
+  // Example: db.findById(requestID)
+  // foundRequest as result
+  // Render the page with the request data
+  res.render('request-detail', { 
+    request: foundRequest 
+  });
+});
 
 /*GET groeplist+room */
 router.get("/chatroom", function(req,res){

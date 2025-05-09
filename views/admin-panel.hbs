@@ -6,7 +6,7 @@
     {{#if requests.length}}
     <ul class="list-group">
         {{#each requests}}
-        <a href="/admin-panel/"><li class="list-group-item d-flex justify-content-between align-items-center">
+        <a href="/admin-panel/{{this.requestID}}"  style="text-decoration: none;"><li class="list-group-item d-flex justify-content-between align-items-center">
             <div class="col-3">{{this.username}}</div>
             <div class="col-3">{{this.title}}</div>
             <div class="col-2">{{this.type}}</div>
