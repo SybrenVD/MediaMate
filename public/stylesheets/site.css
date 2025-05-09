@@ -6,16 +6,6 @@ body {
     background-color: #231F20;
 }
 
-/* .row{
-    border: 1px solid red;
-
-}
-div{
-    border: 1px solid black;
-    min-height: 30px;
-} */
-
-
 h3 {
     color: #8b1d2e;
     font-size: 36px;
@@ -47,42 +37,6 @@ h4 {
     font-size: 28px;
     font-weight: 400;
 }
-
-/* .card {
-    background-color: #8b1d2e;
-    max-width: 18rem;
-    height: auto;
-    flex: 0 0 auto
-}
-
-.card p {
-    font-weight: 500;
-    color: #757575;
-}
-
-.card img {
-    height: 250px;
-    width: auto;
-}
-
-.card-img-top {
-    aspect-ratio: 5 / 4;
-}
-
-.card-slider {
-    position: relative;
-    padding: 0 50px;
-    margin: 0 auto;
-    width: 100%
-}
-
-.card-container {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    padding: 10px 0;
-} */
 
 .card {
     background-color: #8b1d2e;
