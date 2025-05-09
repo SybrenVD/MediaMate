@@ -4,7 +4,7 @@ var router = express.Router();
 //toevoegen pagina
 const addedItems = []; // tijdelijk opgeslagen inhoud
 
-const requests = []; // Her request: { username, title, description, status }
+var requests = []; // Her request: { username, title, description, status }
 
 
 //user-page
@@ -406,6 +406,52 @@ router.post("/add", isAuthenticated, function (req, res) {
   });
 
   
+});
+
+//admin-panel get
+router.get("/admin-panel", isAuthenticated, function (req, res) {
+
+
+  requests = [
+    {
+      username: "test_user1",
+      type: "Bug Report",
+      title: "Login button not working",
+      description: "Clicking the login button does nothing on Chrome browser.",
+      image: "https://example.com/image1.png",
+      status: "Pending"
+    },
+    {
+      username: "test_user2",
+      type: "Feature Request",
+      title: "Add dark mode",
+      description: "A dark mode option would be helpful for night-time browsing.",
+      image: "https://example.com/image2.png",
+      status: "Pending"
+    },
+    {
+      username: "test_user3",
+      type: "Feedback",
+      title: "Great user interface!",
+      description: "The new dashboard layout is very intuitive and clean.",
+      image: "https://example.com/image3.png",
+      status: "Pending"
+    },
+    {
+      username: "test_user3",
+      type: "Feedback",
+      title: "Great user interface!",
+      description: "The new dashboard layout is very intuitive and clean.",
+      image: "https://example.com/image3.png",
+      status: "Accepted"
+    }
+  ];
+  const pendingRequests = requests.filter(r => r.status === "Pending");
+
+  res.render("admin-panel", {
+    title: "Admin Panel",
+    requests: pendingRequests
+  });
 });
 
 
