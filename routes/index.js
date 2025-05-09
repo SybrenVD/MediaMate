@@ -408,7 +408,17 @@ router.post("/add", isAuthenticated, function (req, res) {
   
 });
 
-
-
+/*GET groeplist+room */
+router.get("/chatroom", function(req,res){
+  res.render("chatgroup",{
+    title:"Chatrooms",
+    groups: [
+      {groupId: 0, tag: "", createrId: 0, createDate: Date.now, lidId: 0, groupName: "A", groupImg: "https://huiji-public.huijistatic.com/isaac/uploads/c/c4/Eve%27s_Mascara_Tears.png"},
+      {groupId: 1, tag: "", createrId: 0, createDate: Date.now, lidId: 0, groupName: "B", groupImg: "https://huiji-public.huijistatic.com/isaac/uploads/c/c4/Eve%27s_Mascara_Tears.png"},
+      {groupId: 2, tag: "", createrId: 0, createDate: Date.now, lidId: 0, groupName: "C", groupImg: "https://huiji-public.huijistatic.com/isaac/uploads/c/c4/Eve%27s_Mascara_Tears.png"},
+      {groupId: 3, tag: "", createrId: 0, createDate: Date.now, lidId: 0, groupName: "D", groupImg: "https://huiji-public.huijistatic.com/isaac/uploads/c/c4/Eve%27s_Mascara_Tears.png"}
+    ]
+  });
+});
 
 module.exports = router;
