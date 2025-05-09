@@ -1,10 +1,21 @@
-<nav class="navbar sticky-top" style="background-color: #8b1d2e; color: black;">
+<nav class="navbar navbar-expand-lg sticky-top" style="background-color: #8b1d2e;">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/">
-        <img src="" alt="Logo" width="30" height="24" class="d-inline-block align-text-top">
+    <a class="navbar-brand text-white" href="/">
+      <img src="" alt="Logo" width="30" height="24" class="d-inline-block align-text-top">
+      MediaMate
     </a>
-    <ul class="nav justify-content-end">
-       <li class="nav-item">
+
+    <!-- Hamburger button for small screens -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+      aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Menu items -->
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+
+        <li class="nav-item">
           <a class="nav-link {{#if (eq title 'Games')}}active fw-bold text-dark{{/if}}" href="/category/games" style="color: black;">Games</a>
         </li>
         <li class="nav-item">
@@ -14,38 +25,44 @@
           <a class="nav-link {{#if (eq title 'Books')}}active fw-bold text-dark{{/if}}" href="/category/books" style="color: black;">Books</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/community" style="color: black;">Community</a>
+          <a class="nav-link" href="/community" style="color: black;">Community</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/contact" style="color: black;">Contact</a>
+          <a class="nav-link" href="/contact" style="color: black;">Contact</a>
         </li>
-  
-
-          {{#if @root.session.user}}
-           
-            <li class="nav-item">
-              <span class="nav-link text-white">Welcome, {{@root.session.user}}</span>
-            </li>
-            
-            <li class="nav-item">
-              <a href="/logout" class="btn btn-outline-danger btn-sm ms-2">Logout</a>
-            </li>
-          
-          {{else}}
-  
-            <li class="nav-item">
-              <a href="/login" class="btn btn-outline-success me-2 btn-sm">Log in</a>
-            </li>
-  
-            <li class="nav-item">
-              <a href="/register" class="btn btn-outline-secondary btn-sm">Register</a>
-            </li>
-          
-          {{/if}}
 
 
-    </ul>
+        {{#if @root.session.user}}
+        
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            <i class="bi bi-person-circle"></i> {{@root.session.user}}
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/user">My Profile</a></li>
+            <li><a class="dropdown-item" href="/add">Request</a></li>
+            <li><a class="dropdown-item" href="/favorites">Favorites</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="/logout">Logout</a></li>
+          </ul>
+        </li>
+        
+        {{else}}
+        
+        <li class="nav-item">
+          <a href="/login" class="btn btn-outline-success me-2 btn-sm">Log in</a>
+        </li>
+        <li class="nav-item">
+          <a href="/register" class="btn btn-outline-secondary btn-sm">Register</a>
+        </li>
+       
+        {{/if}}
+
+      </ul>
+    </div>
   </div>
 </nav>
+
 
 

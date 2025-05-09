@@ -1,21 +1,153 @@
 var express = require("express");
 var router = express.Router();
 
+//toevoegen pagina
+const addedItems = []; // tijdelijk opgeslagen inhoud
+
+const requests = []; // Her request: { username, title, description, status }
+
+
+//user-page
+function isAuthenticated(req, res, next) {
+  if (req.session && req.session.user) {
+    return next(); // login
+  }
+  res.redirect("/login");
+}
+
+//user-page get
+router.get("/user", isAuthenticated, function (req, res) {
+  const userRequests = requests.filter(r => r.username === req.session.user);
+
+  res.render("user", {
+    title: "Your Profile",
+    user: {
+      username: req.session.user,
+      fullName: "John Doe", 
+      email: "user@example.com" 
+    },
+    requests: userRequests
+  });
+});
+
+
+
+
 /* GET home page. */
 router.get("/", function (req, res, next) {
   res.render("index",
     {
       title: "Home",
+      banner: "/images/BannerHome.jpg",
       hero: {
-        banner: "/images/placeholder.jpg",
         cta: "Welcome to MediaMate",
         shortDescription: "Find the best in entertainment"
       },
-      card: {
-        title: "Title",
-        description: "Description",
-        img: "/images/placeholder.jpg"
-      }
+      mostViewedContent: [
+        {
+          title: "The Great Gatsby",
+          description: "A story about wealth and the American Dream.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Inception",
+          description: "A thief enters dreams to steal secrets.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Witcher 3: Wild Hunt",
+          description: "An RPG where Geralt hunts monsters and searches for his daughter.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "1984",
+          description: "A dystopian world controlled by surveillance and oppression.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Dark Knight",
+          description: "Batman faces the Joker in Gotham City.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Super Mario Odyssey",
+          description: "Mario embarks on a journey to save Princess Peach.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Lord of the Rings: The Fellowship of the Ring",
+          description: "Frodo starts his quest to destroy the One Ring.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Red Dead Redemption 2",
+          description: "A cowboy story set in the American frontier.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Matrix",
+          description: "A hacker discovers reality is a simulation.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Harry Potter and the Sorcerer's Stone",
+          description: "A boy learns he's a wizard and goes to Hogwarts.",
+          img: "/images/placeholder.jpg"
+        }
+      ],
+
+      bestRatedContent: [
+        {
+          title: "The Hunger Games",
+          description: "Teens fight for survival in a dystopian arena.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Avatar",
+          description: "Humans colonize an alien planet and face its inhabitants.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Elder Scrolls V: Skyrim",
+          description: "An RPG where you explore and fight dragons in a fantasy world.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Jurassic Park",
+          description: "Dinosaurs are resurrected and run wild in a theme park.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Minecraft",
+          description: "A sandbox game where you build and explore virtual worlds.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Godfather",
+          description: "A mafia family's saga of crime and loyalty.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Fight Club",
+          description: "An underground fight club challenges modern society's norms.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Assassin's Creed",
+          description: "A historical action game about assassins fighting for freedom.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Pulp Fiction",
+          description: "Intertwining stories of crime and redemption.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Shining",
+          description: "A family is haunted in a secluded hotel.",
+          img: "/images/placeholder.jpg"
+        }
+      ]
 
     });
 });
@@ -27,7 +159,7 @@ router.get("/category/:type", function (req, res) {
   const dataMap = {
     games: {
       title: "Games",
-      hero: {cta: "Discover Exciting Games",        banner: "/images/placeholder.jpg",
+      hero: {cta: "Discover Exciting Games",        banner: "/images/Banner games.webp",
       shortDescription: "Explore a curated list of top games"},
       card: {
         title: "Title",
@@ -43,7 +175,7 @@ router.get("/category/:type", function (req, res) {
     },
     books: {
       title: "Books",
-      hero: {cta: "Explore Great Reads",          banner: "/images/placeholder.jpg",
+      hero: {cta: "Explore Great Reads",          banner: "/images/BookBanner.jpg",
       shortDescription: "Browse a hand-picked list of top books"},
       items: [
         { name: "1984", description: "Dystopian classic by George Orwell.", image: "https://via.placeholder.com/300x200" },
@@ -54,7 +186,7 @@ router.get("/category/:type", function (req, res) {
     },
     movies: {
       title: "Movies",
-      hero: {cta: "Watch Blockbuster Films",      banner: "/images/placeholder.jpg",
+      hero: {cta: "Watch Blockbuster Films",      banner: "/images/MovieBanner2.jpg",
       shortDescription: "Check out the most loved movies"},
       items: [
         { name: "Inception", description: "A mind-bending thriller.", image: "https://via.placeholder.com/300x200" },
@@ -231,41 +363,52 @@ router.get('/community', function (req, res) {
 });
     
 //GET FavList Page
-router.get("/favList",function(req, res){
+router.get("/favorites", isAuthenticated, function(req, res)
+{
   res.render("fav-list",{
     title: "Favourite"
   });
 });
 
-//toevoegen pagina
-const addedItems = []; // tijdelijk opgeslagen inhoud
+
 
 //get add route
-router.get("/add", function (req, res) {
+router.get("/add", isAuthenticated, function (req, res) {
   res.render("add", {
-    title: "Toevoegen"
+    title: "Request"
   });
 });
 
 
 //post add route
-router.post("/add", function (req, res) {
+router.post("/add", isAuthenticated, function (req, res) {
   const { type, title, description, image } = req.body;
 
   if (!type || !title || !description) {
     return res.render("add", {
-      title: "Add",
+      title: "Request",
       errorMessage: "All fields are required."
     });
   }
 
-
-  addedItems.push({ type, title, description, image });
-  console.log("New item added:", { type, title, description, image });
+  requests.push({
+    username: req.session.user,
+    type,
+    title,
+    description,
+    image,
+    status: "Pending"
+  });
 
   res.render("add", {
-    title: "Add",
-    successMessage: `The ${type} "${title}" was added successfully!`
+    title: "Request",
+    successMessage: "Your request has been received."
   });
+
+  
 });
+
+
+
+
 module.exports = router;
