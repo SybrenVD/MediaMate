@@ -130,3 +130,51 @@ h4 {
 .nav-link:hover{
     color: red;
 }
+
+
+
+/* Link van Navbar */
+.navbar .nav-link {
+    color: white !important;
+    font-weight: 500;
+    margin-left: 10px;
+  }
+  
+  .navbar .nav-link:hover {
+    color: #f8d7da !important;
+  }
+  
+
+  /* Login & Register Buttons with Better Alignment */
+.navbar .btn-login,
+.navbar .btn-register {
+  padding: 4px 12px;
+  margin-top: 2px;
+  line-height: 1.4;
+  vertical-align: middle;
+  border-radius: 5px;
+  font-weight: bold;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.navbar .btn-login {
+  background-color: white;
+  color: #8b1d2e;
+  border: 2px solid #8b1d2e;
+}
+
+.navbar .btn-login:hover {
+  background-color: #f2f2f2;
+}
+
+.navbar .btn-register {
+  background-color: #8b1d2e;
+  color: white;
+  border: none;
+}
+
+.navbar .btn-register:hover {
+  background-color: #6e1624;
+}
+
+  
