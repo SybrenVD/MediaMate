@@ -507,7 +507,7 @@ router.get("/category/:type", function (req, res) {
       return res.status(404).send("Item not found");
     }
   
-    res.render("detail", {
+    res.render("content-detail", {
       item: itemData,
       title: pageData.title,
       type: pageData.type,
