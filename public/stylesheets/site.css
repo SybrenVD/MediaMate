@@ -171,8 +171,11 @@ h4 {
     color: red;
 }
 .nav-link:after{
-    background-color: #757575;;
+    background-color: #757575;
 }
 .nav-link:hover{
     color: red;
+}
+.tab-content{
+    background-color:#757575;
 }
