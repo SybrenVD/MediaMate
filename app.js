@@ -1,23 +1,30 @@
+// Loading the API key from the .env file
+require('dotenv').config();
+
 const createError = require("http-errors");
 const express = require('express');
 const path = require("path");
 const hbs = require("hbs");
-const indexRouter = require("./routes/index");
 const session = require("express-session");
+const bodyParser = require('body-parser');
+const indexRouter = require("./routes/index");
+const importRoutes = require('./routes/import');
 
-
+// Init Express app
 const app = express();
+const port = process.env.PORT || 3001;
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "hbs");
 app.set("view options", { layout: "layouts/main"});
 hbs.registerPartials(path.join(__dirname, "views/partials"));
+
+// Handlebars helpers
 hbs.registerHelper("isSelected", (type, key) => type == key ? "selected": "");
 hbs.registerHelper("eq", function (a, b) {
   return a === b;
 });
-
 hbs.registerHelper('range', function(start, end, options) {
   let result = [];
   for (let i = start; i <= end; i++) {
@@ -29,6 +36,8 @@ hbs.registerHelper("lookup", function(obj, key) {
   return obj[key];
 });
 
+// Middleware
+app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -45,7 +54,8 @@ app.use((req, res, next) => {
   next();
 });
 
-
+// Use the routes that you have defined
+app.use('/import', importRoutes);
 app.use("/", indexRouter);
 
 // catch 404 and forward to error handler
@@ -62,6 +72,11 @@ app.use(function(err, req, res, next) {
   // render the error page
   res.status(err.status || 500);
   res.render("error");
+});
+
+// Start server
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`);
 });
 
 module.exports = app;
