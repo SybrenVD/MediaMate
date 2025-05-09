@@ -216,6 +216,45 @@ h4 {
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6);
   }
   
+
+  .dropdown-menu {
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  
+  .dropdown-menu .dropdown-item {
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .dropdown-menu .dropdown-item:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .dropdown-menu .btn-outline-danger {
+    padding: 6px 0;
+    font-weight: 600;
+  }
+  
+  .offcanvas-body .user-info p {
+    font-size: 1.1rem;
+    color: white;
+  }
+  
+  .offcanvas-body .btn-outline-light {
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  
+  .offcanvas-body .nav-link {
+    padding-left: 0.5rem;
+    border-radius: 4px;
+  }
+  
+  .offcanvas-body .nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
+  }
   
   
   
