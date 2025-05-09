@@ -16,15 +16,12 @@ const dbConfig = {
 async function testDatabaseConnection() {
   try {
     const pool = await sql.connect(dbConfig);
-    console.log('✅ Verbonden met de database');
+    console.log('✅ Connected to the database');
 
-    // Testquery - alleen ter controle
-    const result = await pool.request().query('SELECT 1 AS test');
-    console.log('Testquery resultaat:', result.recordset);
-
-    await pool.close();
+    await sql.close();
+    console.log('🔒 Connection closed');
   } catch (err) {
-    console.error('❌ Databaseverbinding mislukt:', err.message);
+    console.error('❌ Database connection failed:', err);
   }
 }
 

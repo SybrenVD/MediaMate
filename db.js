@@ -139,6 +139,7 @@ async function insertMovies(movies, pool) {
   }
 }
 
+
 // Export the functions so they can be used in other files
 module.exports = {
   connect,
