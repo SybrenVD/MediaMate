@@ -48,13 +48,16 @@
     <div class="row justify-content-center">
       {{#each items}}
         <div class="col">
-          <div class="card h-100" style="background-color: #8b1d2e; color: white;">
-            <img src="{{this.image}}" class="card-img-top" alt="{{this.name}}" style="min-height: 250px; object-fit: cover;">
-            <div class="card-body">
-              <h5 class="card-title" style="color: black;">{{this.name}}</h5>
-              <p class="card-text" style="color: #808080;">{{this.description}}</p>
+          <!-- Add link to item detail page, with inline style to remove underline -->
+          <a href="/category/{{../type}}/{{this.id}}" style="text-decoration: none;">
+            <div class="card h-100" style="background-color: #8b1d2e; color: white;">
+              <img src="{{this.image}}" class="card-img-top" alt="{{this.name}}" style="min-height: 250px; object-fit: cover;">
+              <div class="card-body">
+                <h5 class="card-title" style="color: black;">{{this.name}}</h5>
+                <p class="card-text" style="color: #808080;">{{this.description}}</p>
+              </div>
             </div>
-          </div>
+          </a>
         </div>
       {{/each}}
     </div>
@@ -85,6 +88,7 @@
     max-width: 40%;
   }
 </style>
+
 
 
 
