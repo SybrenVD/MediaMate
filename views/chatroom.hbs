@@ -1,0 +1,38 @@
+<div class="row">
+  <div class="col-4">
+    <div class="list-group" id="list-tab" role="tablist">
+      {{#each rooms}}
+        {{>groupcardpartial}}
+      {{/each}}
+
+      {{!-- <a class="list-group-item list-group-item-action active" id="list-a-list" data-bs-toggle="list" href="#list-a" role="tab" aria-controls="list-a">A
+
+      </a>
+      <a class="list-group-item list-group-item-action" id="list-b-list" data-bs-toggle="list" href="#list-b" role="tab" aria-controls="list-b">B
+
+      </a>
+      <a class="list-group-item list-group-item-action" id="list-c-list" data-bs-toggle="list" href="#list-c" role="tab" aria-controls="list-c">C
+
+      </a>
+      <a class="list-group-item list-group-item-action" id="list-d-list" data-bs-toggle="list" href="#list-d" role="tab" aria-controls="list-d">D
+
+      </a> --}}
+    </div>
+  </div>
+  <div class="col-8">
+    <div class="tab-content" id="nav-tabContent">
+      {{!-- {{>groupheadpartial}} --}}
+      <div class="tab-pane fade show active" id="list-{{rooms.chatId}}" role="tabpanel" aria-labelledby="list-{{rooms.chatId}}-list">
+        <img src="{{rooms.img}}" alt="imgChat"/>
+        <h5>{{rooms.chatName}}</h5>
+        {{#each messages{{rooms.chatId}}}}
+          {{>messagepartial}}
+        {{/each}}
+      </div>
+      {{!-- <div class="tab-pane fade show active" id="list-0" role="tabpanel" aria-labelledby="list-0-list">...</div>
+      <div class="tab-pane fade" id="list-1" role="tabpanel" aria-labelledby="list-1-list">...</div>
+      <div class="tab-pane fade" id="list-2" role="tabpanel" aria-labelledby="list-2-list">...</div>
+      <div class="tab-pane fade" id="list-3" role="tabpanel" aria-labelledby="list-3-list">...</div> --}}
+    </div>
+  </div>
+</div>

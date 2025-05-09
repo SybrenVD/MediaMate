@@ -309,8 +309,20 @@ router.post("/add", function (req, res) {
 
 /*GET groeplist+room */
 router.get("/chatroom", function(req,res){
-  res.render("chatgroep",{
+  res.render("chatroom",{
     title:"Chatrooms",
+    rooms: [
+      {chatId: 0, chatName: "A", tags: "", img: "https://huiji-public.huijistatic.com/isaac/uploads/0/04/3DS_Detailed_Pandora%27s_Box.png", creatorId: 0, membersId: 0},
+      {chatId: 1, chatName: "B", tags: "", img: "https://huiji-public.huijistatic.com/isaac/uploads/3/3b/3DS_Detailed_Converter.png", creatorId: 0, membersId: 0},
+      {chatId: 2, chatName: "C", tags: "", img: "", creatorId: 0, membersId: 0},
+      {chatId: 3, chatName: "D", tags: "", img: "", creatorId: 0, membersId: 0}
+    ],
+    messagesR1: [
+            {messageId: 0, fromId: 0, time: Date.now, content: "Ja?", chatId: 0}
+    ],
+    messagesR2:[
+            {messageId: 0, fromId: 0, time: Date.now, content: "...Nee?", chatId: 1}
+    ]
   });
 });
 
