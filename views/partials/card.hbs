@@ -1,7 +1,12 @@
-<div class="card">
-    <img src="{{this.img}}" class="card-img-top p-2 img-fluid" alt="Card Image">
+<a href="/category/{{type}}/{{id}}?from={{from}}" style="text-decoration: none;">
+
+  <div class="card">
+    <img src="{{img}}{{image}}" alt="Card Image" class="card-img-top p-2 img-fluid">
     <div class="card-body text-start">
-        <h4>{{this.title}}</h4>
-        <p>{{this.description}}</p>
+      <h4>{{title}}{{name}}</h4>
+      <p>{{description}}</p>
     </div>
-</div>
+  </div>
+</a>
+
+

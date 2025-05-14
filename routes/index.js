@@ -43,111 +43,152 @@ router.get("/", function (req, res, next) {
         cta: "Welcome to MediaMate",
         shortDescription: "Find the best in entertainment"
       },
-      mostViewedContent: [
-        {
-          title: "The Great Gatsby",
-          description: "A story about wealth and the American Dream.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Inception",
-          description: "A thief enters dreams to steal secrets.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Witcher 3: Wild Hunt",
-          description: "An RPG where Geralt hunts monsters and searches for his daughter.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "1984",
-          description: "A dystopian world controlled by surveillance and oppression.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Dark Knight",
-          description: "Batman faces the Joker in Gotham City.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Super Mario Odyssey",
-          description: "Mario embarks on a journey to save Princess Peach.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Lord of the Rings: The Fellowship of the Ring",
-          description: "Frodo starts his quest to destroy the One Ring.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Red Dead Redemption 2",
-          description: "A cowboy story set in the American frontier.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Matrix",
-          description: "A hacker discovers reality is a simulation.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Harry Potter and the Sorcerer's Stone",
-          description: "A boy learns he's a wizard and goes to Hogwarts.",
-          img: "/images/placeholder.jpg"
-        }
-      ],
+mostViewedContent: [
+  {
+    id: "the-great-gatsby",
+    type: "books",
+    title: "The Great Gatsby",
+    description: "A story about wealth and the American Dream.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "inception",
+    type: "movies",
+    title: "Inception",
+    description: "A thief enters dreams to steal secrets.",
+    img: "/images/Inception.jpg"
+  },
+  {
+    id: "the-witcher-3",
+    type: "games",
+    title: "The Witcher 3: Wild Hunt",
+    description: "An RPG where Geralt hunts monsters and searches for his daughter.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "1984",
+    type: "books",
+    title: "1984",
+    description: "A dystopian world controlled by surveillance and oppression.",
+    img: "/images/1984.jpg"
+  },
+  {
+    id: "the-dark-knight",
+    type: "movies",
+    title: "The Dark Knight",
+    description: "Batman faces the Joker in Gotham City.",
+    img: "/images/TheDarkKnight.jpg"
+  },
+  {
+    id: "super-mario",
+    type: "games",
+    title: "Super Mario Odyssey",
+    description: "Mario embarks on a journey to save Princess Peach.",
+    img: "/images/SuperMario.jpg"
+  },
+  {
+    id: "the-lord-of-the-rings",
+    type: "books",
+    title: "The Lord of the Rings: The Fellowship of the Ring",
+    description: "Frodo starts his quest to destroy the One Ring.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "red-dead-redemption-2",
+    type: "games",
+    title: "Red Dead Redemption 2",
+    description: "A cowboy story set in the American frontier.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "the-matrix",
+    type: "movies",
+    title: "The Matrix",
+    description: "A hacker discovers reality is a simulation.",
+    img: "/images/TheMatrix.jpg"
+  },
+  {
+    id: "harry-potter",
+    type: "books",
+    title: "Harry Potter and the Sorcerer's Stone",
+    description: "A boy learns he's a wizard and goes to Hogwarts.",
+    img: "/images/HarryPotter.jpg"
+  }
+],
 
-      bestRatedContent: [
-        {
-          title: "The Hunger Games",
-          description: "Teens fight for survival in a dystopian arena.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Avatar",
-          description: "Humans colonize an alien planet and face its inhabitants.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Elder Scrolls V: Skyrim",
-          description: "An RPG where you explore and fight dragons in a fantasy world.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Jurassic Park",
-          description: "Dinosaurs are resurrected and run wild in a theme park.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Minecraft",
-          description: "A sandbox game where you build and explore virtual worlds.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Godfather",
-          description: "A mafia family's saga of crime and loyalty.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Fight Club",
-          description: "An underground fight club challenges modern society's norms.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Assassin's Creed",
-          description: "A historical action game about assassins fighting for freedom.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Pulp Fiction",
-          description: "Intertwining stories of crime and redemption.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Shining",
-          description: "A family is haunted in a secluded hotel.",
-          img: "/images/placeholder.jpg"
-        }
-      ]
+bestRatedContent: [
+  {
+    id: "hunger-games",
+    type: "books",
+    title: "The Hunger Games",
+    description: "Teens fight for survival in a dystopian arena.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "avatar",
+    type: "movies",
+    title: "Avatar",
+    description: "Humans colonize an alien planet and face its inhabitants.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "skyrim",
+    type: "games",
+    title: "The Elder Scrolls V: Skyrim",
+    description: "An RPG where you explore and fight dragons in a fantasy world.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "jurassic-park",
+    type: "movies",
+    title: "Jurassic Park",
+    description: "Dinosaurs are resurrected and run wild in a theme park.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "minecraft",
+    type: "games",
+    title: "Minecraft",
+    description: "A sandbox game where you build and explore virtual worlds.",
+    img: "/images/minecraft.jpg"
+  },
+  {
+    id: "the-godfather",
+    type: "movies",
+    title: "The Godfather",
+    description: "A mafia family's saga of crime and loyalty.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "fight-club",
+    type: "movies",
+    title: "Fight Club",
+    description: "An underground fight club challenges modern society's norms.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "assassins-creed",
+    type: "games",
+    title: "Assassin's Creed",
+    description: "A historical action game about assassins fighting for freedom.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "pulp-fiction",
+    type: "movies",
+    title: "Pulp Fiction",
+    description: "Intertwining stories of crime and redemption.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "the-shining",
+    type: "movies",
+    title: "The Shining",
+    description: "A family is haunted in a secluded hotel.",
+    img: "/images/placeholder.jpg"
+  }
+]
+
 
     });
 });
@@ -493,27 +534,24 @@ router.get("/category/:type", function (req, res) {
   });
   
   // Detail page route
-  router.get("/category/:type/:id", function (req, res) {
-    const { type, id } = req.params;
-    const pageData = dataMap[type];
-  
-    if (!pageData) {
-      return res.status(404).send("Category not found");
-    }
-  
-    const itemData = pageData.items.find(item => item.id === id);
-  
-    if (!itemData) {
-      return res.status(404).send("Item not found");
-    }
-  
-    res.render("content-detail", {
-      item: itemData,
-      title: pageData.title,
-      type: pageData.type,
-      hero: pageData.hero
-    });
+ router.get("/category/:type/:id", function (req, res) {
+  const { type, id } = req.params;
+  const from = req.query.from || "category"; // home naar ?from=home
+
+  const pageData = dataMap[type];
+  if (!pageData) return res.status(404).send("Category not found");
+
+  const itemData = pageData.items.find(item => item.id === id);
+  if (!itemData) return res.status(404).send("Item not found");
+
+  res.render("content-detail", {
+    item: itemData,
+    title: pageData.title,
+    type: pageData.type,
+    from: from
   });
+});
+
 
 
 
@@ -775,7 +813,7 @@ router.get('/admin-panel/:requestID', (req, res) => {
     {
       requestID: "1", // Added unique ID
       username: "test_user1",
-      type: "Bug Report",
+      type: "Book",
       title: "Login button not working",
       description: "Clicking the login button does nothing on Chrome browser.",
       image: "https://example.com/image1.png",
@@ -784,7 +822,7 @@ router.get('/admin-panel/:requestID', (req, res) => {
     {
       requestID: "2", // Added unique ID
       username: "test_user2",
-      type: "Feature Request",
+      type: "Book",
       title: "Add dark mode",
       description: "A dark mode option would be helpful for night-time browsing.",
       image: "https://example.com/image2.png",
@@ -793,7 +831,7 @@ router.get('/admin-panel/:requestID', (req, res) => {
     {
       requestID: "3", // Added unique ID
       username: "test_user3",
-      type: "Feedback",
+      type: "Book",
       title: "Great user interface!",
       description: "The new dashboard layout is very intuitive and clean.",
       image: "https://example.com/image3.png",
@@ -802,7 +840,7 @@ router.get('/admin-panel/:requestID', (req, res) => {
     {
       requestID: "4", // Added unique ID
       username: "test_user3",
-      type: "Feedback",
+      type: "Book",
       title: "Great user interface!",
       description: "The new dashboard layout is very intuitive and clean.",
       image: "https://example.com/image3.png",
@@ -821,6 +859,37 @@ router.get('/admin-panel/:requestID', (req, res) => {
     request: foundRequest 
   });
 });
+router.post('/admin/edit/:id', async (req, res) => {
+  const action = req.body.action;
+  const requestId = req.params.id;
+
+  if (action === 'accept') {
+    // Update the request
+    await Request.findByIdAndUpdate(requestId, {
+      type: req.body.type,
+      title: req.body.title,
+      description: req.body.description,
+      image: req.body.image,
+      status: 'Accepted' // Update status to Accepted
+    });
+
+    res.render('status', {
+      message: 'Request Accepted. Redirecting to admin panel...',
+      redirect: '/admin-panel'
+    });
+  }
+
+  if (action === 'decline') {
+    // Delete the request
+    await Request.findByIdAndDelete(requestId);
+
+    res.render('status', {
+      message: 'Request Declined. Redirecting to admin panel...',
+      redirect: '/admin-panel'
+    });
+  }
+});
+
 
 /*GET groeplist+room */
 router.get("/chatroom", function(req, res) {
