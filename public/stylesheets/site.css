@@ -42,9 +42,23 @@ h4 {
     background-color: #8b1d2e;
     width: 18rem; /* Fixed base width for larger screens */
     flex: 0 0 auto; /* No grow, no shrink, size based on width */
-    height: auto; /* Allow height to adjust based on content */
+    height: 350px; /* Allow height to adjust based on content */
     margin-right: 15px; /* Space between cards */
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
+
+.card-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
 
 .card p {
     font-weight: 500;
@@ -58,6 +72,10 @@ h4 {
 
 .card-img-top {
     aspect-ratio: 5 / 4; /* Ensure consistent image proportions */
+      width: 100%;
+    height: 180px;
+    object-fit: cover;
+     object-position: center;
 }
 
 .card-slider {
@@ -132,6 +150,20 @@ h4 {
 }
 .tab-content{
     background-color:#757575;
+}
+.list-group-item:hover, .list-group-item:focus, .list-group-item:active{
+  background-color:#8b1d2e;
+}
+.list-group-item.active{
+  background-color:#8b1d2e;
+  border-color: white;
+  box-shadow: none;
+}
+.list-group{
+  height: 880px;
+}
+.p-2{
+  height:780px;
 }
 
 /* Link van Navbar */

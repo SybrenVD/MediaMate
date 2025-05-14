@@ -43,111 +43,152 @@ router.get("/", function (req, res, next) {
         cta: "Welcome to MediaMate",
         shortDescription: "Find the best in entertainment"
       },
-      mostViewedContent: [
-        {
-          title: "The Great Gatsby",
-          description: "A story about wealth and the American Dream.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Inception",
-          description: "A thief enters dreams to steal secrets.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Witcher 3: Wild Hunt",
-          description: "An RPG where Geralt hunts monsters and searches for his daughter.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "1984",
-          description: "A dystopian world controlled by surveillance and oppression.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Dark Knight",
-          description: "Batman faces the Joker in Gotham City.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Super Mario Odyssey",
-          description: "Mario embarks on a journey to save Princess Peach.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Lord of the Rings: The Fellowship of the Ring",
-          description: "Frodo starts his quest to destroy the One Ring.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Red Dead Redemption 2",
-          description: "A cowboy story set in the American frontier.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Matrix",
-          description: "A hacker discovers reality is a simulation.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Harry Potter and the Sorcerer's Stone",
-          description: "A boy learns he's a wizard and goes to Hogwarts.",
-          img: "/images/placeholder.jpg"
-        }
-      ],
+mostViewedContent: [
+  {
+    id: "the-great-gatsby",
+    type: "books",
+    title: "The Great Gatsby",
+    description: "A story about wealth and the American Dream.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "inception",
+    type: "movies",
+    title: "Inception",
+    description: "A thief enters dreams to steal secrets.",
+    img: "/images/Inception.jpg"
+  },
+  {
+    id: "the-witcher-3",
+    type: "games",
+    title: "The Witcher 3: Wild Hunt",
+    description: "An RPG where Geralt hunts monsters and searches for his daughter.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "1984",
+    type: "books",
+    title: "1984",
+    description: "A dystopian world controlled by surveillance and oppression.",
+    img: "/images/1984.jpg"
+  },
+  {
+    id: "the-dark-knight",
+    type: "movies",
+    title: "The Dark Knight",
+    description: "Batman faces the Joker in Gotham City.",
+    img: "/images/TheDarkKnight.jpg"
+  },
+  {
+    id: "super-mario",
+    type: "games",
+    title: "Super Mario Odyssey",
+    description: "Mario embarks on a journey to save Princess Peach.",
+    img: "/images/SuperMario.jpg"
+  },
+  {
+    id: "the-lord-of-the-rings",
+    type: "books",
+    title: "The Lord of the Rings: The Fellowship of the Ring",
+    description: "Frodo starts his quest to destroy the One Ring.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "red-dead-redemption-2",
+    type: "games",
+    title: "Red Dead Redemption 2",
+    description: "A cowboy story set in the American frontier.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "the-matrix",
+    type: "movies",
+    title: "The Matrix",
+    description: "A hacker discovers reality is a simulation.",
+    img: "/images/TheMatrix.jpg"
+  },
+  {
+    id: "harry-potter",
+    type: "books",
+    title: "Harry Potter and the Sorcerer's Stone",
+    description: "A boy learns he's a wizard and goes to Hogwarts.",
+    img: "/images/HarryPotter.jpg"
+  }
+],
 
-      bestRatedContent: [
-        {
-          title: "The Hunger Games",
-          description: "Teens fight for survival in a dystopian arena.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Avatar",
-          description: "Humans colonize an alien planet and face its inhabitants.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Elder Scrolls V: Skyrim",
-          description: "An RPG where you explore and fight dragons in a fantasy world.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Jurassic Park",
-          description: "Dinosaurs are resurrected and run wild in a theme park.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Minecraft",
-          description: "A sandbox game where you build and explore virtual worlds.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Godfather",
-          description: "A mafia family's saga of crime and loyalty.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Fight Club",
-          description: "An underground fight club challenges modern society's norms.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Assassin's Creed",
-          description: "A historical action game about assassins fighting for freedom.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "Pulp Fiction",
-          description: "Intertwining stories of crime and redemption.",
-          img: "/images/placeholder.jpg"
-        },
-        {
-          title: "The Shining",
-          description: "A family is haunted in a secluded hotel.",
-          img: "/images/placeholder.jpg"
-        }
-      ]
+bestRatedContent: [
+  {
+    id: "hunger-games",
+    type: "books",
+    title: "The Hunger Games",
+    description: "Teens fight for survival in a dystopian arena.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "avatar",
+    type: "movies",
+    title: "Avatar",
+    description: "Humans colonize an alien planet and face its inhabitants.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "skyrim",
+    type: "games",
+    title: "The Elder Scrolls V: Skyrim",
+    description: "An RPG where you explore and fight dragons in a fantasy world.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "jurassic-park",
+    type: "movies",
+    title: "Jurassic Park",
+    description: "Dinosaurs are resurrected and run wild in a theme park.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "minecraft",
+    type: "games",
+    title: "Minecraft",
+    description: "A sandbox game where you build and explore virtual worlds.",
+    img: "/images/minecraft.jpg"
+  },
+  {
+    id: "the-godfather",
+    type: "movies",
+    title: "The Godfather",
+    description: "A mafia family's saga of crime and loyalty.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "fight-club",
+    type: "movies",
+    title: "Fight Club",
+    description: "An underground fight club challenges modern society's norms.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "assassins-creed",
+    type: "games",
+    title: "Assassin's Creed",
+    description: "A historical action game about assassins fighting for freedom.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "pulp-fiction",
+    type: "movies",
+    title: "Pulp Fiction",
+    description: "Intertwining stories of crime and redemption.",
+    img: "/images/placeholder.jpg"
+  },
+  {
+    id: "the-shining",
+    type: "movies",
+    title: "The Shining",
+    description: "A family is haunted in a secluded hotel.",
+    img: "/images/placeholder.jpg"
+  }
+]
+
 
     });
 });
@@ -856,7 +897,7 @@ router.post('/admin/edit/:id', async (req, res) => {
 /*GET groeplist+room */
 router.get("/chatroom", function(req, res) {
   const rooms = [
-    {chatId: 0, chatName: "A", tags: "", img: "https://huiji-public.huijistatic.com/isaac/uploads/0/04/3DS_Detailed_Pandora%27s_Box.png", creatorId: 0, membersId: 0},
+    {chatId: 0, chatName: "A", tags: "", img: "https://huiji-public.huijistatic.com/isaac/uploads/0/04/3DS_Detailed_Pandora%27s_Box.png", members:{ creatorId: 0, membersId: 0}},
     {chatId: 1, chatName: "B", tags: "", img: "https://huiji-public.huijistatic.com/isaac/uploads/3/3b/3DS_Detailed_Converter.png", creatorId: 0, membersId: 0},
     {chatId: 2, chatName: "C", tags: "", img: "", creatorId: 0, membersId: 0},
     {chatId: 3, chatName: "D", tags: "", img: "", creatorId: 0, membersId: 0}
