@@ -534,27 +534,24 @@ router.get("/category/:type", function (req, res) {
   });
   
   // Detail page route
-  router.get("/category/:type/:id", function (req, res) {
-    const { type, id } = req.params;
-    const pageData = dataMap[type];
-  
-    if (!pageData) {
-      return res.status(404).send("Category not found");
-    }
-  
-    const itemData = pageData.items.find(item => item.id === id);
-  
-    if (!itemData) {
-      return res.status(404).send("Item not found");
-    }
-  
-    res.render("content-detail", {
-      item: itemData,
-      title: pageData.title,
-      type: pageData.type,
-      hero: pageData.hero
-    });
+ router.get("/category/:type/:id", function (req, res) {
+  const { type, id } = req.params;
+  const from = req.query.from || "category"; // home naar ?from=home
+
+  const pageData = dataMap[type];
+  if (!pageData) return res.status(404).send("Category not found");
+
+  const itemData = pageData.items.find(item => item.id === id);
+  if (!itemData) return res.status(404).send("Item not found");
+
+  res.render("content-detail", {
+    item: itemData,
+    title: pageData.title,
+    type: pageData.type,
+    from: from
   });
+});
+
 
 
 
