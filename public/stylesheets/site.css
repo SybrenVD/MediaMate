@@ -133,6 +133,14 @@ h4 {
 .tab-content{
     background-color:#757575;
 }
+.list-group-item:hover, .list-group-item:focus, .list-group-item:active{
+  background-color:#8b1d2e;
+}
+.list-group-item.active{
+  background-color:#8b1d2e;
+  border-color: white;
+  box-shadow: none;
+}
 
 /* Link van Navbar */
 .navbar .nav-link {
