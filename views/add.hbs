@@ -1,6 +1,5 @@
 <div class="container mt-5 p-4 rounded" style="background-color: hsla(351, 70%, 38%, 0.8); color: black;">
-  
-  <h1 class="text-center mb-4">Add New Content</h1>
+  <h1 class="text-center mb-4">Submit a Request</h1>
 
   {{#if successMessage}}
     <div class="alert alert-success text-center">
@@ -8,7 +7,6 @@
     </div>
   {{/if}}
 
- 
   {{#if errorMessage}}
     <div class="alert alert-danger text-center">
       {{errorMessage}}
@@ -16,14 +14,14 @@
   {{/if}}
 
   <form action="/add" method="POST" class="col-md-8 offset-md-2">
-    
+
     <div class="mb-3">
       <label for="type" class="form-label">Category</label>
       <select id="type" name="type" class="form-select" required>
         <option value="">-- Select a category --</option>
-        <option value="book">Book</option>
-        <option value="game">Game</option>
-        <option value="movie">Movie</option>
+        <option value="Book">Book</option>
+        <option value="Game">Game</option>
+        <option value="Movie">Movie</option>
       </select>
     </div>
 
@@ -38,30 +36,14 @@
     </div>
 
     <div class="mb-3">
-  <label for="image" class="form-label">Image URL</label>
-  <input type="url" id="image" name="image" class="form-control" placeholder="https://example.com/image.jpg" required />
+      <label for="image" class="form-label">Image URL</label>
+      <input type="url" id="image" name="image" class="form-control" placeholder="https://example.com/image.jpg" />
     </div>
-
 
     <div class="text-center">
-      <button type="submit" class="btn btn-light">Add Content</button>
+      <button type="submit" class="btn btn-light">Send Request</button>
     </div>
-
-    {{#if items.length}}
-  
-  <hr />
-  <h4 class="mt-4"> Previously Added Content</h4>
-  
-  <ul>
-    
-    {{#each items}}
-      <li><strong>{{type}}:</strong> {{title}}</li>
-    {{/each}}
-  
-  </ul>
-      
-      {{/if}}
-
   </form>
 </div>
+
 

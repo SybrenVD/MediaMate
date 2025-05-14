@@ -1,7 +1,7 @@
 {
   "name": "mediamate",
   "version": "1.0.0",
-  "description": "",
+  "description": "!! Werk in een apparte branch, NIET IN DE MAIN !!",
   "homepage": "https://github.com/SybrenVD/MediaMate#readme",
   "bugs": {
     "url": "https://github.com/SybrenVD/MediaMate/issues"
@@ -19,10 +19,14 @@
     "dev": "nodemon --experimental-sqlite ./bin/www -e js,json,hbs,css"
   },
   "dependencies": {
+    "axios": "^1.9.0",
+    "body-parser": "^2.2.0",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "hbs": "^4.2.0",
     "lodash": "^4.17.21",
+    "mssql": "^11.0.1",
     "nodemon": "^3.1.10"
   }
 }

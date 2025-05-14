@@ -4,6 +4,9 @@ var router = express.Router();
 //toevoegen pagina
 const addedItems = []; // tijdelijk opgeslagen inhoud
 
+var requests = []; // Her request: { username, title, description, status }
+
+
 //user-page
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
@@ -14,11 +17,19 @@ function isAuthenticated(req, res, next) {
 
 //user-page get
 router.get("/user", isAuthenticated, function (req, res) {
+  const userRequests = requests.filter(r => r.username === req.session.user);
+
   res.render("user", {
     title: "Your Profile",
-    items: addedItems
+    user: {
+      username: req.session.user,
+      fullName: "John Doe", 
+      email: "user@example.com" 
+    },
+    requests: userRequests
   });
 });
+
 
 
 
@@ -32,11 +43,111 @@ router.get("/", function (req, res, next) {
         cta: "Welcome to MediaMate",
         shortDescription: "Find the best in entertainment"
       },
-      card: {
-        title: "Title",
-        description: "Description",
-        img: "/images/placeholder.jpg"
-      }
+      mostViewedContent: [
+        {
+          title: "The Great Gatsby",
+          description: "A story about wealth and the American Dream.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Inception",
+          description: "A thief enters dreams to steal secrets.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Witcher 3: Wild Hunt",
+          description: "An RPG where Geralt hunts monsters and searches for his daughter.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "1984",
+          description: "A dystopian world controlled by surveillance and oppression.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Dark Knight",
+          description: "Batman faces the Joker in Gotham City.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Super Mario Odyssey",
+          description: "Mario embarks on a journey to save Princess Peach.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Lord of the Rings: The Fellowship of the Ring",
+          description: "Frodo starts his quest to destroy the One Ring.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Red Dead Redemption 2",
+          description: "A cowboy story set in the American frontier.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Matrix",
+          description: "A hacker discovers reality is a simulation.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Harry Potter and the Sorcerer's Stone",
+          description: "A boy learns he's a wizard and goes to Hogwarts.",
+          img: "/images/placeholder.jpg"
+        }
+      ],
+
+      bestRatedContent: [
+        {
+          title: "The Hunger Games",
+          description: "Teens fight for survival in a dystopian arena.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Avatar",
+          description: "Humans colonize an alien planet and face its inhabitants.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Elder Scrolls V: Skyrim",
+          description: "An RPG where you explore and fight dragons in a fantasy world.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Jurassic Park",
+          description: "Dinosaurs are resurrected and run wild in a theme park.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Minecraft",
+          description: "A sandbox game where you build and explore virtual worlds.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Godfather",
+          description: "A mafia family's saga of crime and loyalty.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Fight Club",
+          description: "An underground fight club challenges modern society's norms.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Assassin's Creed",
+          description: "A historical action game about assassins fighting for freedom.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "Pulp Fiction",
+          description: "Intertwining stories of crime and redemption.",
+          img: "/images/placeholder.jpg"
+        },
+        {
+          title: "The Shining",
+          description: "A family is haunted in a secluded hotel.",
+          img: "/images/placeholder.jpg"
+        }
+      ]
 
     });
 });
@@ -48,40 +159,153 @@ router.get("/category/:type", function (req, res) {
   const dataMap = {
     games: {
       title: "Games",
-      hero: {cta: "Discover Exciting Games",        banner: "/images/Banner games.webp",
-      shortDescription: "Explore a curated list of top games"},
-      card: {
-        title: "Title",
-        description: "Description",
-        img: "/images/placeholder.jpg"
+      type: "games", // Add type here
+      hero: {
+        cta: "Discover Exciting Games",
+        banner: "/images/Banner games.webp",
+        shortDescription: "Explore a curated list of top games"
       },
       items: [
-        { name: "Halo", description: "A sci-fi FPS with rich lore.", image: "https://via.placeholder.com/300x200" },
-        { name: "Zelda", description: "Adventure in a magical world.", image: "https://via.placeholder.com/300x200" },
-        { name: "Minecraft", description: "Build and explore endless worlds.", image: "https://via.placeholder.com/300x200" },
-        { name: "Super Mario", description: "Classic platforming fun.", image: "https://via.placeholder.com/300x200" }
+        {
+          id: "halo",
+          name: "Halo",
+          description: "A sci-fi FPS with rich lore.",
+          longDescription: "Halo is a military science fiction franchise centered on a war between humanity and an alliance of aliens known as the Covenant. Known for its storytelling and multiplayer combat.",
+          releaseDate: "2001-11-15",
+          estimatedTimeToFinish: "10-12 hours",
+          developer: "Bungie / 343 Industries",
+          image: "/images/Halo.jpg"
+        },
+        {
+          id: "zelda",
+          name: "Zelda",
+          description: "Adventure in a magical world.",
+          longDescription: "The Legend of Zelda is a high-fantasy action-adventure franchise with exploration, puzzle-solving, and epic storytelling set in the land of Hyrule.",
+          releaseDate: "1986-02-21",
+          estimatedTimeToFinish: "15-20 hours",
+          developer: "Nintendo",
+          image: "/images/zelda.jpg"
+        },
+        {
+          id: "minecraft",
+          name: "Minecraft",
+          description: "Build and explore endless worlds.",
+          longDescription: "Minecraft is a sandbox video game where players can build and explore virtual worlds made up of blocks. Known for its open-ended gameplay and creative possibilities.",
+          releaseDate: "2011-11-18",
+          estimatedTimeToFinish: "Endless / Sandbox",
+          developer: "Mojang Studios",
+          image: "/images/minecraft.jpg"
+        },
+        {
+          id: "super-mario",
+          name: "Super Mario",
+          description: "Classic platforming fun.",
+          longDescription: "Super Mario is a beloved platforming series featuring Mario's adventures to rescue Princess Peach from Bowser. Known for iconic level design and gameplay.",
+          releaseDate: "1985-09-13",
+          estimatedTimeToFinish: "6-8 hours",
+          developer: "Nintendo",
+          image: "/images/SuperMario.jpg"
+        }
       ]
     },
+
     books: {
       title: "Books",
-      hero: {cta: "Explore Great Reads",          banner: "/images/BookBanner.jpg",
-      shortDescription: "Browse a hand-picked list of top books"},
+      type: "books", // Add type here
+      hero: {
+        cta: "Explore Great Reads",
+        banner: "/images/BookBanner.jpg",
+        shortDescription: "Browse a hand-picked list of top books"
+      },
       items: [
-        { name: "1984", description: "Dystopian classic by George Orwell.", image: "https://via.placeholder.com/300x200" },
-        { name: "Dune", description: "Epic sci-fi adventure.", image: "https://via.placeholder.com/300x200" },
-        { name: "The Hobbit", description: "A journey through Middle-earth.", image: "https://via.placeholder.com/300x200" },
-        { name: "Harry Potter", description: "Magic and mystery at Hogwarts.", image: "https://via.placeholder.com/300x200" }
+        {
+          id: "1984",
+          name: "1984",
+          description: "Dystopian classic by George Orwell.",
+          longDescription: "1984 is a chilling dystopian novel that critiques totalitarianism and extreme political ideology through the lens of a society under constant surveillance.",
+          releaseDate: "1949-06-08",
+          author: "George Orwell",
+          image: "/images/1984.jpg"
+        },
+        {
+          id: "dune",
+          name: "Dune",
+          description: "Epic sci-fi adventure.",
+          longDescription: "Dune tells the story of Paul Atreides as he navigates a complex interstellar struggle for power and control over the desert planet Arrakis and its valuable spice.",
+          releaseDate: "1965-08-01",
+          author: "Frank Herbert",
+          image: "/images/Dune.jpg"
+        },
+        {
+          id: "the-hobbit",
+          name: "The Hobbit",
+          description: "A journey through Middle-earth.",
+          longDescription: "The Hobbit follows Bilbo Baggins on an epic journey to help a group of dwarves reclaim their homeland from the dragon Smaug. A prelude to the Lord of the Rings.",
+          releaseDate: "1937-09-21",
+          author: "J.R.R. Tolkien",
+          image: "/images/TheHobbit.jpg"
+        },
+        {
+          id: "harry-potter",
+          name: "Harry Potter",
+          description: "Magic and mystery at Hogwarts.",
+          longDescription: "Harry Potter is a fantasy series chronicling a young wizard’s time at Hogwarts and his battle against the dark wizard Voldemort.",
+          releaseDate: "1997-06-26",
+          author: "J.K. Rowling",
+          image: "/images/HarryPotter.jpg"
+        }
       ]
     },
+
     movies: {
       title: "Movies",
-      hero: {cta: "Watch Blockbuster Films",      banner: "/images/MovieBanner2.jpg",
-      shortDescription: "Check out the most loved movies"},
+      type: "movies", // Add type here
+      hero: {
+        cta: "Watch Blockbuster Films",
+        banner: "/images/MovieBanner2.jpg",
+        shortDescription: "Check out the most loved movies"
+      },
       items: [
-        { name: "Inception", description: "A mind-bending thriller.", image: "https://via.placeholder.com/300x200" },
-        { name: "The Matrix", description: "Enter the digital world.", image: "https://via.placeholder.com/300x200" },
-        { name: "Interstellar", description: "Explore space and time.", image: "https://via.placeholder.com/300x200" },
-        { name: "The Dark Knight", description: "Gotham's greatest hero.", image: "https://via.placeholder.com/300x200" }
+        {
+          id: "inception",
+          name: "Inception",
+          description: "A mind-bending thriller.",
+          longDescription: "Inception is a science fiction heist thriller where a skilled thief steals secrets by infiltrating the subconscious. Directed by Christopher Nolan.",
+          releaseDate: "2010-07-16",
+          length: "2h 28m",
+          director: "Christopher Nolan",
+          image: "/images/Inception.jpg"
+        },
+        {
+          id: "the-matrix",
+          name: "The Matrix",
+          description: "Enter the digital world.",
+          longDescription: "The Matrix follows Neo, who discovers the reality he knows is a simulation controlled by intelligent machines. A cyberpunk classic.",
+          releaseDate: "1999-03-31",
+          length: "2h 16m",
+          director: "Lana & Lilly Wachowski",
+          image: "/images/TheMatrix.jpg"
+        },
+        {
+          id: "interstellar",
+          name: "Interstellar",
+          description: "Explore space and time.",
+          longDescription: "Interstellar follows a team of explorers who travel through a wormhole in space to ensure humanity's survival. A blend of science and emotion.",
+          releaseDate: "2014-11-07",
+          length: "2h 49m",
+          director: "Christopher Nolan",
+          image: "/images/Interstellar.jpg"
+        },
+        {
+          id: "the-dark-knight",
+          name: "The Dark Knight",
+          description: "Gotham's greatest hero.",
+          longDescription: "The Dark Knight continues Batman’s fight against crime, introducing the Joker as his greatest adversary in a gritty and acclaimed superhero film.",
+          releaseDate: "2008-07-18",
+          length: "2h 32m",
+          director: "Christopher Nolan",
+          image: "/images/TheDarkKnight.jpg"
+        }
       ]
     }
   };
@@ -96,6 +320,203 @@ router.get("/category/:type", function (req, res) {
     ...pageData
   });
 });
+
+  const dataMap = {
+    games: {
+      title: "Games",
+      type: "games",
+      hero: {
+        cta: "Discover Exciting Games",
+        banner: "/images/Banner games.webp",
+        shortDescription: "Explore a curated list of top games"
+      },
+      items: [
+        {
+          id: "halo",
+          name: "Halo",
+          description: "A sci-fi FPS with rich lore.",
+          longDescription: "Halo is a military science fiction franchise centered on a war between humanity and an alliance of aliens known as the Covenant. Known for its storytelling and multiplayer combat.",
+          releaseDate: "2001-11-15",
+          estimatedTimeToFinish: "10-12 hours",
+          developer: "Bungie / 343 Industries",
+          image: "/images/Halo.jpg"
+        },
+        {
+          id: "zelda",
+          name: "Zelda",
+          description: "Adventure in a magical world.",
+          longDescription: "The Legend of Zelda is a high-fantasy action-adventure franchise with exploration, puzzle-solving, and epic storytelling set in the land of Hyrule.",
+          releaseDate: "1986-02-21",
+          estimatedTimeToFinish: "15-20 hours",
+          developer: "Nintendo",
+          image: "/images/zelda.jpg"
+        },
+        {
+          id: "minecraft",
+          name: "Minecraft",
+          description: "Build and explore endless worlds.",
+          longDescription: "Minecraft is a sandbox video game where players can build and explore virtual worlds made up of blocks. Known for its open-ended gameplay and creative possibilities.",
+          releaseDate: "2011-11-18",
+          estimatedTimeToFinish: "Endless / Sandbox",
+          developer: "Mojang Studios",
+          image: "/images/minecraft.jpg"
+        },
+        {
+          id: "super-mario",
+          name: "Super Mario",
+          description: "Classic platforming fun.",
+          longDescription: "Super Mario is a beloved platforming series featuring Mario's adventures to rescue Princess Peach from Bowser. Known for iconic level design and gameplay.",
+          releaseDate: "1985-09-13",
+          estimatedTimeToFinish: "6-8 hours",
+          developer: "Nintendo",
+          image: "/images/SuperMario.jpg"
+        }
+      ]
+    },
+  
+    books: {
+      title: "Books",
+      type: "books",
+      hero: {
+        cta: "Explore Great Reads",
+        banner: "/images/BookBanner.jpg",
+        shortDescription: "Browse a hand-picked list of top books"
+      },
+      items: [
+        {
+          id: "1984",
+          name: "1984",
+          description: "Dystopian classic by George Orwell.",
+          longDescription: "1984 is a chilling dystopian novel that critiques totalitarianism and extreme political ideology through the lens of a society under constant surveillance.",
+          releaseDate: "1949-06-08",
+          author: "George Orwell",
+          image: "/images/1984.jpg"
+        },
+        {
+          id: "dune",
+          name: "Dune",
+          description: "Epic sci-fi adventure.",
+          longDescription: "Dune tells the story of Paul Atreides as he navigates a complex interstellar struggle for power and control over the desert planet Arrakis and its valuable spice.",
+          releaseDate: "1965-08-01",
+          author: "Frank Herbert",
+          image: "/images/Dune.jpg"
+        },
+        {
+          id: "the-hobbit",
+          name: "The Hobbit",
+          description: "A journey through Middle-earth.",
+          longDescription: "The Hobbit follows Bilbo Baggins on an epic journey to help a group of dwarves reclaim their homeland from the dragon Smaug. A prelude to the Lord of the Rings.",
+          releaseDate: "1937-09-21",
+          author: "J.R.R. Tolkien",
+          image: "/images/TheHobbit.jpg"
+        },
+        {
+          id: "harry-potter",
+          name: "Harry Potter",
+          description: "Magic and mystery at Hogwarts.",
+          longDescription: "Harry Potter is a fantasy series chronicling a young wizard’s time at Hogwarts and his battle against the dark wizard Voldemort.",
+          releaseDate: "1997-06-26",
+          author: "J.K. Rowling",
+          image: "/images/HarryPotter.jpg"
+        }
+      ]
+    },
+  
+    movies: {
+      title: "Movies",
+      type: "movies",
+      hero: {
+        cta: "Watch Blockbuster Films",
+        banner: "/images/MovieBanner2.jpg",
+        shortDescription: "Check out the most loved movies"
+      },
+      items: [
+        {
+          id: "inception",
+          name: "Inception",
+          description: "A mind-bending thriller.",
+          longDescription: "Inception is a science fiction heist thriller where a skilled thief steals secrets by infiltrating the subconscious. Directed by Christopher Nolan.",
+          releaseDate: "2010-07-16",
+          length: "2h 28m",
+          director: "Christopher Nolan",
+          image: "/images/Inception.jpg"
+        },
+        {
+          id: "the-matrix",
+          name: "The Matrix",
+          description: "Enter the digital world.",
+          longDescription: "The Matrix follows Neo, who discovers the reality he knows is a simulation controlled by intelligent machines. A cyberpunk classic.",
+          releaseDate: "1999-03-31",
+          length: "2h 16m",
+          director: "Lana & Lilly Wachowski",
+          image: "/images/TheMatrix.jpg"
+        },
+        {
+          id: "interstellar",
+          name: "Interstellar",
+          description: "Explore space and time.",
+          longDescription: "Interstellar follows a team of explorers who travel through a wormhole in space to ensure humanity's survival. A blend of science and emotion.",
+          releaseDate: "2014-11-07",
+          length: "2h 49m",
+          director: "Christopher Nolan",
+          image: "/images/Interstellar.jpg"
+        },
+        {
+          id: "the-dark-knight",
+          name: "The Dark Knight",
+          description: "Gotham's greatest hero.",
+          longDescription: "The Dark Knight continues Batman’s fight against crime, introducing the Joker as his greatest adversary in a gritty and acclaimed superhero film.",
+          releaseDate: "2008-07-18",
+          length: "2h 32m",
+          director: "Christopher Nolan",
+          image: "/images/TheDarkKnight.jpg"
+        }
+      ]
+    }
+  };
+  
+  // Category overview route
+  router.get("/category/:type", function (req, res) {
+    const { type } = req.params;
+    const pageData = dataMap[type];
+  
+    if (!pageData) {
+      return res.status(404).send("Category not found");
+    }
+  
+    res.render("category", {
+      title: pageData.title,
+      type: pageData.type,
+      hero: pageData.hero,
+      items: pageData.items
+    });
+  });
+  
+  // Detail page route
+  router.get("/category/:type/:id", function (req, res) {
+    const { type, id } = req.params;
+    const pageData = dataMap[type];
+  
+    if (!pageData) {
+      return res.status(404).send("Category not found");
+    }
+  
+    const itemData = pageData.items.find(item => item.id === id);
+  
+    if (!itemData) {
+      return res.status(404).send("Item not found");
+    }
+  
+    res.render("content-detail", {
+      item: itemData,
+      title: pageData.title,
+      type: pageData.type,
+      hero: pageData.hero
+    });
+  });
+
+
+
 
 
 router.get("/faq", function (req, res, next) {
@@ -252,7 +673,8 @@ router.get('/community', function (req, res) {
 });
     
 //GET FavList Page
-router.get("/favList",function(req, res){
+router.get("/favorites", isAuthenticated, function(req, res)
+{
   res.render("fav-list",{
     title: "Favourite"
   });
@@ -261,50 +683,143 @@ router.get("/favList",function(req, res){
 
 
 //get add route
-router.get("/add", function (req, res) {
-  const userItems = addedItems.filter(item => item.username === req.session.user);
-
+router.get("/add", isAuthenticated, function (req, res) {
   res.render("add", {
-    title: "Add",
-    items: userItems
+    title: "Request"
   });
 });
 
 
-
-
 //post add route
-router.post("/add", function (req, res) {
+router.post("/add", isAuthenticated, function (req, res) {
   const { type, title, description, image } = req.body;
 
-  if (!type || !title || !description || !image) {
+  if (!type || !title || !description) {
     return res.render("add", {
-      title: "Add",
-      errorMessage: "All fields are required.",
-      items: addedItems
+      title: "Request",
+      errorMessage: "All fields are required."
     });
   }
 
-
-  //only user
-  addedItems.push({
+  requests.push({
     username: req.session.user,
     type,
     title,
     description,
-    image
+    image,
+    status: "Pending"
   });
-  
-
-  const userItems = addedItems.filter(item => item.username === req.session.user);
 
   res.render("add", {
-    title: "Add",
-    successMessage: `The ${type} "${title}" was added successfully!`,
-    items: userItems
+    title: "Request",
+    successMessage: "Your request has been received."
   });
 
   
+});
+
+//admin-panel get
+router.get("/admin-panel", isAuthenticated, function (req, res) {
+
+
+  const requests = [
+    {
+      requestID: "1", // Added unique ID
+      username: "test_user1",
+      type: "Bug Report",
+      title: "Login button not working",
+      description: "Clicking the login button does nothing on Chrome browser.",
+      image: "https://example.com/image1.png",
+      status: "Pending"
+    },
+    {
+      requestID: "2", // Added unique ID
+      username: "test_user2",
+      type: "Feature Request",
+      title: "Add dark mode",
+      description: "A dark mode option would be helpful for night-time browsing.",
+      image: "https://example.com/image2.png",
+      status: "Pending"
+    },
+    {
+      requestID: "3", // Added unique ID
+      username: "test_user3",
+      type: "Feedback",
+      title: "Great user interface!",
+      description: "The new dashboard layout is very intuitive and clean.",
+      image: "https://example.com/image3.png",
+      status: "Pending"
+    },
+    {
+      requestID: "4", // Added unique ID
+      username: "test_user3",
+      type: "Feedback",
+      title: "Great user interface!",
+      description: "The new dashboard layout is very intuitive and clean.",
+      image: "https://example.com/image3.png",
+      status: "Accepted"
+    }
+  ];
+
+  const pendingRequests = requests.filter(r => r.status === "Pending");
+
+  res.render("admin-panel", {
+    title: "Admin Panel",
+    requests: pendingRequests
+  });
+});
+
+router.get('/admin-panel/:requestID', (req, res) => {
+
+  const requests = [
+    {
+      requestID: "1", // Added unique ID
+      username: "test_user1",
+      type: "Bug Report",
+      title: "Login button not working",
+      description: "Clicking the login button does nothing on Chrome browser.",
+      image: "https://example.com/image1.png",
+      status: "Pending"
+    },
+    {
+      requestID: "2", // Added unique ID
+      username: "test_user2",
+      type: "Feature Request",
+      title: "Add dark mode",
+      description: "A dark mode option would be helpful for night-time browsing.",
+      image: "https://example.com/image2.png",
+      status: "Pending"
+    },
+    {
+      requestID: "3", // Added unique ID
+      username: "test_user3",
+      type: "Feedback",
+      title: "Great user interface!",
+      description: "The new dashboard layout is very intuitive and clean.",
+      image: "https://example.com/image3.png",
+      status: "Pending"
+    },
+    {
+      requestID: "4", // Added unique ID
+      username: "test_user3",
+      type: "Feedback",
+      title: "Great user interface!",
+      description: "The new dashboard layout is very intuitive and clean.",
+      image: "https://example.com/image3.png",
+      status: "Accepted"
+    }
+  ];
+
+  const requestID = req.params.requestID;
+  const foundRequest = requests.find(req => req.requestID === requestID);
+  console.log('Request ID:', req.params.requestID, typeof req.params.requestID);
+  // Query the database using requestID
+  // Example: db.findById(requestID)
+  // foundRequest as result
+  // Render the page with the request data
+  res.render('request-detail', { 
+    request: foundRequest 
+  });
 });
 
 /*GET groeplist+room */
