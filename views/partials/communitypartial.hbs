@@ -3,12 +3,17 @@
     <img src="https://via.placeholder.com/40" alt="Icon" class="me-3 rounded-circle" style="width: 40px; height: 40px;">
     <div>
       <!-- Title in black -->
-      <a href="../chatroom" style="text-decoration: none;">
-        <h5 class="mb-1" style="color: black;">Community {{this}}</h5>
-      </a>
+      <div class="d-flex justy-content-between">
+        <a class="flex-grow-1" href="../chatroom" style="text-decoration: none;">
+          <h5 class="mb-1" style="color: black;">Community {{this}}</h5>
+        </a>
+        <button type="button" class="btn btn-card" data-bs-toggle="button" active.activearia-pressed="true">
+          <i class="bi bi-heart"></i>
+        {{!-- <i class="bi bi-heart-fill"></i> --}}
+        </button>
+      </div>
       <!-- Description in light gray -->
       <p class="mb-0" style="color: gray;">This is a description for Community {{this}}.</p>
     </div>
   </div>
 </div>
-
