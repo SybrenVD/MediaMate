@@ -35,6 +35,10 @@ hbs.registerHelper('range', function(start, end, options) {
 hbs.registerHelper("lookup", function(obj, key) {
   return obj[key];
 });
+hbs.registerHelper('ifEquals', function (arg1, arg2, options) {
+  return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
+});
+
 
 // Middleware
 app.use(bodyParser.json());

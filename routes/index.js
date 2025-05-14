@@ -775,7 +775,7 @@ router.get('/admin-panel/:requestID', (req, res) => {
     {
       requestID: "1", // Added unique ID
       username: "test_user1",
-      type: "Bug Report",
+      type: "Book",
       title: "Login button not working",
       description: "Clicking the login button does nothing on Chrome browser.",
       image: "https://example.com/image1.png",
@@ -784,7 +784,7 @@ router.get('/admin-panel/:requestID', (req, res) => {
     {
       requestID: "2", // Added unique ID
       username: "test_user2",
-      type: "Feature Request",
+      type: "Book",
       title: "Add dark mode",
       description: "A dark mode option would be helpful for night-time browsing.",
       image: "https://example.com/image2.png",
@@ -793,7 +793,7 @@ router.get('/admin-panel/:requestID', (req, res) => {
     {
       requestID: "3", // Added unique ID
       username: "test_user3",
-      type: "Feedback",
+      type: "Book",
       title: "Great user interface!",
       description: "The new dashboard layout is very intuitive and clean.",
       image: "https://example.com/image3.png",
@@ -802,7 +802,7 @@ router.get('/admin-panel/:requestID', (req, res) => {
     {
       requestID: "4", // Added unique ID
       username: "test_user3",
-      type: "Feedback",
+      type: "Book",
       title: "Great user interface!",
       description: "The new dashboard layout is very intuitive and clean.",
       image: "https://example.com/image3.png",
@@ -821,6 +821,37 @@ router.get('/admin-panel/:requestID', (req, res) => {
     request: foundRequest 
   });
 });
+router.post('/admin/edit/:id', async (req, res) => {
+  const action = req.body.action;
+  const requestId = req.params.id;
+
+  if (action === 'accept') {
+    // Update the request
+    await Request.findByIdAndUpdate(requestId, {
+      type: req.body.type,
+      title: req.body.title,
+      description: req.body.description,
+      image: req.body.image,
+      status: 'Accepted' // Update status to Accepted
+    });
+
+    res.render('status', {
+      message: 'Request Accepted. Redirecting to admin panel...',
+      redirect: '/admin-panel'
+    });
+  }
+
+  if (action === 'decline') {
+    // Delete the request
+    await Request.findByIdAndDelete(requestId);
+
+    res.render('status', {
+      message: 'Request Declined. Redirecting to admin panel...',
+      redirect: '/admin-panel'
+    });
+  }
+});
+
 
 /*GET groeplist+room */
 router.get("/chatroom", function(req, res) {
