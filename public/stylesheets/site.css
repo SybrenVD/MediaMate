@@ -141,6 +141,12 @@ h4 {
   border-color: white;
   box-shadow: none;
 }
+.list-group{
+  height: 880px;
+}
+.p-2{
+  height:780px;
+}
 
 /* Link van Navbar */
 .navbar .nav-link {
