@@ -918,4 +918,17 @@ router.get("/chatroom", function(req, res) {
   });
 });
 
+router.get("/create-community", function (req, res) {
+  res.render("create-community", {
+    title: "Create Community",
+    active: "create-community"
+  });
+});
+
+router.post("/create-community", function (req, res) {
+  const formData = req.body;
+  console.log("Community form submitted:", formData);
+  res.send("Community created successfully!"); // Optional: redirect or render confirmation
+});
+
 module.exports = router;
