@@ -8,7 +8,6 @@ const hbs = require("hbs");
 const session = require("express-session");
 const bodyParser = require('body-parser');
 const indexRouter = require("./routes/index");
-const importRoutes = require('./routes/import');
 
 // Init Express app
 const app = express();
@@ -59,7 +58,6 @@ app.use((req, res, next) => {
 });
 
 // Use the routes that you have defined
-app.use('/import', importRoutes);
 app.use("/", indexRouter);
 
 // catch 404 and forward to error handler
