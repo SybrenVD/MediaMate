@@ -1,6 +1,7 @@
 require('dotenv').config();
 const axios = require('axios');
 const sql = require('mssql');
+const { rawgGenreMap } = require('../../config/mappings');
 
 async function fetchWithRetry(url, params, retries = 3, delay = 1000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
