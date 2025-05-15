@@ -37,6 +37,25 @@
     </div>
   </div>
 </div>
+<style>
+  /* Change background and text color when accordion button is active (opened) */
+  .accordion-button:not(.collapsed) {
+    background-color: #8b1d2e;
+    color: #fff;
+  }
+
+  /* Optional: Remove default Bootstrap blue border */
+  .accordion-button:focus {
+    box-shadow: none;
+    border-color: #8b1d2e;
+  }
+
+  /* Change chevron color (the arrow icon) */
+  .accordion-button::after {
+    filter: brightness(0) invert(1); /* Make it white */
+  }
+</style>
+
 
 
 
