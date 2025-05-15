@@ -1,24 +1,25 @@
 <header>
   <section class="hero">
-    <div class="banner" style="background-image: url('{{banner}}'); background-size: cover; background-position: center; height: 600px; display: flex; justify-content: center; align-items: center;">
+    <div class="banner"
+      style="background-image: url('{{banner}}'); background-size: cover; background-position: center; height: 600px; display: flex; justify-content: center; align-items: center; position: relative;">
       <div class="container text-center" style="z-index: 2;">
 
-        <!-- Title with blur -->
-        <div class="row p-2" style="position: relative; z-index: 3;">
+        <!-- Title -->
+        <div class="row mb-3" style="position: relative; z-index: 3;">
           <div class="hero-text mx-auto">
             <h2 class="m-0">{{hero.cta}}</h2>
           </div>
         </div>
 
-        <!-- Description with smaller blur -->
-        <div class="row pb-3" style="position: relative; z-index: 3;">
+        <!-- Description -->
+        <div class="row mb-4" style="position: relative; z-index: 3;">
           <div class="hero-desc mx-auto">
             <p class="m-0">{{hero.shortDescription}}</p>
           </div>
         </div>
 
-        <!-- Search bar (below title and description) -->
-        <div class="row mb-4" style="position: relative; z-index: 3;">
+        <!-- Search bar -->
+        <div class="row" style="position: relative; z-index: 3;">
           <div class="col-12 d-flex justify-content-center">
             <form class="d-flex" role="search" style="width: 80%;">
               <div class="input-group input-group-lg w-100">
@@ -47,7 +48,6 @@
       <h3>Most Viewed</h3>
     </div>
     {{> slider content=mostViewedContent includeType=true }}
-
   </div>
 </section>
 
@@ -57,7 +57,6 @@
       <h3>Best Rated</h3>
     </div>
     {{> slider content=bestRatedContent includeType=true }}
-
   </div>
 </section>
 
@@ -68,10 +67,10 @@
     backdrop-filter: blur(4px);
     background-color: rgba(0, 0, 0, 0.35);
     color: white;
-    padding: 4px 10px;
+    padding: 10px 20px;
     border-radius: 6px;
     display: inline-block;
-    max-width: 60%;
+    max-width: 70%;
   }
 
   /* Description styling */
@@ -79,12 +78,18 @@
     backdrop-filter: blur(2px);
     background-color: rgba(0, 0, 0, 0.25);
     color: white;
-    padding: 2px 6px;
+    padding: 6px 14px;
     border-radius: 5px;
     display: inline-block;
-    max-width: 40%;
+    max-width: 50%;
+  }
+
+  /* Optional spacing below hero */
+  .hero {
+    margin-bottom: 60px;
   }
 </style>
+
 
 
 
