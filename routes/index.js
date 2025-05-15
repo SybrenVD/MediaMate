@@ -917,5 +917,9 @@ router.get("/chatroom", function(req, res) {
     messagesByRoom: allMessages
   });
 });
+/*Get test chatroom*/
+router.get("/testroom", function(req,res){
+  res.render("testroom", {  });
+});
 
 module.exports = router;
