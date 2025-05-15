@@ -7,28 +7,27 @@
     </div>
   </div>
 
-  <div class="col-8">
+  <div class="col-8 d-flex flex-column mb-3">
     <div class="tab-content" id="nav-tabContent">
       {{#each rooms}}
           <div class="tab-pane fade {{#if @first}}show active{{/if}}"
              id="list-{{chatId}}"
              role="tabpanel"
              aria-labelledby="list-{{chatId}}-list">
-              <div class="p-2">
+              <div class="p-2" style="height: 100px;">
                 <div class="d-flex flex-row mb-3">
                   <img src="{{img}}" alt="imgChat" style="max-width: 100px; max-height: 100px;" />
-                  {{!-- <ul class="dropdown-menu">{{chatName}} --}}
                   <div class="btn-group">
                     <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">{{chatName}}</button>
                     <ul class="dropdown-menu">
-                      {{#each rooms.memberId}}
+                      {{#each rooms.members}}
                         {{>grouplidcard}}
                       {{/each}}
                     </ul>
                   </div>
                 </div>
               </div>
-              <div class="p-2">
+              <div class="p-2 d-flex flex-column mb-3">
                 {{#each (lookup ../messagesByRoom chatId)}}
                   {{> messagepartial}}
                 {{/each}}

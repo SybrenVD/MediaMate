@@ -1,2 +1,97 @@
-<h2 style="color: white;">requestdetail</h2>
-<p style="color: white;">{{request.title}}</p>
+<div class="container mt-5 p-4 rounded" style="background-color: hsla(351, 70%, 38%, 0.8); color: black;">
+  <h1 class="text-center mb-4">Edit Request</h1>
+
+  {{#if successMessage}}
+    <div class="alert alert-success text-center">
+      {{successMessage}}
+    </div>
+  {{/if}}
+
+  {{#if errorMessage}}
+    <div class="alert alert-danger text-center">
+      {{errorMessage}}
+    </div>
+  {{/if}}
+
+  <form id="requestForm" action="/admin/edit/{{request._id}}" method="POST" enctype="multipart/form-data" class="col-md-8 offset-md-2">
+    <div class="mb-3">
+      <label for="type" class="form-label">Category</label>
+      <select id="type" name="type" class="form-select" required>
+        <option value="">-- Select a category --</option>
+        <option value="Book" {{#ifEquals request.type "Book"}}selected{{/ifEquals}}>Book</option>
+        <option value="Game" {{#ifEquals request.type "Game"}}selected{{/ifEquals}}>Game</option>
+        <option value="Movie" {{#ifEquals request.type "Movie"}}selected{{/ifEquals}}>Movie</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" id="title" name="title" class="form-control" value="{{request.title}}" required />
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea id="description" name="description" rows="4" class="form-control" required>{{request.description}}</textarea>
+    </div>
+
+    <!-- Image Picker -->
+    <div class="mb-3 text-center">
+      <label class="form-label d-block">Image</label>
+
+      <div
+        id="image-preview"
+        class="mx-auto mb-2"
+        style="width: 150px; height: 150px; background-color: #f8f9fa; background-size: cover; background-position: center; border: 2px dashed #ccc; cursor: pointer;"
+        onclick="document.getElementById('image-options').classList.toggle('d-none')"
+      ></div>
+
+      <div id="image-options" class="d-none">
+        <div class="mb-2">
+          <input type="file" class="form-control" accept="image/*" onchange="handleFileUpload(event)">
+        </div>
+        <div>
+          <input
+            type="url"
+            id="image"
+            name="image"
+            class="form-control"
+            placeholder="Paste image URL"
+            value="{{request.image}}"
+            oninput="updatePreview(this.value)"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center d-flex justify-content-center gap-3">
+      <button type="submit" class="btn btn-success" name="action" value="accept">Accept Request</button>
+      <button type="submit" class="btn btn-danger" name="action" value="decline">Decline Request</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Image preview setup
+  document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('image');
+    if (input && input.value) {
+      updatePreview(input.value);
+    }
+  });
+
+  function updatePreview(src) {
+    const preview = document.getElementById('image-preview');
+    preview.style.backgroundImage = `url('${src}')`;
+  }
+
+  function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      updatePreview(e.target.result);
+      document.getElementById('image').value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+</script>

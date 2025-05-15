@@ -8,9 +8,16 @@
   <!-- Detail Section -->
   <div class="container my-5">
     <!-- Back Button -->
-    <a href="/category/{{type}}" class="btn btn-outline-danger mb-4">
-      <i class="bi bi-arrow-left-circle-fill"></i> Back to {{title}}
-    </a>
+   {{#ifEquals from "home"}}
+  <a href="/" class="btn btn-outline-danger mb-4">
+    <i class="bi bi-arrow-left-circle-fill"></i> Back to Home
+  </a>
+{{else}}
+  <a href="/category/{{type}}" class="btn btn-outline-danger mb-4">
+    <i class="bi bi-arrow-left-circle-fill"></i> Back to {{title}}
+  </a>
+{{/ifEquals}}
+
 
     <div class="row justify-content-center">
       <!-- Details Column Wrapped in Black Box -->

@@ -1,23 +1,53 @@
 <div class="container mt-5 p-4 rounded" style="background-color: hsla(351, 70%, 38%, 0.8); color: black;">
     <h1 class="text-center mb-4">Admin Panel</h1>
     <hr />
+    
+    <!-- Pending Requests Section -->
     <h4 class="mt-4">Pending Requests</h4>
-
     {{#if requests.length}}
-    <ul class="list-group">
+    <ul class="list-group mb-4">
         {{#each requests}}
-        <a href="/admin-panel/{{this.requestID}}"  style="text-decoration: none;"><li class="list-group-item d-flex justify-content-between align-items-center">
-            <div class="col-3">{{this.username}}</div>
-            <div class="col-3">{{this.title}}</div>
-            <div class="col-2">{{this.type}}</div>
-            <span class="badge bg-secondary">{{this.status}}</span>
-        </li></a>
+        <a href="/admin-panel/{{this.requestID}}" style="text-decoration: none;">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="col-3">{{this.username}}</div>
+                <div class="col-3">{{this.title}}</div>
+                <div class="col-2">{{this.type}}</div>
+                <span class="badge bg-secondary">{{this.status}}</span>
+            </li>
+        </a>
         {{/each}}
     </ul>
     {{else}}
     <p>All requests have been handled.</p>
     {{/if}}
+
+    <!-- Combined Management Section -->
+    <h4 class="mt-4">Manage Users, Content & Communities</h4>
+    <input type="text" id="adminSearch" class="form-control mb-3" placeholder="Search by name, title, or type...">
+
+    <ul class="list-group" id="adminList">
+        {{#each managementItems}}
+        <a href="/admin-panel/edit/{{this.id}}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style="text-decoration: none;">
+            <div class="col-4">{{this.name}}</div>
+            <div class="col-3">{{this.category}}</div>
+            <span class="badge bg-dark">{{this.status}}</span>
+        </a>
+        {{/each}}
+    </ul>
 </div>
+
+<script>
+document.getElementById('adminSearch').addEventListener('input', function () {
+    const filter = this.value.toLowerCase();
+    const items = document.querySelectorAll('#adminList a');
+
+    items.forEach(item => {
+        const text = item.innerText.toLowerCase();
+        item.style.display = text.includes(filter) ? '' : 'none';
+    });
+});
+</script>
+
 
 
 
