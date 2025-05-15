@@ -1,15 +1,16 @@
-<div class="card">
-    <a href="/category/{{type}}/{{id}}?from={{from}}" style="text-decoration: none;">
+<a href="/category/{{type}}/{{id}}?from={{from}}" style="text-decoration: none; color: inherit;">
+  <div class="card h-100">
     <img src="{{img}}{{image}}" alt="Card Image" class="card-img-top p-2 img-fluid">
-    </a>
     <div class="card-body text-start">
-      <div class="d-flex justy-content-between">
+      <div class="d-flex justify-content-between">
         <h4 class="flex-grow-1">{{title}}{{name}}</h4>
-        {{>iheart}}       
+        {{> iheart}}       
       </div>
       <p>{{description}}</p>
     </div>
   </div>
+</a>
+
 
 
 
