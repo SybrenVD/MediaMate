@@ -17,6 +17,20 @@ async function main() {
 
   const pool = await sql.connect(config);
 
+  // Ensure a default user exists
+  const userResult = await pool.request()
+    .input('Username', sql.VarChar, 'Admin')
+    .input('Email', sql.VarChar, null)
+    .input('PasswordHash', sql.VarChar, 'Tp:r7576jX')
+    .input('UserType', sql.VarChar, 'Admin')
+    .query(`
+      IF NOT EXISTS (SELECT 1 FROM Users WHERE Username = @Username)
+      INSERT INTO Users (Username, Email, PasswordHash, UserType)
+      OUTPUT INSERTED.UserID
+      VALUES (@Username, @Email, @PasswordHash, @UserType)
+    `);
+  const addedByUserID = userResult.recordset && userResult.recordset.length > 0 ? userResult.recordset[0].UserID : 1;
+
   const genres = [
     "Art", "Biography", "Business", "Children", "Comics", "Computers",
     "Cooking", "Education", "Fiction", "Health", "History", "Horror",
@@ -25,6 +39,7 @@ async function main() {
     "Self-Help", "Sports", "Technology", "Travel"
   ];
 
+  // Insert genres
   for (const genre of genres) {
     await pool.request()
       .input('Name', sql.VarChar, genre)
@@ -34,11 +49,12 @@ async function main() {
       `);
   }
 
+  // Process books for each genre
   for (const genre of genres) {
     const genreIdResult = await pool.request()
       .input('Name', sql.VarChar, genre)
-      .query('SELECT GenresID FROM Genres WHERE Name = @Name');
-    const genreId = genreIdResult.recordset[0].GenresID;
+      .query('SELECT GenreID FROM Genres WHERE Name = @Name');
+    const genreId = genreIdResult.recordset[0].GenreID;
 
     for (let page = 0; page < 5; page++) {
       const startIndex = page * 40;
@@ -50,21 +66,71 @@ async function main() {
         }
       });
       const books = response.data.items || [];
+      
       for (const book of books) {
         const title = book.volumeInfo.title || 'No title';
-        const description = book.volumeInfo.description || 'No description';
-        const releaseDate = book.volumeInfo.publishedDate || null;
+        // Ensure description is a string and truncate to 2000 characters
+        let description = book.volumeInfo.description || 'No description';
+        description = typeof description === 'string' ? description : String(description);
+        if (description.length > 2000) {
+          console.log(`Truncating description for book "${title}": Original length = ${description.length}`);
+          description = description.substring(0, 2000);
+        }
 
-        await pool.request()
+        // Validate and format releaseDate
+        let releaseDate = book.volumeInfo.publishedDate || null;
+        if (releaseDate) {
+          // Handle various date formats
+          if (/^\d{4}$/.test(releaseDate)) {
+            releaseDate = `${releaseDate}-01-01`; // Year-only: 2023 -> 2023-01-01
+          } else if (/^\d{4}-\d{2}$/.test(releaseDate)) {
+            releaseDate = `${releaseDate}-01`; // Year-month: 2023-05 -> 2023-05-01
+          } else if (!/^\d{4}-\d{2}-\d{2}$/.test(releaseDate)) {
+            console.log(`Invalid date format for book "${title}": ${releaseDate}, setting to NULL`);
+            releaseDate = null; // Set to null for any other invalid format
+          }
+          // Additional validation to ensure date is valid
+          if (releaseDate) {
+            const dateObj = new Date(releaseDate);
+            if (isNaN(dateObj.getTime()) || dateObj.getFullYear() < 1000 || dateObj.getFullYear() > 9999) {
+              console.log(`Invalid date for book "${title}": ${releaseDate}, setting to NULL`);
+              releaseDate = null;
+            }
+          }
+        }
+
+        // Insert into Books table
+        const bookResult = await pool.request()
           .input('Title', sql.VarChar, title)
-          .input('ContentType', sql.VarChar, 'Book')
           .input('Description', sql.VarChar, description)
           .input('ReleaseDate', sql.Date, releaseDate)
-          .input('addedByUserID', sql.Int, 1)
-          .input('GenresID', sql.Int, genreId)
+          .input('AddedByUserID', sql.Int, addedByUserID)
           .query(`
-            INSERT INTO Content (Title, ContentType, Description, ReleaseDate, Rating, addedByUserID, GenresID)
-            VALUES (@Title, @ContentType, @Description, @ReleaseDate, NULL, @addedByUserID, @GenresID)
+            INSERT INTO Books (Title, Description, ReleaseDate, AddedByUserID)
+            OUTPUT INSERTED.BookID
+            VALUES (@Title, @Description, @ReleaseDate, @AddedByUserID)
+          `);
+        
+        const bookId = bookResult.recordset[0].BookID;
+
+        // Insert into Content table
+        const contentResult = await pool.request()
+          .input('BookID', sql.Int, bookId)
+          .query(`
+            INSERT INTO Content (BookID)
+            OUTPUT INSERTED.ContentID
+            VALUES (@BookID)
+          `);
+        
+        const contentId = contentResult.recordset[0].ContentID;
+
+        // Link to genre in Content_Genre table
+        await pool.request()
+          .input('GenreID', sql.Int, genreId)
+          .input('ContentID', sql.Int, contentId)
+          .query(`
+            INSERT INTO Content_Genre (GenreID, ContentID)
+            VALUES (@GenreID, @ContentID)
           `);
       }
     }

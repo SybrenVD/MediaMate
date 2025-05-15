@@ -7,7 +7,7 @@ const {
   getPopularMovies,
   insertGenres,
   insertMovies
-} = require('../db'); // Gebruik functies uit db.js
+} = require('./db'); // Gebruik functies uit db.js
 
 // Route to import movies and genres from TMDB
 router.get('/movies', async (req, res) => {
