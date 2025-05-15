@@ -11,10 +11,16 @@ const hbs = require("hbs");
 const session = require("express-session");
 const bodyParser = require('body-parser');
 const indexRouter = require("./routes/index");
+//chatroom env
+const http = require('http');
+const socketIo = require('socket.io');
 
 // Init Express app
 const app = express();
 const port = process.env.PORT || 3001;
+//chatroom
+const server = http.createServer(app);
+const io = socketIo(server);
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -47,7 +53,16 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
-
+//chatroom
+io.on('connection', (socket) => {
+  // console.log('a user conneted');
+  socket.on('chat message', (msg) => {
+    io.emit('chat message', msg);
+  });
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
 
 app.use(session({
   secret: 'mySecretKey123',
