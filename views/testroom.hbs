@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chatroom</title>
+        <style>
+            #messages{
+                list-style-type: none; padding: 0;
+            }
+            #messages li{
+                padding: 8px; margin-bottom: 10px; border-bottom: 1px solid #ddd; color: #ddd;
+            }
+            #form{
+                display: flex;
+                gap: 10px;
+            }
+            #input{
+                flex: 1;
+            }
+        </style>
+    </head>
+    <body>
+        <ul id="messages"></ul>
+        <form id="form">
+            <input id="input" autocomplete="off"/>
+            <button type="submit">Send</button>
+        </form>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(function () {
+                var socket = io();
+                var username = prompt('Enter your username');
+                //send
+                $('form').submit(function () {
+                    var message = username + ':' + $('#input').val().trim();
+                    socket.emit('chat message', message);
+                    $('#input').val('');
+                    return false;
+                });
+                //recieve and show
+                socket.on('chat message', function (msg) {
+                    $('#messages').append($('<li>').text(msg));
+                });
+            })
+       </script>
+    </body>
+</html>
