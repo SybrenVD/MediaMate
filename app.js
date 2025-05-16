@@ -11,6 +11,7 @@ const hbs = require("hbs");
 const session = require("express-session");
 const bodyParser = require('body-parser');
 const indexRouter = require("./routes/index");
+const multer = require("multer");
 
 
 // Init Express app
@@ -47,7 +48,7 @@ hbs.registerHelper('ifEquals', function (arg1, arg2, options) {
 // Middleware
 app.use(bodyParser.json());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 

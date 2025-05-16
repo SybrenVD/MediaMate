@@ -1,5 +1,8 @@
 var express = require("express");
 var router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 //toevoegen pagina
 const addedItems = []; // tijdelijk opgeslagen inhoud
@@ -921,5 +924,51 @@ router.get("/chatroom", function(req, res) {
 router.get("/testroom", function(req,res){
   res.render("testroom", {  });
 });
+
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, '../public/uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Multer storage setup
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage });
+
+// GET: form
+router.get('/create-community', (req, res) => {
+  res.render('create-community', {
+    title: 'Create Community',
+    active: 'create-community'
+  });
+});
+
+// POST: handle form
+router.post('/create-community', upload.single('image'), (req, res) => {
+  const { name, keywords } = req.body;
+  const imageFile = req.file;
+
+  if (!name || !keywords || !imageFile) {
+    return res.status(400).send('All fields are required.');
+  }
+
+  console.log('✅ Community created:');
+  console.log('Name:', name);
+  console.log('Keywords:', keywords.split(',').map(k => k.trim()));
+  console.log('Image file:', imageFile.filename);
+
+  res.send('Community created successfully!');
+});
+
+module.exports = router;
+
 
 module.exports = router;
