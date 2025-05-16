@@ -920,6 +920,10 @@ router.get("/chatroom", function(req, res) {
     messagesByRoom: allMessages
   });
 });
+/*Get test chatroom*/
+router.get("/testroom", function(req,res){
+  res.render("testroom", {  });
+});
 
 // Ensure upload directory exists
 const uploadDir = path.join(__dirname, '../public/uploads');
