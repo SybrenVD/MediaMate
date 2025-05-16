@@ -99,16 +99,20 @@ async function main() {
           }
         }
 
-        // Insert into Books table
+        // Get full image URL from thumbnail
+        const imageUrl = book.volumeInfo.imageLinks?.thumbnail || null;
+
+        // Insert into Books table with Image column
         const bookResult = await pool.request()
-          .input('Title', sql.VarChar, title)
-          .input('Description', sql.VarChar, description)
+          .input('Title', sql.NVarChar, title)
+          .input('Description', sql.NVarChar, description)
           .input('ReleaseDate', sql.Date, releaseDate)
+          .input('Image', sql.NVarChar, imageUrl)
           .input('AddedByUserID', sql.Int, addedByUserID)
           .query(`
-            INSERT INTO Books (Title, Description, ReleaseDate, AddedByUserID)
+            INSERT INTO Books (Title, Description, ReleaseDate, Image, AddedByUserID)
             OUTPUT INSERTED.BookID
-            VALUES (@Title, @Description, @ReleaseDate, @AddedByUserID)
+            VALUES (@Title, @Description, @ReleaseDate, @Image, @AddedByUserID)
           `);
         
         const bookId = bookResult.recordset[0].BookID;

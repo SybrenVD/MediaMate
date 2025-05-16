@@ -1,7 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
 const sql = require('mssql');
-const { rawgGenreMap } = require('../../config/mapping');
 
 async function fetchWithRetry(url, params, retries = 3, delay = 1000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -75,19 +74,19 @@ async function main() {
     'Fighting': 'fighting',
     'Racing': 'racing',
     'Multiplayer': 'massively-multiplayer',
-    'Battle Royale': 'battle-royale', // Tag
-    'MOBA': 'moba', // Tag
-    'Survival': 'survival', // Tag
-    'Open World': 'open-world', // Tag
-    'Sandbox': 'sandbox', // Tag
-    'Horror': 'horror', // Tag
-    'Stealth': 'stealth', // Tag
-    'Visual Novel': 'visual-novel', // Tag
-    'Idle': 'indie', // Closest match
+    'Battle Royale': 'battle-royale',
+    'MOBA': 'moba',
+    'Survival': 'survival',
+    'Open World': 'open-world',
+    'Sandbox': 'sandbox',
+    'Horror': 'horror',
+    'Stealth': 'stealth',
+    'Visual Novel': 'visual-novel',
+    'Idle': 'indie',
     'Card Game': 'card',
     'Board Game': 'board-games',
-    'Trivia': 'educational', // Closest match
-    'Music': 'music', // Tag
+    'Trivia': 'educational',
+    'Music': 'music',
     'Educational': 'educational'
   };
 
@@ -165,16 +164,20 @@ async function main() {
             }
           }
 
-          // Insert into Games table
+          // Get full image URL from background_image
+          const imageUrl = game.background_image || null;
+
+          // Insert into Games table with Image column
           const gameResult = await pool.request()
             .input('Title', sql.NVarChar, title)
             .input('Description', sql.NVarChar, description)
             .input('ReleaseDate', sql.Date, releaseDate)
+            .input('Image', sql.NVarChar, imageUrl)
             .input('AddedByUserID', sql.Int, addedByUserID)
             .query(`
-              INSERT INTO Games (Title, Description, ReleaseDate, Rating, AddedByUserID)
+              INSERT INTO Games (Title, Description, ReleaseDate, Rating, Image, AddedByUserID)
               OUTPUT INSERTED.GameID
-              VALUES (@Title, @Description, @ReleaseDate, NULL, @AddedByUserID)
+              VALUES (@Title, @Description, @ReleaseDate, NULL, @Image, @AddedByUserID)
             `);
           
           const gameId = gameResult.recordset[0].GameID;
@@ -282,15 +285,19 @@ async function main() {
               }
             }
 
+            // Get full image URL from background_image
+            const imageUrl = game.background_image || null;
+
             const gameResult = await pool.request()
               .input('Title', sql.NVarChar, title)
               .input('Description', sql.NVarChar, description)
               .input('ReleaseDate', sql.Date, releaseDate)
+              .input('Image', sql.NVarChar, imageUrl)
               .input('AddedByUserID', sql.Int, addedByUserID)
               .query(`
-                INSERT INTO Games (Title, Description, ReleaseDate, Rating, AddedByUserID)
+                INSERT INTO Games (Title, Description, ReleaseDate, Rating, Image, AddedByUserID)
                 OUTPUT INSERTED.GameID
-                VALUES (@Title, @Description, @ReleaseDate, NULL, @AddedByUserID)
+                VALUES (@Title, @Description, @ReleaseDate, NULL, @Image, @AddedByUserID)
               `);
             
             const gameId = gameResult.recordset[0].GameID;

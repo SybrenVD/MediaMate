@@ -61,6 +61,15 @@ async function main() {
     37: 'Western'
   };
 
+  // Fetch TMDB configuration for image base URL
+  const configResponse = await axios.get('https://api.themoviedb.org/3/configuration', {
+    params: {
+      api_key: 'c6fbfed994de21544500c97199ead40d'
+    }
+  });
+  const imageBaseUrl = configResponse.data.images.secure_base_url;
+  const imageSize = 'w500'; // Reasonable size for posters
+
   // Insert genres, respecting existing ones
   for (const genre of movieGenres) {
     await pool.request()
@@ -124,16 +133,20 @@ async function main() {
             }
           }
 
-          // Insert into Movies table
+          // Construct full image URL
+          const imageUrl = movie.poster_path ? `${imageBaseUrl}${imageSize}${movie.poster_path}` : null;
+
+          // Insert into Movies table with Image column
           const movieResult = await pool.request()
             .input('Title', sql.NVarChar, title) // Use NVarChar for Title
             .input('Description', sql.NVarChar, description) // Use NVarChar for Description
             .input('ReleaseDate', sql.Date, releaseDate)
+            .input('Image', sql.NVarChar, imageUrl) // New Image column
             .input('AddedByUserID', sql.Int, addedByUserID)
             .query(`
-              INSERT INTO Movies (Title, Description, ReleaseDate, Rating, AddedByUserID)
+              INSERT INTO Movies (Title, Description, ReleaseDate, Rating, Image, AddedByUserID)
               OUTPUT INSERTED.MovieID
-              VALUES (@Title, @Description, @ReleaseDate, NULL, @AddedByUserID)
+              VALUES (@Title, @Description, @ReleaseDate, NULL, @Image, @AddedByUserID)
             `);
           
           const movieId = movieResult.recordset[0].MovieID;
