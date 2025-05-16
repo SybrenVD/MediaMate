@@ -4,6 +4,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+//backend Home-page
+const { getHomePageContent } = require("../modules/homepage");
+
+
+
 //toevoegen pagina
 const addedItems = []; // tijdelijk opgeslagen inhoud
 
@@ -37,164 +42,27 @@ router.get("/user", isAuthenticated, function (req, res) {
 
 
 /* GET home page. */
-router.get("/", function (req, res, next) {
-  res.render("index",
-    {
+router.get("/", async function (req, res) {
+  try {
+    const mostViewedContent = await getHomePageContent();
+    const bestRatedContent = await getHomePageContent();
+
+    res.render("index", {
       title: "Home",
       banner: "/images/BannerHome.jpg",
       hero: {
         cta: "Welcome to MediaMate",
         shortDescription: "Find the best in entertainment"
       },
-mostViewedContent: [
-  {
-    id: "the-great-gatsby",
-    type: "books",
-    title: "The Great Gatsby",
-    description: "A story about wealth and the American Dream.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "inception",
-    type: "movies",
-    title: "Inception",
-    description: "A thief enters dreams to steal secrets.",
-    img: "/images/Inception.jpg"
-  },
-  {
-    id: "the-witcher-3",
-    type: "games",
-    title: "The Witcher 3: Wild Hunt",
-    description: "An RPG where Geralt hunts monsters and searches for his daughter.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "1984",
-    type: "books",
-    title: "1984",
-    description: "A dystopian world controlled by surveillance and oppression.",
-    img: "/images/1984.jpg"
-  },
-  {
-    id: "the-dark-knight",
-    type: "movies",
-    title: "The Dark Knight",
-    description: "Batman faces the Joker in Gotham City.",
-    img: "/images/TheDarkKnight.jpg"
-  },
-  {
-    id: "super-mario",
-    type: "games",
-    title: "Super Mario Odyssey",
-    description: "Mario embarks on a journey to save Princess Peach.",
-    img: "/images/SuperMario.jpg"
-  },
-  {
-    id: "the-lord-of-the-rings",
-    type: "books",
-    title: "The Lord of the Rings: The Fellowship of the Ring",
-    description: "Frodo starts his quest to destroy the One Ring.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "red-dead-redemption-2",
-    type: "games",
-    title: "Red Dead Redemption 2",
-    description: "A cowboy story set in the American frontier.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "the-matrix",
-    type: "movies",
-    title: "The Matrix",
-    description: "A hacker discovers reality is a simulation.",
-    img: "/images/TheMatrix.jpg"
-  },
-  {
-    id: "harry-potter",
-    type: "books",
-    title: "Harry Potter and the Sorcerer's Stone",
-    description: "A boy learns he's a wizard and goes to Hogwarts.",
-    img: "/images/HarryPotter.jpg"
-  }
-],
-
-bestRatedContent: [
-  {
-    id: "hunger-games",
-    type: "books",
-    title: "The Hunger Games",
-    description: "Teens fight for survival in a dystopian arena.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "avatar",
-    type: "movies",
-    title: "Avatar",
-    description: "Humans colonize an alien planet and face its inhabitants.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "skyrim",
-    type: "games",
-    title: "The Elder Scrolls V: Skyrim",
-    description: "An RPG where you explore and fight dragons in a fantasy world.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "jurassic-park",
-    type: "movies",
-    title: "Jurassic Park",
-    description: "Dinosaurs are resurrected and run wild in a theme park.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "minecraft",
-    type: "games",
-    title: "Minecraft",
-    description: "A sandbox game where you build and explore virtual worlds.",
-    img: "/images/minecraft.jpg"
-  },
-  {
-    id: "the-godfather",
-    type: "movies",
-    title: "The Godfather",
-    description: "A mafia family's saga of crime and loyalty.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "fight-club",
-    type: "movies",
-    title: "Fight Club",
-    description: "An underground fight club challenges modern society's norms.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "assassins-creed",
-    type: "games",
-    title: "Assassin's Creed",
-    description: "A historical action game about assassins fighting for freedom.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "pulp-fiction",
-    type: "movies",
-    title: "Pulp Fiction",
-    description: "Intertwining stories of crime and redemption.",
-    img: "/images/placeholder.jpg"
-  },
-  {
-    id: "the-shining",
-    type: "movies",
-    title: "The Shining",
-    description: "A family is haunted in a secluded hotel.",
-    img: "/images/placeholder.jpg"
-  }
-]
-
-
+      mostViewedContent,
+      bestRatedContent
     });
+  } catch (error) {
+    console.error("Error loading homepage content:", error);
+    res.status(500).send("Internal Server Error");
+  }
 });
+
 
 
 router.get("/category/:type", function (req, res) {
