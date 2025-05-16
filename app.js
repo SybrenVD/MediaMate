@@ -11,6 +11,7 @@ const hbs = require("hbs");
 const session = require("express-session");
 const bodyParser = require('body-parser');
 const indexRouter = require("./routes/index");
+const multer = require("multer");
 
 // Init Express app
 const app = express();

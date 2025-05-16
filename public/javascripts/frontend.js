@@ -88,6 +88,49 @@ document.addEventListener("DOMContentLoaded", () => {
             updateArrowsVisibility(container, leftButton, rightButton);
         });
     });
+
+    // ----------------- New: Community Create Form Handling -----------------
+    const form = document.getElementById('createCommunityForm');
+    const messageDiv = document.getElementById('formMessage');
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();  // prevent normal form submission
+
+            const name = form.name.value.trim();
+            const description = form.description.value.trim();
+
+            if (!name || !description) {
+                messageDiv.textContent = 'Please fill in all fields.';
+                messageDiv.style.color = 'red';
+                return;
+            }
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, description }),
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    messageDiv.textContent = 'Community created successfully!';
+                    messageDiv.style.color = 'green';
+                    form.reset();
+                } else {
+                    const error = await response.json();
+                    messageDiv.textContent = error.message || 'Failed to create community.';
+                    messageDiv.style.color = 'red';
+                }
+            } catch (err) {
+                messageDiv.textContent = 'Error submitting the form.';
+                messageDiv.style.color = 'red';
+            }
+        });
+    }
 });
 
 
