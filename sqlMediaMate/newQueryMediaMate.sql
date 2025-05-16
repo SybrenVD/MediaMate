@@ -82,6 +82,7 @@ CREATE TABLE Books
     Description NVARCHAR(2000),
     ReleaseDate DATE,
     Rating DECIMAL(2,1),
+    Image NVARCHAR(500),
     AddedByUserID INTEGER
 )
 GO
@@ -108,6 +109,7 @@ CREATE TABLE Movies
     Description NVARCHAR(2000),
     ReleaseDate DATE,
     Rating DECIMAL(2,1),
+    Image NVARCHAR(500),
     AddedByUserID INTEGER
 )
 GO
@@ -134,6 +136,7 @@ CREATE TABLE Games
     Description NVARCHAR(2000),
     ReleaseDate DATE,
     Rating DECIMAL(2,1),
+    Image NVARCHAR(500),
     AddedByUserID INTEGER
 )
 GO
