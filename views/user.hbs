@@ -1,4 +1,4 @@
-<div class="container mt-5 p-4 rounded" style="background-color: hsla(351, 70%, 38%, 0.8); color: black;">
+{{!-- <div class="container mt-5 p-4 rounded" style="background-color: hsla(351, 70%, 38%, 0.8); color: black;">
   <h1 class="text-center mb-4">My Profile</h1>
 
   <!-- User Info -->
@@ -28,4 +28,149 @@
   {{else}}
     <p>You haven't submitted any requests yet.</p>
   {{/if}}
+</div> --}}
+
+<div class="container mt-5 p-4 rounded" style="background-color: hsla(351, 70%, 38%, 0.8); color: black;">
+  <h1 class="text-center mb-4">My Profile</h1>
+
+  <!-- Success Message -->
+  {{#if successMessage}}
+    <div class="alert alert-success text-center" role="alert">
+      {{successMessage}}
+    </div>
+  {{/if}}
+
+  <!-- General Error -->
+  {{#if errors.general}}
+    <div class="alert alert-danger text-center" role="alert">
+      {{errors.general}}
+    </div>
+  {{/if}}
+
+  <!-- User Info -->
+  <div class="row mb-4">
+    <div class="col-md-3 text-center">
+      <img src="{{user.Image}}" alt="Profile Picture" class="rounded-circle" width="120" height="120">
+    </div>
+    <div class="col-md-9">
+      <p><strong>Username:</strong> {{user.Username}}</p>
+      <p><strong>Email:</strong> {{user.Email}}</p>
+      {{#if (eq user.UserType "Admin")}}
+        <p><strong>User Type:</strong> {{user.UserType}}</p>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Edit Form -->
+  <form action="/user" method="POST" enctype="multipart/form-data" class="col-md-6 offset-md-3">
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input
+        type="email"
+        class="form-control {{#if errors.email}}is-invalid{{/if}}"
+        id="email"
+        name="email"
+        value="{{inputValues.email}}"
+        maxlength="254"
+      />
+      {{#if errors.email}}
+        <div class="invalid-feedback">
+          {{errors.email}}
+        </div>
+      {{/if}}
+    </div>
+
+    <div class="mb-3">
+      <label for="image" class="form-label">Profile Picture</label>
+      <input
+        type="file"
+        class="form-control {{#if errors.image}}is-invalid{{/if}}"
+        id="image"
+        name="image"
+        accept="image/jpeg,image/jpg,image/png"
+      />
+      {{#if errors.image}}
+        <div class="invalid-feedback">
+          {{errors.image}}
+        </div>
+      {{/if}}
+    </div>
+
+    <div class="mb-3">
+      <button type="button" class="btn btn-secondary" onclick="togglePasswordFields()">Change Password</button>
+    </div>
+
+    <div id="passwordFields" style="display: none;">
+      <div class="mb-3">
+        <label for="currentPassword" class="form-label">Current Password</label>
+        <input
+          type="password"
+          class="form-control {{#if errors.currentPassword}}is-invalid{{/if}}"
+          id="currentPassword"
+          name="currentPassword"
+        />
+        {{#if errors.currentPassword}}
+          <div class="invalid-feedback">
+            {{errors.currentPassword}}
+          </div>
+        {{/if}}
+      </div>
+
+      <div class="mb-3">
+        <label for="newPassword" class="form-label">New Password</label>
+        <input
+          type="password"
+          class="form-control {{#if errors.newPassword}}is-invalid{{/if}}"
+          id="newPassword"
+          name="newPassword"
+          minlength="6"
+        />
+        {{#if errors.newPassword}}
+          <div class="invalid-feedback">
+            {{errors.newPassword}}
+          </div>
+        {{/if}}
+      </div>
+    </div>
+
+    <div class="text-center">
+      <button type="submit" class="btn btn-danger">Update Profile</button>
+    </div>
+  </form>
+
+  <!-- User Requests -->
+  <div class="mt-5">
+    <h2 class="mb-3">Your Requests</h2>
+    {{#if requests.length}}
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Content Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each requests}}
+            <tr>
+              <td>{{this.RequestID}}</td>
+              <td>{{this.Description}}</td>
+              <td>{{this.Status}}</td>
+              <td>{{this.ContentType}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{else}}
+      <p class="text-center">You have no requests.</p>
+    {{/if}}
+  </div>
 </div>
+
+<script>
+  function togglePasswordFields() {
+    const passwordFields = document.getElementById('passwordFields');
+    passwordFields.style.display = passwordFields.style.display === 'none' ? 'block' : 'none';
+  }
+</script>

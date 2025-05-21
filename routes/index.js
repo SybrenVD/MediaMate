@@ -9,7 +9,8 @@ const { getHomePageContent } = require("../modules/home");
 const { getContentByTypeAndId } = require("../modules/detail");
 const { registerUser } = require("../modules/register");
 const { loginUser } = require("../modules/login");
-const { validateRegisterInput, validateLoginInput } = require("../modules/userValidation");
+const { validateRegisterInput, validateLoginInput, validateUpdateInput, verifyCurrentPassword } = require("../modules/userValidation");
+const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = require('../modules/user');
 
 
 
@@ -58,17 +59,145 @@ function isAuthenticated(req, res, next) {
   res.redirect("/login");
 }
 
-//user-page get
-router.get("/user", isAuthenticated, function (req, res) {
-  const userRequests = requests.filter(r => r.username === req.session.user);
+// User Page - GET
+router.get("/user", isAuthenticated, async (req, res) => {
+  const userResult = await getUserById(req.session.user.UserID);
+  if (!userResult.success) {
+    return res.status(404).render('error', { message: userResult.message });
+  }
+
+  const requestsResult = await getUserRequests(req.session.user.UserID);
+  if (!requestsResult.success) {
+    return res.status(500).render('error', { message: requestsResult.message });
+  }
 
   res.render("user", {
     title: "Your Profile",
-    user: {
-      username: req.session.user, 
-      email: "user@example.com" 
-    },
-    requests: userRequests
+    user: userResult.user,
+    requests: requestsResult.requests,
+    errors: {},
+    successMessage: null,
+    inputValues: { email: userResult.user.Email }
+  });
+});
+
+// User Page - POST (Update Email, Image, Password)
+router.post("/user", isAuthenticated, upload.single('image'), async (req, res) => {
+  const { email, currentPassword, newPassword } = req.body;
+  const imagePath = req.file ? `/images/${req.file.filename}` : null;
+  const userID = req.session.user.UserID;
+
+  // Validate inputs
+  const validationResult = validateUpdateInput(email, imagePath, newPassword, currentPassword);
+  if (!validationResult.isValid) {
+    const userResult = await getUserById(userID);
+    const requestsResult = await getUserRequests(userID);
+    const user = userResult.success ? userResult.user : req.session.user;
+    const requests = requestsResult.success ? requestsResult.requests : [];
+
+    return res.render("user", {
+      title: "Your Profile",
+      user,
+      requests,
+      errors: validationResult.errors,
+      successMessage: null,
+      inputValues: { email: validationResult.trimmedEmail || user.Email }
+    });
+  }
+
+  // Verify current password if updating password
+  if (newPassword) {
+    const passwordVerification = await verifyCurrentPassword(userID, currentPassword);
+    if (!passwordVerification.isValid) {
+      const userResult = await getUserById(userID);
+      const requestsResult = await getUserRequests(userID);
+      const user = userResult.success ? userResult.user : req.session.user;
+      const requests = requestsResult.success ? requestsResult.requests : [];
+
+      return res.render("user", {
+        title: "Your Profile",
+        user,
+        requests,
+        errors: { currentPassword: passwordVerification.error },
+        successMessage: null,
+        inputValues: { email: validationResult.trimmedEmail || user.Email }
+      });
+    }
+  }
+
+  // Check for duplicate email
+  if (validationResult.trimmedEmail && validationResult.trimmedEmail !== req.session.user.Email) {
+    const emailCheck = await checkDuplicateEmail(validationResult.trimmedEmail, userID);
+    if (!emailCheck.isUnique) {
+      const userResult = await getUserById(userID);
+      const requestsResult = await getUserRequests(userID);
+      const user = userResult.success ? userResult.user : req.session.user;
+      const requests = requestsResult.success ? requestsResult.requests : [];
+
+      return res.render("user", {
+        title: "Your Profile",
+        user,
+        requests,
+        errors: { email: emailCheck.message },
+        successMessage: null,
+        inputValues: { email: validationResult.trimmedEmail }
+      });
+    }
+  }
+
+  // Build update inputs
+  const updates = [];
+  const inputs = {};
+  if (validationResult.trimmedEmail && validationResult.trimmedEmail !== req.session.user.Email) {
+    updates.push('Email = @Email');
+    inputs.Email = validationResult.trimmedEmail;
+  }
+  if (imagePath) {
+    updates.push('Image = @Image');
+    inputs.Image = imagePath;
+  }
+  if (newPassword) {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    updates.push('PasswordHash = @PasswordHash');
+    inputs.PasswordHash = hashedPassword;
+  }
+
+  // Update user
+  const updateResult = await updateUser(userID, updates, inputs);
+  if (!updateResult.success) {
+    const userResult = await getUserById(userID);
+    const requestsResult = await getUserRequests(userID);
+    const user = userResult.success ? userResult.user : req.session.user;
+    const requests = requestsResult.success ? requestsResult.requests : [];
+
+    return res.render("user", {
+      title: "Your Profile",
+      user,
+      requests,
+      errors: { general: updateResult.message },
+      successMessage: null,
+      inputValues: { email: validationResult.trimmedEmail || user.Email }
+    });
+  }
+
+  // Update session
+  if (inputs.Email) req.session.user.Email = inputs.Email;
+  if (inputs.Image) req.session.user.Image = inputs.Image;
+
+  // Fetch updated user data and requests
+  const userResult = await getUserById(userID);
+  const requestsResult = await getUserRequests(userID);
+  const user = userResult.success ? userResult.user : req.session.user;
+  const requests = requestsResult.success ? requestsResult.requests : [];
+
+  res.render("user", {
+    title: "Your Profile",
+    user,
+    requests,
+    errors: {},
+    successMessage: 'Profile updated successfully',
+    inputValues: { email: user.Email }
   });
 });
 
