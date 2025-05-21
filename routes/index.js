@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 
 //backend Home-page
-const { getHomePageContent } = require("../modules/homepage");
+const { getHomePageContent } = require("../modules/home");
 
 
 
