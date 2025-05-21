@@ -1,52 +1,211 @@
-<div class="container mt-5 p-4 rounded" style="background-color: hsla(351, 70%, 38%, 0.8); color: black;">
-    <h1 class="text-center mb-4">Admin Panel</h1>
-    <hr />
-    
-    <!-- Pending Requests Section -->
-    <h4 class="mt-4">Pending Requests</h4>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #801B29;
+      color: #000;
+    }
+
+    .admin-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 20px 10px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #000;
+    }
+
+    hr {
+      border: none;
+      height: 1px;
+      background-color: #ccc;
+      margin: 10px 0 30px;
+    }
+
+    h2 {
+      margin-bottom: 15px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #ccc;
+      text-align: left;
+    }
+
+    .status {
+      background-color: #555;
+      color: white;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 12px;
+      display: inline-block;
+    }
+
+    input#adminSearch {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      margin-bottom: 4px; /* Reduced margin */
+      box-sizing: border-box;
+    }
+
+    ul.list-group {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 300px; /* Limit height */
+      overflow-y: auto;  /* Scroll if too tall */
+      transition: max-height 0.3s ease;
+    }
+
+    ul.list-group li {
+      background: white;
+      margin-bottom: 8px;
+      padding: 12px 15px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      text-decoration: none;
+      color: black;
+      border: 1px solid #ccc;
+      transition: background-color 0.2s ease;
+    }
+
+    ul.list-group li:hover {
+      background-color: #f0f0f0;
+    }
+
+    .list-item-name {
+      flex: 4;
+    }
+
+    .list-item-category {
+      flex: 3;
+    }
+
+    .list-item-status {
+      flex: 1;
+      text-align: right;
+    }
+
+    .bottom-section {
+      margin-top: 20px;
+    }
+
+    #noResults {
+      font-style: italic;
+      color: #222;
+      margin-top: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <h1>Admin Panel</h1>
+    <hr>
+
+    <h2>Pending Requests</h2>
     {{#if requests.length}}
-    <ul class="list-group mb-4">
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Title</th>
+          <th>Type</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
         {{#each requests}}
-        <a href="/admin-panel/{{this.requestID}}" style="text-decoration: none;">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div class="col-3">{{this.username}}</div>
-                <div class="col-3">{{this.title}}</div>
-                <div class="col-2">{{this.type}}</div>
-                <span class="badge bg-secondary">{{this.status}}</span>
-            </li>
-        </a>
+        <tr onclick="window.location='/admin-panel/{{this.requestID}}'" style="cursor:pointer;">
+          <td>{{this.username}}</td>
+          <td>{{this.title}}</td>
+          <td>{{this.type}}</td>
+          <td><span class="status">{{this.status}}</span></td>
+        </tr>
         {{/each}}
-    </ul>
+      </tbody>
+    </table>
     {{else}}
     <p>All requests have been handled.</p>
     {{/if}}
 
-    <!-- Combined Management Section -->
-    <h4 class="mt-4">Manage Users, Content & Communities</h4>
-    <input type="text" id="adminSearch" class="form-control mb-3" placeholder="Search by name, title, or type...">
+    <div class="bottom-section">
+      <h2>Manage Users, Content & Communities</h2>
+      <input
+        type="text"
+        id="adminSearch"
+        placeholder="Search by name, title, or type..."
+        autocomplete="off"
+      />
 
-    <ul class="list-group" id="adminList">
+      <ul class="list-group" id="adminList">
         {{#each managementItems}}
-        <a href="/admin-panel/edit/{{this.id}}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style="text-decoration: none;">
-            <div class="col-4">{{this.name}}</div>
-            <div class="col-3">{{this.category}}</div>
-            <span class="badge bg-dark">{{this.status}}</span>
-        </a>
+        <li onclick="window.location='/admin-panel/edit/{{this.id}}'">
+          <div class="list-item-name">{{this.name}}</div>
+          <div class="list-item-category">{{this.category}}</div>
+          <div class="list-item-status"><span class="status">{{this.status}}</span></div>
+        </li>
         {{/each}}
-    </ul>
-</div>
+      </ul>
 
-<script>
-document.getElementById('adminSearch').addEventListener('input', function () {
-    const filter = this.value.toLowerCase();
-    const items = document.querySelectorAll('#adminList a');
+      <p id="noResults">No results found.</p>
+    </div>
+  </div>
 
-    items.forEach(item => {
+  <script>
+    const searchInput = document.getElementById('adminSearch');
+    const adminList = document.getElementById('adminList');
+    const noResults = document.getElementById('noResults');
+
+    searchInput.addEventListener('input', function () {
+      const filter = this.value.toLowerCase();
+      const items = adminList.querySelectorAll('li');
+      let visibleCount = 0;
+
+      items.forEach(item => {
         const text = item.innerText.toLowerCase();
-        item.style.display = text.includes(filter) ? '' : 'none';
+        if (text.includes(filter)) {
+          item.style.display = '';
+          visibleCount++;
+        } else {
+          item.style.display = 'none';
+        }
+      });
+
+      // Show no results message if nothing visible
+      if (visibleCount === 0) {
+        noResults.style.display = 'block';
+      } else {
+        noResults.style.display = 'none';
+      }
     });
-});
-</script>
+  </script>
+</body>
+</html>
+
+
+
+
 
 
 
