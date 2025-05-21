@@ -7,6 +7,10 @@ const fs = require('fs');
 //backend Home-page
 const { getHomePageContent } = require("../modules/home");
 const { getContentByTypeAndId } = require("../modules/detail");
+const { registerUser } = require("../modules/register");
+const { loginUser } = require("../modules/login");
+const { validateRegisterInput, validateLoginInput } = require("../modules/userValidation");
+
 
 
 //toevoegen pagina
