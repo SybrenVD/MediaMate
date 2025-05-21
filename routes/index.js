@@ -10,8 +10,6 @@ const { getContentByTypeAndId } = require("../modules/detail");
 const { registerUser } = require("../modules/register");
 const { loginUser } = require("../modules/login");
 const { validateRegisterInput, validateLoginInput } = require("../modules/userValidation");
-const { registerUser } = require("../modules/register");
-const { loginUser } = require("../modules/login");
 
 
 
