@@ -1,5 +1,3 @@
-
-// Loading the API key from the .env file
 require('dotenv').config();
 
 

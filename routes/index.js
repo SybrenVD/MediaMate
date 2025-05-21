@@ -6,8 +6,13 @@ const fs = require('fs');
 
 //backend Home-page
 const { getHomePageContent } = require("../modules/home");
+const { registerUser } = require("../modules/register");
+const { loginUser } = require("../modules/login");
+const { validateRegisterInput } = require('../modules/userValidation');
+const { validateLoginInput } = require('../modules/userValidation');
 
 
+const e = require("express");
 
 //toevoegen pagina
 const addedItems = []; // tijdelijk opgeslagen inhoud
@@ -480,70 +485,108 @@ router.get("/faq", function (req, res, next) {
 
 
 // Login Page - GET
-router.get("/login", function (req, res) 
-{
+router.get("/login", function (req, res) {
   res.render("login", {
-    title: "Login"
+    title: "Login",
+    errorMessage: null,
+    successMessage: null
   });
 });
 
-
 // Login Page - POST
-router.post("/login", function (req, res) 
-{
+router.post("/login", async function (req, res) {
   const { username, password } = req.body;
 
-  console.log("Login attempt:");
-  console.log("Username:", username);
-  console.log("Password:", password);
+  // Validate inputs
+  const validationResult = validateLoginInput(username, password);
 
-
-  // Fake Control
-  if (username === "admin" && password === "1234") 
-    {
-    req.session.user = username;
-    return res.redirect("/");
-    }
-
-   else 
-   {
-    res.render("login", {
+  if (!validationResult.isValid) {
+    return res.render("login", {
       title: "Login",
-      errorMessage: "Invalid username or password"
+      errorMessage: validationResult.error,
+      successMessage: null
+    });
+  }
+
+  try {
+    const result = await loginUser(validationResult.trimmedUsername, password);
+
+    if (result.success) {
+      // Set session
+      req.session.user = result.user; // Store user object in session
+      return res.redirect("/");
+    } else {
+      return res.render("login", {
+        title: "Login",
+        errorMessage: result.message,
+        successMessage: null
+      });
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    return res.render("login", {
+      title: "Login",
+      errorMessage: "Server error during login",
+      successMessage: null
     });
   }
 });
 
-//logout
+// Logout
 router.get("/logout", function (req, res) {
   req.session.destroy();
   res.redirect("/");
 });
 
 
-
 // Register Page - GET
-
 router.get("/register", function (req, res) {
   res.render("register", {
-    title: "Register"
+    title: "Register",
+    errorMessage: null,
+    successMessage: null
   });
 });
 
 // Register Page - POST
-
-router.post("/register", function (req, res) {
+router.post("/register", async function (req, res) {
   const { username, email, password } = req.body;
 
-  console.log("Registration attempt:");
-  console.log("Username:", username);
-  console.log("Email:", email);
-  console.log("Password:", password);
+  // Validate inputs
+  const validationResult = validateRegisterInput(username, email, password);
 
-  res.render("register", {
-    title: "Register",
-    successMessage: `Welcome, ${username}! Your account has been created.`
-  });
+  if (!validationResult.isValid) {
+    return res.render("register", {
+      title: "Register",
+      errorMessage: validationResult.error,
+      successMessage: null
+    });
+  }
+
+  try {
+    const result = await registerUser(validationResult.trimmedUsername, validationResult.trimmedEmail, password);
+
+    if (result.success) {
+      return res.render("register", {
+        title: "Register",
+        errorMessage: null,
+        successMessage: `Welcome, ${result.user.Username}! Your account has been created.`
+      });
+    } else {
+      return res.render("register", {
+        title: "Register",
+        errorMessage: result.message,
+        successMessage: null
+      });
+    }
+  } catch (error) {
+    console.error("Registration error:", error);
+    return res.render("register", {
+      title: "Register",
+      errorMessage: "Server error during registration",
+      successMessage: null
+    });
+  }
 });
 
 
