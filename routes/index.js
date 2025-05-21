@@ -20,6 +20,35 @@ const addedItems = []; // tijdelijk opgeslagen inhoud
 
 var requests = []; // Her request: { username, title, description, status }
 
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, '../public/uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Multer storage setup
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalName));
+  },
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png/;
+    const extname = filetypes.test(path.extname(file.originalName).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
+    }
+    cb('Error: Images only (jpeg, jpg, png)');
+  }
+});
 
 //user-page
 function isAuthenticated(req, res, next) {
@@ -36,8 +65,7 @@ router.get("/user", isAuthenticated, function (req, res) {
   res.render("user", {
     title: "Your Profile",
     user: {
-      username: req.session.user,
-      fullName: "John Doe", 
+      username: req.session.user, 
       email: "user@example.com" 
     },
     requests: userRequests
@@ -840,23 +868,6 @@ router.get("/testroom", function(req,res){
   res.render("testroom", {  });
 });
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../public/uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Multer storage setup
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({ storage });
 
 // GET: form
 router.get('/create-community', (req, res) => {
