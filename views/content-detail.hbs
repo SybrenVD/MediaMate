@@ -6,19 +6,22 @@
   <div class="detail-card">
     <h2 class="detail-title">{{item.name}}</h2>
 
+    {{#if item.releaseDate}}
+      <p class="detail-date"><strong>Release Date:</strong> {{item.releaseDate}}</p>
+    {{/if}}
+
     {{#if item.description}}
       <p class="detail-description mt-3">{{item.description}}</p>
     {{else}}
       <p class="detail-description mt-3 text-muted fst-italic">No description available.</p>
     {{/if}}
 
-    <p class="detail-date"><strong>Release Date:</strong> {{item.releaseDate}}</p>
-
     <a href="/" class="btn btn-back mt-4">
       <i class="bi bi-arrow-left-circle"></i> Back to Home
     </a>
   </div>
 </div>
+
 
 
 

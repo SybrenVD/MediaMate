@@ -33,6 +33,13 @@ async function getContentByTypeAndId(type, id) {
     .input("Id", id)
     .query(query);
 
+
+    if (result.recordset[0]?.ReleaseDate) {
+  const rawDate = new Date(result.recordset[0].ReleaseDate);
+  const formattedDate = rawDate.toDateString(); // bvb: "Thu Jul 21 2022"
+  result.recordset[0].ReleaseDate = formattedDate;
+}
+
   return result.recordset[0] || null;
 }
 
