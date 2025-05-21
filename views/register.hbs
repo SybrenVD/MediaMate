@@ -10,6 +10,12 @@
     </div>
   {{/if}}
 
+  {{#if errorMessage}}
+    <div class="alert alert-danger text-center" role="alert">
+      {{errorMessage}}
+    </div>
+  {{/if}}
+
   <form action="/register" method="POST" class="mt-4 col-md-6 offset-md-3">
    
     <div class="mb-3">
