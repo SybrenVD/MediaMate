@@ -880,6 +880,3 @@ router.post('/create-community', upload.single('image'), (req, res) => {
 });
 
 module.exports = router;
-
-
-module.exports = router;
