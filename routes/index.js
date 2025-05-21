@@ -6,10 +6,11 @@ const fs = require('fs');
 
 //backend Home-page
 const { getHomePageContent } = require("../modules/home");
+const { getContentByTypeAndId } = require("../modules/detail");
 const { registerUser } = require("../modules/register");
 const { loginUser } = require("../modules/login");
-const { validateRegisterInput } = require('../modules/userValidation');
-const { validateLoginInput } = require('../modules/userValidation');
+const { validateRegisterInput, validateLoginInput } = require("../modules/userValidation");
+
 
 
 const e = require("express");
@@ -410,21 +411,24 @@ router.get("/category/:type", function (req, res) {
   });
   
   // Detail page route
- router.get("/category/:type/:id", function (req, res) {
+router.get("/category/:type/:id", async function (req, res) {
   const { type, id } = req.params;
-  const from = req.query.from || "category"; // home naar ?from=home
+  const from = req.query.from || "category";
 
-  const pageData = dataMap[type];
-  if (!pageData) return res.status(404).send("Category not found");
+  const itemData = await getContentByTypeAndId(type, parseInt(id));
 
-  const itemData = pageData.items.find(item => item.id === id);
   if (!itemData) return res.status(404).send("Item not found");
 
   res.render("content-detail", {
-    item: itemData,
-    title: pageData.title,
-    type: pageData.type,
-    from: from
+    item: {
+      name: itemData.Title,
+      description: itemData.Description,
+      image: itemData.Image || "/images/placeholder.jpg",
+      releaseDate: itemData.ReleaseDate
+    },
+    title: itemData.Title,
+    type,
+    from
   });
 });
 
