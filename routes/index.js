@@ -1,8 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { upload } = require('../config/multer');
 
 //backend Home-page
 const { getHomePageContent } = require("../modules/home");
@@ -21,35 +19,6 @@ const addedItems = []; // tijdelijk opgeslagen inhoud
 
 var requests = []; // Her request: { username, title, description, status }
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../public/uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Multer storage setup
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalName));
-  },
-});
-
-const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    const filetypes = /jpeg|jpg|png/;
-    const extname = filetypes.test(path.extname(file.originalName).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
-    if (extname && mimetype) {
-      return cb(null, true);
-    }
-    cb('Error: Images only (jpeg, jpg, png)');
-  }
-});
 
 //user-page
 function isAuthenticated(req, res, next) {
@@ -58,151 +27,6 @@ function isAuthenticated(req, res, next) {
   }
   res.redirect("/login");
 }
-
-// User Page - GET
-router.get("/user", isAuthenticated, async (req, res) => {
-  const userResult = await getUserById(req.session.user.UserID);
-  if (!userResult.success) {
-    return res.status(404).render('error', { message: userResult.message });
-  }
-
-  const requestsResult = await getUserRequests(req.session.user.UserID);
-  if (!requestsResult.success) {
-    return res.status(500).render('error', { message: requestsResult.message });
-  }
-
-  res.render("user", {
-    title: "Your Profile",
-    user: userResult.user,
-    requests: requestsResult.requests,
-    errors: {},
-    successMessage: null,
-    inputValues: { email: userResult.user.Email }
-  });
-});
-
-// User Page - POST (Update Email, Image, Password)
-router.post("/user", isAuthenticated, upload.single('image'), async (req, res) => {
-  const { email, currentPassword, newPassword } = req.body;
-  const imagePath = req.file ? `/images/${req.file.filename}` : null;
-  const userID = req.session.user.UserID;
-
-  // Validate inputs
-  const validationResult = validateUpdateInput(email, imagePath, newPassword, currentPassword);
-  if (!validationResult.isValid) {
-    const userResult = await getUserById(userID);
-    const requestsResult = await getUserRequests(userID);
-    const user = userResult.success ? userResult.user : req.session.user;
-    const requests = requestsResult.success ? requestsResult.requests : [];
-
-    return res.render("user", {
-      title: "Your Profile",
-      user,
-      requests,
-      errors: validationResult.errors,
-      successMessage: null,
-      inputValues: { email: validationResult.trimmedEmail || user.Email }
-    });
-  }
-
-  // Verify current password if updating password
-  if (newPassword) {
-    const passwordVerification = await verifyCurrentPassword(userID, currentPassword);
-    if (!passwordVerification.isValid) {
-      const userResult = await getUserById(userID);
-      const requestsResult = await getUserRequests(userID);
-      const user = userResult.success ? userResult.user : req.session.user;
-      const requests = requestsResult.success ? requestsResult.requests : [];
-
-      return res.render("user", {
-        title: "Your Profile",
-        user,
-        requests,
-        errors: { currentPassword: passwordVerification.error },
-        successMessage: null,
-        inputValues: { email: validationResult.trimmedEmail || user.Email }
-      });
-    }
-  }
-
-  // Check for duplicate email
-  if (validationResult.trimmedEmail && validationResult.trimmedEmail !== req.session.user.Email) {
-    const emailCheck = await checkDuplicateEmail(validationResult.trimmedEmail, userID);
-    if (!emailCheck.isUnique) {
-      const userResult = await getUserById(userID);
-      const requestsResult = await getUserRequests(userID);
-      const user = userResult.success ? userResult.user : req.session.user;
-      const requests = requestsResult.success ? requestsResult.requests : [];
-
-      return res.render("user", {
-        title: "Your Profile",
-        user,
-        requests,
-        errors: { email: emailCheck.message },
-        successMessage: null,
-        inputValues: { email: validationResult.trimmedEmail }
-      });
-    }
-  }
-
-  // Build update inputs
-  const updates = [];
-  const inputs = {};
-  if (validationResult.trimmedEmail && validationResult.trimmedEmail !== req.session.user.Email) {
-    updates.push('Email = @Email');
-    inputs.Email = validationResult.trimmedEmail;
-  }
-  if (imagePath) {
-    updates.push('Image = @Image');
-    inputs.Image = imagePath;
-  }
-  if (newPassword) {
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-    updates.push('PasswordHash = @PasswordHash');
-    inputs.PasswordHash = hashedPassword;
-  }
-
-  // Update user
-  const updateResult = await updateUser(userID, updates, inputs);
-  if (!updateResult.success) {
-    const userResult = await getUserById(userID);
-    const requestsResult = await getUserRequests(userID);
-    const user = userResult.success ? userResult.user : req.session.user;
-    const requests = requestsResult.success ? requestsResult.requests : [];
-
-    return res.render("user", {
-      title: "Your Profile",
-      user,
-      requests,
-      errors: { general: updateResult.message },
-      successMessage: null,
-      inputValues: { email: validationResult.trimmedEmail || user.Email }
-    });
-  }
-
-  // Update session
-  if (inputs.Email) req.session.user.Email = inputs.Email;
-  if (inputs.Image) req.session.user.Image = inputs.Image;
-
-  // Fetch updated user data and requests
-  const userResult = await getUserById(userID);
-  const requestsResult = await getUserRequests(userID);
-  const user = userResult.success ? userResult.user : req.session.user;
-  const requests = requestsResult.success ? requestsResult.requests : [];
-
-  res.render("user", {
-    title: "Your Profile",
-    user,
-    requests,
-    errors: {},
-    successMessage: 'Profile updated successfully',
-    inputValues: { email: user.Email }
-  });
-});
-
-
-
 
 /* GET home page. */
 router.get("/", async function (req, res) {
@@ -590,7 +414,30 @@ router.get("/category/:type/:id", async function (req, res) {
 });
 
 
+// Contact Page - POST
 
+router.post("/contact", function (req, res) 
+{
+  
+  const { name, email, message } = req.body;
+
+  console.log("Contact form submitted:");
+  console.log("Name:", name);
+  console.log("Email:", email);
+  console.log("Message:", message);
+
+  res.render("contact", {
+    title: "Contact",
+    successMessage: `Thanks for contacting us, ${name}!`
+  
+});
+});
+
+router.get('/community', function (req, res) {
+  res.render('community', {
+    title: 'Community'
+  });
+});
 
 
 
@@ -750,6 +597,147 @@ router.post("/register", async function (req, res) {
   }
 });
 
+// User Page - GET
+router.get("/user", isAuthenticated, async (req, res) => {
+  const userResult = await getUserById(req.session.user.UserID);
+  if (!userResult.success) {
+    return res.status(404).render('error', { message: userResult.message });
+  }
+
+  const requestsResult = await getUserRequests(req.session.user.UserID);
+  if (!requestsResult.success) {
+    return res.status(500).render('error', { message: requestsResult.message });
+  }
+
+  res.render("user", {
+    title: "Your Profile",
+    user: userResult.user,
+    requests: requestsResult.requests,
+    errors: {},
+    successMessage: null,
+    inputValues: { email: userResult.user.Email }
+  });
+});
+
+// User Page - POST (Update Email, Image, Password)
+router.post("/user", isAuthenticated, upload.single('image'), async (req, res) => {
+  const { email, currentPassword, newPassword } = req.body;
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+  const userID = req.session.user.UserID;
+
+  // Validate inputs
+  const validationResult = validateUpdateInput(email, imagePath, newPassword, currentPassword);
+  if (!validationResult.isValid) {
+    const userResult = await getUserById(userID);
+    const requestsResult = await getUserRequests(userID);
+    const user = userResult.success ? userResult.user : req.session.user;
+    const requests = requestsResult.success ? requestsResult.requests : [];
+
+    return res.render("user", {
+      title: "Your Profile",
+      user,
+      requests,
+      errors: validationResult.errors,
+      successMessage: null,
+      inputValues: { email: validationResult.trimmedEmail || user.Email }
+    });
+  }
+
+  // Verify current password if updating password
+  if (newPassword) {
+    const passwordVerification = await verifyCurrentPassword(userID, currentPassword);
+    if (!passwordVerification.isValid) {
+      const userResult = await getUserById(userID);
+      const requestsResult = await getUserRequests(userID);
+      const user = userResult.success ? userResult.user : req.session.user;
+      const requests = requestsResult.success ? requestsResult.requests : [];
+
+      return res.render("user", {
+        title: "Your Profile",
+        user,
+        requests,
+        errors: { currentPassword: passwordVerification.error },
+        successMessage: null,
+        inputValues: { email: validationResult.trimmedEmail || user.Email }
+      });
+    }
+  }
+
+  // Check for duplicate email
+  if (validationResult.trimmedEmail && validationResult.trimmedEmail !== req.session.user.Email) {
+    const emailCheck = await checkDuplicateEmail(validationResult.trimmedEmail, userID);
+    if (!emailCheck.isUnique) {
+      const userResult = await getUserById(userID);
+      const requestsResult = await getUserRequests(userID);
+      const user = userResult.success ? userResult.user : req.session.user;
+      const requests = requestsResult.success ? requestsResult.requests : [];
+
+      return res.render("user", {
+        title: "Your Profile",
+        user,
+        requests,
+        errors: { email: emailCheck.message },
+        successMessage: null,
+        inputValues: { email: validationResult.trimmedEmail }
+      });
+    }
+  }
+
+  // Build update inputs
+  const updates = [];
+  const inputs = {};
+  if (validationResult.trimmedEmail && validationResult.trimmedEmail !== req.session.user.Email) {
+    updates.push('Email = @Email');
+    inputs.Email = validationResult.trimmedEmail;
+  }
+  if (imagePath) {
+    updates.push('Image = @Image');
+    inputs.Image = imagePath;
+  }
+  if (newPassword) {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    updates.push('PasswordHash = @PasswordHash');
+    inputs.PasswordHash = hashedPassword;
+  }
+
+  // Update user
+  const updateResult = await updateUser(userID, updates, inputs);
+  if (!updateResult.success) {
+    const userResult = await getUserById(userID);
+    const requestsResult = await getUserRequests(userID);
+    const user = userResult.success ? userResult.user : req.session.user;
+    const requests = requestsResult.success ? requestsResult.requests : [];
+
+    return res.render("user", {
+      title: "Your Profile",
+      user,
+      requests,
+      errors: { general: updateResult.message },
+      successMessage: null,
+      inputValues: { email: validationResult.trimmedEmail || user.Email }
+    });
+  }
+
+  // Update session
+  if (inputs.Email) req.session.user.Email = inputs.Email;
+  if (inputs.Image) req.session.user.Image = inputs.Image;
+
+  // Fetch updated user data and requests
+  const userResult = await getUserById(userID);
+  const requestsResult = await getUserRequests(userID);
+  const user = userResult.success ? userResult.user : req.session.user;
+  const requests = requestsResult.success ? requestsResult.requests : [];
+
+  res.render("user", {
+    title: "Your Profile",
+    user,
+    requests,
+    errors: {},
+    successMessage: 'Profile updated successfully',
+    inputValues: { email: user.Email }
+  });
+});
 
 
 // Contact Page - GET
@@ -760,30 +748,7 @@ router.get("/contact", function (req, res) {
   });
 });
 
-// Contact Page - POST
 
-router.post("/contact", function (req, res) 
-{
-  
-  const { name, email, message } = req.body;
-
-  console.log("Contact form submitted:");
-  console.log("Name:", name);
-  console.log("Email:", email);
-  console.log("Message:", message);
-
-  res.render("contact", {
-    title: "Contact",
-    successMessage: `Thanks for contacting us, ${name}!`
-  
-});
-});
-
-router.get('/community', function (req, res) {
-  res.render('community', {
-    title: 'Community'
-  });
-});
     
 //GET FavList Page
 router.get("/favorites", isAuthenticated, function(req, res)
@@ -1010,7 +975,6 @@ router.get('/create-community', (req, res) => {
 router.post('/create-community', upload.single('image'), (req, res) => {
   const { name, keywords } = req.body;
   const imageFile = req.file;
-
   if (!name || !keywords || !imageFile) {
     return res.status(400).send('All fields are required.');
   }
