@@ -9,17 +9,94 @@ const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 const server = http.createServer(app);
+
+const { sql, poolPromise } = require("../config/db");
 //chatroom
 const io = socketIo(server);
 
 io.on('connection', (socket) => {
-  console.log('a user conneted');
-  socket.on('chat message', (msg) => {
-    io.emit('chat message', msg);
-  });
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  });
+  console.log('user conneted');
+//login
+    socket.on('login', async (username, callback) => {
+        try {
+            const pool = await poolPromise;
+            let result = await pool.request()
+                .input('Username', sql.NVarChar, username)
+                .query('SELECT * FROM Users WHERE Username = @username');
+
+            let user = result.recordset[0];
+            if (!user) {
+                result = await pool.request()
+                    .input('Username', sql.NVarChar, username)
+                    .query('INSERT INTO Users (Username) OUTPUT INSERTED.UserID VALUES (@username)');
+                user = { UserID: result.recordset[0].UserID, username };
+            }
+            socket.data.user = user;
+            callback(user);
+        } catch (err) {
+            console.error('Login error', err);
+        }
+    });
+//enter/create room
+    socket.on('join room', async (roomname, callback) => {
+        try {
+            const pool = await poolPromise;
+            const user = socket.data.user;
+            if (!user) return;
+
+            let result = await pool.request()
+                .input('ChatName', sql.NVarChar, roomname)
+                .query('SELECT * FROM Communities WHERE ChatName = @ChatName');
+    
+            let room = result.recordset[0];
+            if (!room) {
+                result = await pool.request()
+                    .input('ChatName', sql.NVarChar, roomname)
+                    .input('CreatorID', sql.Int, user.UserID)
+                    .query('INSERT INTO Communities (ChatName, CreatorID) OUTPUT INSERTED.ChatID VALUES (@ChatName, @CreatorID)');
+                room = { ChatID: result.recordset[0].ChatID, roomname, CreatorID: user.UserID };
+            }
+            await pool.request()
+                .input('ChatID', sql.Int, room.ChatID)
+                .input('UserID', sql.Int, user.UserID)
+                .query(`IF NOT EXISTS (
+                    SELECT * FROM Favorites WHERE ChatID = @ChatID AND UserID = @UserID) INSERT INTO Favorites (ChatID, UserID) VALUES (@ChatID, @UserID)`);
+            socket.join(`room_${room.ChatID}`);
+            socket.data.room = room;
+//history msg
+            const msgResult = await pool.request()
+                    .input('ChatID', sql.Int, room.ChatID)
+                    .query(`SELECT Messages.[Content], Messages.Time, Users.Username FROM Messages JOIN Users ON Messages.FromUser = Users.UserID WHERE ChatID = @ChatID ORDER BY Messages.MessageID ASC`);
+            callback({ room: { ChatID: room.ChatID, ChatName: room.ChatName }, messages: msgResult.recordset });
+        } catch (err) {
+            console.error('Join room error', err);
+        }
+    });
+//accept and save new msg
+    socket.on('chat message', async (msg) => {
+        try {
+            const pool = await poolPromise;
+            const user = socket.data.user;
+            const room = socket.data.room;
+            if (!user || !room ||!msg) return;
+
+            const timestamp = new Date().toISOString();
+            await pool.request()
+                .input('ChatID', sql.Int, room.ChatID)
+                .input('UserID', sql.Int, user.UserID)
+                .input('[Content]', sql.NVarChar, msg)
+                .input('Time', sql.DateTime2, timestamp)
+                .query(`INSERT INTO Messages (ChatID, UserID, [Content], Time) VALUES (@ChatID, @UserID, @[Content], @Time)`);
+            const message = `[${user.Username}] ${msg}`;
+            io.to(`room_${room.ChatID}`).emit('chat message', message);
+        } catch (err) {
+            console.error('Message error:', err);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+    });
 });
 
 server.listen(port, () => {
