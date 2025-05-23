@@ -39,8 +39,8 @@
                     console.log('Logged in as', user);
 //enter room
                     socket.emit('join room', roomname, (data) => {
-                        console.log('Joined room: ', data.room.ChatName);
-                        $('#messages').append(`<li>--- Joined room: ${data.room.ChatName} ---</li>`);
+                        console.log('Joined room: ', data.room.RoomName);
+                        $('#messages').append(`<li>--- Joined room: ${data.room.RoomName} ---</li>`);
                         room.messages.forEach(msg => {
                             $('#messages').append($('<li>').text(`[${msg.username}] ${msg.message}`));
                         });
