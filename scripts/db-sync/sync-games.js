@@ -1,16 +1,17 @@
 require('dotenv').config();
 const axios = require('axios');
 const sql = require('mssql');
+const striptags = require('striptags');
 
-async function fetchWithRetry(url, params, retries = 3, delay = 1000) {
+async function fetchWithRetry(url, retries = 3, delay = 1000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const response = await axios.get(url, { params });
+      const response = await axios.get(url);
       return response;
     } catch (error) {
-      if (error.response && (error.response.status === 502 || error.response.status === 503)) {
+      if (error.response && (error.response.status === 429 || error.response.status === 502 || error.response.status === 503)) {
         if (attempt === retries) {
-          throw error;
+          throw new Error(`Failed after ${retries} attempts: ${error.message}`);
         }
         console.log(`Attempt ${attempt} failed with status ${error.response.status}. Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -136,12 +137,34 @@ async function main() {
 
         for (const game of games) {
           const title = game.name || 'No title';
-          // Ensure description is a string and truncate to 2000 characters
-          let description = game.description_raw || game.description || 'No description';
-          description = typeof description === 'string' ? description : String(description);
-          if (description.length > 2000) {
-            console.log(`Truncating description for game "${title}": Original length = ${description.length}`);
-            description = description.substring(0, 2000);
+
+          // Fetch detailed game data for description
+          let description = 'No description';
+          try {
+            const slug = title.toLowerCase()
+              .replace(/[^a-z0-9\s-]/g, '')
+              .trim()
+              .replace(/\s+/g, '-');
+            const detailUrl = `https://api.rawg.io/api/games/${slug}?key=f161c5ceeac2444a950ccf2fe1cdebb4`;
+            await new Promise(resolve => setTimeout(resolve, 200)); // Rate limit delay
+            const detailResponse = await fetchWithRetry(detailUrl);
+            const gameData = detailResponse.data;
+
+            description = gameData.description_raw || gameData.description || 'No description';
+            description = typeof description === 'string' ? description : String(description);
+            // Strip HTML tags
+            description = striptags(description);
+            // Truncate to 2000 characters
+            if (description.length > 2000) {
+              console.log(`Truncating description for game "${title}": Original length = ${description.length}`);
+              description = description.substring(0, 2000);
+            }
+          } catch (error) {
+            if (error.response && error.response.status === 404) {
+              console.log(`Detailed data not found for game "${title}". Using default description.`);
+            } else {
+              console.error(`Error fetching detailed data for game "${title}":`, error.message);
+            }
           }
 
           // Validate and format releaseDate
@@ -167,7 +190,7 @@ async function main() {
           // Get full image URL from background_image
           const imageUrl = game.background_image || null;
 
-          // Insert into Games table with Image column
+          // Insert into Games table with Image and Description
           const gameResult = await pool.request()
             .input('Title', sql.NVarChar, title)
             .input('Description', sql.NVarChar, description)
@@ -259,13 +282,37 @@ async function main() {
 
           for (const game of games) {
             const title = game.name || 'No title';
-            let description = game.description_raw || game.description || 'No description';
-            description = typeof description === 'string' ? description : String(description);
-            if (description.length > 2000) {
-              console.log(`Truncating description for game "${title}": Original length = ${description.length}`);
-              description = description.substring(0, 2000);
+
+            // Fetch detailed game data for description
+            let description = 'No description';
+            try {
+              const slug = title.toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .trim()
+                .replace(/\s+/g, '-');
+              const detailUrl = `https://api.rawg.io/api/games/${slug}?key=f161c5ceeac2444a950ccf2fe1cdebb4`;
+              await new Promise(resolve => setTimeout(resolve, 200)); // Rate limit delay
+              const detailResponse = await fetchWithRetry(detailUrl);
+              const gameData = detailResponse.data;
+
+              description = gameData.description_raw || gameData.description || 'No description';
+              description = typeof description === 'string' ? description : String(description);
+              // Strip HTML tags
+              description = striptags(description);
+              // Truncate to 2000 characters
+              if (description.length > 2000) {
+                console.log(`Truncating description for game "${title}": Original length = ${description.length}`);
+                description = description.substring(0, 2000);
+              }
+            } catch (error) {
+              if (error.response && error.response.status === 404) {
+                console.log(`Detailed data not found for game "${title}". Using default description.`);
+              } else {
+                console.error(`Error fetching detailed data for game "${title}":`, error.message);
+              }
             }
 
+            // Validate and format releaseDate
             let releaseDate = game.released || null;
             if (releaseDate) {
               if (/^\d{4}$/.test(releaseDate)) {
@@ -288,6 +335,7 @@ async function main() {
             // Get full image URL from background_image
             const imageUrl = game.background_image || null;
 
+            // Insert into Games table with Image and Description
             const gameResult = await pool.request()
               .input('Title', sql.NVarChar, title)
               .input('Description', sql.NVarChar, description)
@@ -302,6 +350,7 @@ async function main() {
             
             const gameId = gameResult.recordset[0].GameID;
 
+            // Insert into Content table
             const contentResult = await pool.request()
               .input('GameID', sql.Int, gameId)
               .query(`
@@ -312,6 +361,7 @@ async function main() {
             
             const contentId = contentResult.recordset[0].ContentID;
 
+            // Link to genre in Content_Genre table
             await pool.request()
               .input('GenreID', sql.Int, genreId)
               .input('ContentID', sql.Int, contentId)

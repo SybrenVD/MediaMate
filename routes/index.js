@@ -36,8 +36,6 @@ router.get("/", async function (req, res) {
     const randomMoviesContent = await getRandomMovies();
     const randomGamesContent = await getRandomGames();
 
-    console.log(bestRatedContent);
-
     res.render("index", {
       title: "Home",
       banner: "/images/BannerHome.jpg",
