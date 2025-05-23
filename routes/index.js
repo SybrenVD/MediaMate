@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const { upload } = require('../config/multer');
+const upload = require('../config/multer');
 
 //backend Home-page
 const { getHomePageContent } = require("../modules/home");
