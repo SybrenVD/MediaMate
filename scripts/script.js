@@ -1,43 +1,55 @@
-const { poolPromise } = require('../config/db'); // Adjust path to your db config
+const { sql, poolPromise } = require('../config/db');
 
-async function updateUserImages() {
+async function setRandomRatings() {
   try {
     const pool = await poolPromise;
 
-    // Query all users with .jpg images
-    const result = await pool.request()
-      .query("SELECT UserID, Username, Image FROM Users WHERE Image LIKE '%.jpg'");
+    // Select 10 random items across Books, Movies, and Games
+    const result = await pool.request().query(`
+      SELECT TOP 10
+        C.ContentID,
+        CASE 
+          WHEN B.BookID IS NOT NULL THEN 'Books'
+          WHEN M.MovieID IS NOT NULL THEN 'Movies'
+          WHEN G.GameID IS NOT NULL THEN 'Games'
+        END AS ContentType,
+        COALESCE(B.BookID, M.MovieID, G.GameID) AS ItemID
+      FROM Content C
+      LEFT JOIN Books B ON C.BookID = B.BookID
+      LEFT JOIN Movies M ON C.MovieID = M.MovieID
+      LEFT JOIN Games G ON C.GameID = G.GameID
+      WHERE B.BookID IS NOT NULL OR M.MovieID IS NOT NULL OR G.GameID IS NOT NULL
+      ORDER BY NEWID()
+    `);
 
-    const users = result.recordset;
+    const items = result.recordset;
+    console.log('Selected items:', items);
 
-    if (users.length === 0) {
-      console.log('No users with .jpg images found.');
+    if (items.length === 0) {
+      console.log('No items found to update.');
       return;
     }
 
-    for (const user of users) {
-      const newImage = user.Image.replace('.jpg', '.png');
-      try {
-        await pool.request()
-          .input('UserID', user.UserID)
-          .input('Image', newImage)
-          .query('UPDATE Users SET Image = @Image WHERE UserID = @UserID');
-        console.log(`Updated image for UserID ${user.UserID} (${user.Username}): ${user.Image} -> ${newImage}`);
-      } catch (error) {
-        console.error(`Error updating image for UserID ${user.UserID} (${user.Username}):`, error.message);
-      }
+    // Update ratings for each selected item
+    for (const item of items) {
+      const { ContentType, ItemID } = item;
+      const table = ContentType;
+      const idColumn = ContentType.slice(0, -1) + 'ID';
+      await pool.request()
+        .input('ItemID', sql.Int, ItemID)
+        .query(`UPDATE ${table} SET Rating = 1 WHERE ${idColumn} = @ItemID`);
+      console.log(`Updated ${ContentType} ID ${ItemID} to Rating = 1`);
     }
 
-    console.log('All image updates completed.');
+    console.log('Successfully updated 10 random items.');
   } catch (error) {
-    console.error('Error connecting to database or querying users:', error.message);
-  } finally {
-    // Close the database connection
-    await pool.close();
+    console.error('Error in setRandomRatings:', error);
+    throw error;
   }
 }
 
 // Run the script
-updateUserImages().catch((error) => {
-  console.error('Script execution failed:', error.message);
+setRandomRatings().catch(err => {
+  console.error('Script error:', err);
+  process.exit(1);
 });
