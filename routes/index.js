@@ -417,6 +417,14 @@ router.get("/category/:type/:id", async function (req, res) {
   });
 });
 
+// Contact Page - GET
+
+router.get("/contact", function (req, res) {
+  res.render("contact", {
+    title: "Contact"
+  });
+});
+
 
 // Contact Page - POST
 
@@ -443,6 +451,36 @@ router.get('/community', function (req, res) {
   });
 });
 
+// GET: form
+router.get('/create-community', (req, res) => {
+  res.render('create-community', {
+    title: 'Create Community',
+    active: 'create-community',
+    error: null
+  });
+});
+
+// POST: handle form
+router.post('/create-community', upload.single('image'), (req, res) => {
+  const { name, keywords } = req.body;
+  const imageFile = req.file;
+
+  // Check for required fields
+  if (!name || !keywords || !imageFile) {
+    return res.status(400).render('create-community', {
+      title: 'Create Community',
+      active: 'create-community',
+      error: 'All fields (name, keywords, image) are required.'
+    });
+  }
+
+  console.log('✅ Community created:');
+  console.log('Name:', name);
+  console.log('Keywords:', keywords.split(',').map(k => k.trim()));
+  console.log('Image file:', imageFile.filename);
+
+  res.send('Community created successfully!');
+});
 
 
 router.get("/faq", function (req, res, next) {
@@ -743,16 +781,6 @@ router.post("/user", isAuthenticated, upload.single('image'), async (req, res) =
   });
 });
 
-
-// Contact Page - GET
-
-router.get("/contact", function (req, res) {
-  res.render("contact", {
-    title: "Contact"
-  });
-});
-
-
     
 //GET FavList Page
 router.get("/favorites", isAuthenticated, function(req, res)
@@ -967,35 +995,6 @@ router.get("/testroom", function(req,res){
 });
 
 
-// GET: form
-router.get('/create-community', (req, res) => {
-  res.render('create-community', {
-    title: 'Create Community',
-    active: 'create-community',
-    error: null
-  });
-});
 
-// POST: handle form
-router.post('/create-community', upload.single('image'), (req, res) => {
-  const { name, keywords } = req.body;
-  const imageFile = req.file;
-
-  // Check for required fields
-  if (!name || !keywords || !imageFile) {
-    return res.status(400).render('create-community', {
-      title: 'Create Community',
-      active: 'create-community',
-      error: 'All fields (name, keywords, image) are required.'
-    });
-  }
-
-  console.log('✅ Community created:');
-  console.log('Name:', name);
-  console.log('Keywords:', keywords.split(',').map(k => k.trim()));
-  console.log('Image file:', imageFile.filename);
-
-  res.send('Community created successfully!');
-});
 
 module.exports = router;
