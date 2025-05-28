@@ -13,7 +13,7 @@ const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = requir
 
 
 const e = require("express");
-const { poolPromise } = require("../config/db");
+const { sql, poolPromise } = require("../config/db");
 
 //toevoegen pagina
 const addedItems = []; // tijdelijk opgeslagen inhoud
@@ -936,26 +936,26 @@ router.post('/admin/edit/:id', async (req, res) => {
 });
 
 
-/*GET groeplist+room */
+/*GET chatroom */
 router.get("/chatroom", async function(req, res) {
   try {
     const pool = await poolPromise;
-    const roomResult = await pool.request().query('SELECT RoomID AS chatId, RoomName AS chatName FROM Communities');
+    const roomResult = await pool.request().query('SELECT RoomID, ChatName FROM Communities');
     const rooms = roomResult.recordset;
-    rooms.forEach(room => {
-      room.img = "";
-      room.members = "";
-    });
+    // rooms.forEach(room => {
+    //   room.Image = "";
+    //   room.members = "";
+    // });
     const messagesByRoom = {};
     for (const room of rooms) {
-      const msgResult = await pool.request().input('RoomID', sql.Int, room.chatId).query(`SELECT TOP 50 MessageID AS messageId, FromUser as fromId, Time AS time, Content AS content FROM Messages WHERE RoomID = @RoomID ORDER BY Time DESC`);
-      messagesByRoom[room.chatId] = msgResult.recordset;
+      const msgResult = await pool.request().input('RoomID', sql.Int, room.RoomID).query(`SELECT TOP 50 MessageID, FromUser, Time, Content FROM Messages WHERE RoomID = @RoomID ORDER BY Time DESC`);
+      messagesByRoom[room.RoomID] = msgResult.recordset;
     }
 
   res.render("chatroom", {
     title: "Chatrooms",
     rooms,
-    messagesByRoom: allMessages
+    messagesByRoom
   });
 } catch (err) {
   console.error('Error loading chatroom', err);
@@ -992,3 +992,4 @@ router.post('/create-community', upload.single('image'), (req, res) => {
 });
 
 module.exports = router;
+// module.exports = {sql, poolPromise};

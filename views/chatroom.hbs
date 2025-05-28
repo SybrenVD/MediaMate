@@ -11,16 +11,16 @@
     <div class="tab-content" id="nav-tabContent">
       {{#each rooms}}
           <div class="tab-pane fade {{#if @first}}show active{{/if}}"
-             id="list-{{this.chatId}}"
+             id="list-{{this.RoomID}}"
              role="tabpanel"
-             aria-labelledby="list-{{this.chatId}}-list"
-             data-room-id="{{this.chatId}}"
-             data-room-name="{{this.chatName}}">
+             aria-labelledby="list-{{this.RoomID}}-list"
+             data-room-id="{{this.RoomID}}"
+             data-room-name="{{this.ChatName}}">
               <div class="p-2">
                 <div class="d-flex flex-row mb-3">
-                  <img src="{{img}}" alt="imgChat" style="max-width: 100px; max-height: 100px;" />
+                  <img src="{{this.Image}}" alt="imgChat" style="max-width: 100px; max-height: 100px;" />
                   <div class="btn-group">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">{{chatName}}</button>
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">{{this.ChatName}}</button>
                     <ul class="dropdown-menu">
                       {{#each this.members}}
                         {{>grouplidcard}}
@@ -29,14 +29,14 @@
                   </div>
                 </div>
               </div>
-              <div id="messages-{{this.chatId}}" class="p-2 d-flex flex-column mb-3">
-                {{#each (lookup ../messagesByRoom chatId)}}
+              <div id="messages-{{this.RoomID}}" class="p-2 d-flex flex-column mb-3">
+                {{#each (lookup ../messagesByRoom RoomID)}}
                   {{> messagepartial}}
                 {{/each}}
               </div>
               <div class="mt-auto p-3 border-top">
-                <form class="d-flex gap-2" data-room-id="{{this.chatId}}">
-                  <input type="text" class="form-control">
+                <form class="d-flex gap-2" data-room-id="{{this.RoomID}}">
+                  <input type="text" class="form-control message-input">
                   <button class="btn btn-secondary">⬆</button>
                 </form>
               </div>
@@ -76,11 +76,11 @@
       
       socket.emit('join room', roomName, (data) => {
         currentRoom = data.room;
-        console.log('Joined room:', data.room.RoomName);
+        console.log('Joined room:', data.room.ChatName);
         
         // 显示加入消息
         const messagesContainer = $(`#messages-${data.room.RoomID}`);
-        messagesContainer.append(`<div class="alert alert-info">Joined room: ${data.room.RoomName}</div>`);
+        messagesContainer.append(`<div class="alert alert-info">Joined room: ${data.room.ChatName}</div>`);
         
         // 加载历史消息
         data.messages.forEach(msg => {
@@ -112,7 +112,7 @@
     });
     
     // 消息发送
-    $('.room-form').on('submit', function(e) {
+    $('form[data-room-id]').on('submit', function(e) {
       e.preventDefault();
       const roomId = $(this).data('room-id');
       const input = $(this).find('.message-input');
@@ -125,17 +125,17 @@
     });
     
     // 接收新消息
-    socket.on('chat message', function(data) {
+    socket.on('chat message', function({ roomId, username, message, time }) {
       const messagesContainer = $(`#messages-${data.roomId}`);
       messagesContainer.append(`
         <div class="message mb-2">
           <div class="d-flex align-items-start">
-            <img src="" alt="${data.username}" class="rounded-circle me-2" width="30">
-            <strong>${data.username}</strong>
+            <img src="" alt="${username}" class="rounded-circle me-2" width="30">
+            <strong>${username}</strong>
           </div>
           <div class="ms-4">
-            <p class="mb-0">${data.message}</p>
-            <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+            <p class="mb-0">${message}</p>
+            <small class="text-muted">${new Date(time).toLocaleTimeString()}</small>
           </div>
         </div>
       `);

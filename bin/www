@@ -29,7 +29,7 @@ io.on('connection', (socket) => {
                 result = await pool.request()
                     .input('Username', sql.NVarChar, username)
                     .query('INSERT INTO Users (Username) OUTPUT INSERTED.UserID VALUES (@username)');
-                user = { UserID: result.recordset[0].UserID, username };
+                user = { UserID: result.recordset[0].UserID, Username: username };
             }
             socket.data.user = user;
             callback(user);
@@ -49,16 +49,16 @@ io.on('connection', (socket) => {
       }
 //search/create room
       let result = await pool.request()
-        .input('RoomName', sql.NVarChar, roomname)
-        .query('SELECT * FROM Communities WHERE RoomName = @RoomName');
+        .input('ChatName', sql.NVarChar, roomname)
+        .query('SELECT * FROM Communities WHERE ChatName = @ChatName');
       let room = result.recordset[0];
 //create new room
             if (!room) {
                 result = await pool.request()
-                    .input('RoomName', sql.NVarChar, roomname)
+                    .input('ChatName', sql.NVarChar, roomname)
                     .input('CreatorID', sql.Int, user.UserID)
-                    .query('INSERT INTO Communities (RoomName, CreatorID) OUTPUT INSERTED.RoomID VALUES (@RoomName, @CreatorID)');
-                room = { RoomID: result.recordset[0].RoomID, roomname, CreatorID: user.UserID };
+                    .query('INSERT INTO Communities (ChatName, CreatorID) OUTPUT INSERTED.RoomID VALUES (@ChatName, @CreatorID)');
+                room = { RoomID: result.recordset[0].RoomID, ChatName: roomname, CreatorID: user.UserID };
             }
 //add lid
             await pool.request()
@@ -73,7 +73,7 @@ io.on('connection', (socket) => {
             const msgResult = await pool.request()
                     .input('RoomID', sql.Int, room.RoomID)
                     .query(`SELECT Messages.Content, Messages.Time, Users.Username FROM Messages JOIN Users ON Messages.FromUser = Users.UserID WHERE RoomID = @RoomID ORDER BY Messages.MessageID ASC`);
-            callback({ room: { RoomID: room.RoomID, RoomName: room.RoomName }, messages: msgResult.recordset });
+            callback({ room: { RoomID: room.RoomID, ChatName: room.ChatName }, messages: msgResult.recordset });
         } catch (err) {
             console.error('Join room error', err);
         }
@@ -95,7 +95,9 @@ io.on('connection', (socket) => {
                 .query(`INSERT INTO Messages (RoomID, FromUser, Content, Time) VALUES (@RoomID, @FromUser, @Content, @Time)`);
             const message = `[${user.Username}] ${msg}`;
 //broad msg
-            io.to(`room_${room.RoomID}`).emit('chat message', message);
+            io.to(`room_${room.RoomID}`).emit('chat message', {
+                roomId: room.RoomID, username: user.Username, message: msg, time: timestamp
+            });
         } catch (err) {
             console.error('Message error:', err);
         }
