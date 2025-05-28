@@ -9,6 +9,7 @@ const { registerUser } = require("../modules/register");
 const { loginUser } = require("../modules/login");
 const { validateRegisterInput, validateLoginInput, validateUpdateInput, verifyCurrentPassword } = require("../modules/userValidation");
 const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = require('../modules/user');
+const { searchAllContent } = require('../modules/search');
 // const { io } = require("../modules/chatroom");
 
 
@@ -28,20 +29,20 @@ function isAuthenticated(req, res, next) {
   res.redirect("/login");
 }
 
-/* GET home page. */
-router.get("/", async function (req, res) {
+router.get('/', async function (req, res) {
   try {
     const bestRatedContent = await getBestRated();
     const randomBooksContent = await getRandomBooks();
     const randomMoviesContent = await getRandomMovies();
     const randomGamesContent = await getRandomGames();
+    console.log('Homepage data:', { bestRatedContent, randomBooksContent, randomMoviesContent, randomGamesContent }); // Debug
 
-    res.render("index", {
-      title: "Home",
-      banner: "/images/BannerHome.jpg",
+    res.render('index', {
+      title: 'Home',
+      banner: '/images/BannerHome.jpg',
       hero: {
-        cta: "Welcome to MediaMate",
-        shortDescription: "Find the best in entertainment"
+        cta: 'Welcome to MediaMate',
+        shortDescription: 'Find the best in entertainment'
       },
       bestRatedContent,
       randomBooksContent,
@@ -49,8 +50,100 @@ router.get("/", async function (req, res) {
       randomGamesContent
     });
   } catch (error) {
-    console.error("Error loading homepage content:", error);
-    res.status(500).send("Internal Server Error");
+    console.error('Error loading homepage content:', error);
+    res.status(500).render('index', {
+      title: 'Home',
+      banner: '/images/BannerHome.jpg',
+      hero: {
+        cta: 'Welcome to MediaMate',
+        shortDescription: 'Find the best in entertainment'
+      },
+      bestRatedContent: [],
+      randomBooksContent: [],
+      randomMoviesContent: [],
+      randomGamesContent: [],
+      error: 'Failed to load content'
+    });
+  }
+});
+
+/* POST search */
+router.post('/search', async function (req, res) {
+  console.log('POST /search received:', req.body);
+  const query = req.body.query?.trim();
+  if (!query) {
+    console.log('No query provided, redirecting with error');
+    return res.redirect('/search?error=Please enter a search query');
+  }
+  console.log(`Redirecting to /search?query=${encodeURIComponent(query)}`);
+  res.redirect(`/search?query=${encodeURIComponent(query)}`);
+});
+
+/* GET search results */
+router.get('/search', async function (req, res) {
+  console.log('GET /search received:', req.query);
+  const query = req.query.query?.trim() || '';
+  const page = parseInt(req.query.page) || 1;
+  const error = req.query.error;
+
+  try {
+    let searchResults = [];
+    let searchError = error;
+    let currentPage = 1;
+    let totalPages = 1;
+
+    if (query) {
+      const result = await searchAllContent(query, page);
+      searchResults = Array.isArray(result.searchResults) ? result.searchResults : [];
+      currentPage = result.currentPage;
+      totalPages = result.totalPages;
+      // Log searchResults details
+      console.log('Search Results:', searchResults);
+      console.log('Search Results Type:', Array.isArray(searchResults) ? 'Array' : typeof searchResults);
+      console.log('Search Results Length:', searchResults.length);
+      if (searchResults.length === 0) {
+        searchError = 'No results found';
+      }
+    } else if (!error) {
+      searchError = 'Please enter a search query';
+    }
+
+    // Log data passed to render
+    const renderData = {
+      title: 'Search Results',
+      searchResults,
+      searchQuery: query,
+      currentPage,
+      totalPages,
+      error: searchError,
+      range: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start),
+      eq: (a, b) => a === b,
+      gt: (a, b) => a > b,
+      lt: (a, b) => a < b,
+      add: (a, b) => a + b,
+      subtract: (a, b) => a - b,
+      json: (context) => JSON.stringify(context, null, 2) // Added for debug
+    };
+    console.log('Render Data:', renderData);
+
+    res.render('search', renderData); // Updated to 'search'
+  } catch (error) {
+    console.error('Error performing search:', error);
+    res.status(500).render('search', { // Updated to 'search'
+      title: 'Search Results',
+      searchResults: [],
+      searchQuery: query,
+      currentPage: 1,
+      totalPages: 1,
+      error: 'Search failed, please try again',
+      range: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start),
+      eq: (a, b) => a === b,
+      gt: (a, b) => a > b,
+      lt: (a, b) => a < b,
+      add: (a, b) => a + b,
+      subtract: (a, b) => a - b,
+      json: (context) => JSON.stringify(context, null, 2)
+    });
   }
 });
 

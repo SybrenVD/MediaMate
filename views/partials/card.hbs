@@ -1,23 +1,20 @@
 <a href="/category/{{type}}/{{id}}?from=home" style="text-decoration: none; color: inherit;">
   <div class="card h-100 shadow-sm">
     <img src="{{img}}" alt="Card Image" class="card-img-top p-2 img-fluid" style="height: 200px; object-fit: cover;">
-    
-    <div class="card-body text-start">
+
+    <div class="card-body text-start" style="position: relative;">
       <div class="d-flex justify-content-between">
         <h4 class="flex-grow-1">{{title}}</h4>
-        {{> iheart}}       
+        {{> iheart}}
       </div>
 
-     <p class="card-text" style="font-size: 0.9rem; min-height: 70px; color: #f1f1f1; font-family: 'Segoe UI', sans-serif;">
-  {{description}}
-</p>
+      <p class="pt-3">
+        {{Genres}}
+      </p>
+      <span class="badge bg-secondary position-absolute bottom-0 end-0 m-3">
+        {{ContentType}}
+      </span>
 
     </div>
   </div>
 </a>
-
-
-
-
-
-

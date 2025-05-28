@@ -18,19 +18,16 @@
           </div>
         </div>
 
-        <!-- Search bar -->
-        <div class="row" style="position: relative; z-index: 3;">
-          <div class="col-12 d-flex justify-content-center">
-            <form class="d-flex" role="search" style="width: 80%;">
-              <div class="input-group input-group-lg w-100">
+        <!-- Search Bar -->
+        <div class="row justify-content-center mb-5" style="position: relative; z-index: 3;">
+          <div class="col-md-6">
+            <form class="d-flex" role="search" action="/search" method="POST">
+              <div class="input-group input-group-lg">
                 <span class="input-group-text" style="background-color: #8b1d2e; border-color: #8b1d2e;">
                   <i class="bi bi-search" style="color: white;"></i>
                 </span>
-                <input 
-                  class="form-control border-2" 
-                  type="search" 
-                  placeholder="Find your {{title}}" 
-                  aria-label="Search"
+                <input class="form-control border-2" type="search" name="query"
+                  placeholder="Find books, movies, or games..." aria-label="Search"
                   style="border-color: #8b1d2e; background-color: #f4d1d1; color: #8b1d2e;">
               </div>
             </form>
@@ -107,12 +104,3 @@
     margin-bottom: 60px;
   }
 </style>
-
-
-
-
-
-
-
-
-

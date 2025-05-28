@@ -1,0 +1,85 @@
+<div class="container mt-5 text-center">
+    <h1 class="page-title mb-4">Search Results</h1>
+
+    <!-- Search Bar -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-6">
+            <form class="d-flex" role="search" action="/search" method="POST">
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text" style="background-color: #8b1d2e; border-color: #8b1d2e;">
+                        <i class="bi bi-search" style="color: white;"></i>
+                    </span>
+                    <input class="form-control border-2" type="search" name="query"
+                        placeholder="Find books, movies, or games..." aria-label="Search"
+                        style="border-color: #8b1d2e; background-color: #f4d1d1; color: #8b1d2e;"
+                        value="{{searchQuery}}">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Search Results Grid -->
+<div class="container">
+    {{#if error}}
+    <div class="alert alert-danger" role="alert">
+        {{error}}
+    </div>
+    {{/if}}
+
+    <!-- Search Results Grid -->
+    <div class="container">
+        {{#if error}}
+        <div class="alert alert-danger" role="alert">
+            {{error}}
+        </div>
+        {{/if}}
+
+        {{#if searchResults.length}}
+        <div class="row g-4">
+            {{#each searchResults}}
+            <div class="col-md-3">
+                {{> card type=ContentType id=ItemID img=Image title=Title Genres=Genres}}
+            </div>
+            {{/each}}
+        </div>
+
+        <!-- Pagination -->
+        <nav aria-label="Page navigation" class="mt-5">
+            <ul class="pagination justify-content-center">
+                {{#if (gt currentPage 1)}}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="/search?page={{subtract currentPage 1}}{{#if searchQuery}}&query={{searchQuery}}{{/if}}">Previous</a>
+                </li>
+                {{else}}
+                <li class="page-item disabled">
+                    <span class="page-link">Previous</span>
+                </li>
+                {{/if}}
+
+                {{#each (range 1 totalPages)}}
+                <li class="page-item {{#if (eq this ../currentPage)}}active{{/if}}">
+                    <a class="page-link"
+                        href="/search?page={{this}}{{#if ../searchQuery}}&query={{../searchQuery}}{{/if}}">{{this}}</a>
+                </li>
+                {{/each}}
+
+                {{#if (lt currentPage totalPages)}}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="/search?page={{add currentPage 1}}{{#if searchQuery}}&query={{searchQuery}}{{/if}}">Next</a>
+                </li>
+                {{else}}
+                <li class="page-item disabled">
+                    <span class="page-link">Next</span>
+                </li>
+                {{/if}}
+            </ul>
+        </nav>
+        {{else}}
+        <div class="alert alert-info" role="alert">
+            No results found. Try a different search!
+        </div>
+        {{/if}}
+    </div>

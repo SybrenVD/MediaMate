@@ -49,8 +49,7 @@ h4 {
     justify-content: space-between;
     border-radius: 8px;
     overflow: hidden;
-    min-height: 280px;
-    max-height: 340px;
+    min-height: 340px;
 }
 
 .card-body {

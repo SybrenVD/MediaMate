@@ -8,76 +8,68 @@ async function getBestRated() {
     const result = await pool.request().query(`
       SELECT TOP 10
         C.ContentID,
-        B.BookID, B.Title AS BookTitle, B.Description AS BookDesc, B.Image AS BookImage, B.Rating AS Rating,
-        NULL AS MovieID, NULL AS MovieTitle, NULL AS MovieDesc, NULL AS MovieImage, NULL AS MovieRating,
-        NULL AS GameID, NULL AS GameTitle, NULL AS GameDesc, NULL AS GameImage, NULL AS GameRating
+        B.BookID AS ItemID,
+        'Book' AS ContentType,
+        B.Title,
+        B.Description,
+        B.Image,
+        B.Rating,
+        STRING_AGG(G.Name, ', ') AS Genres
       FROM Content C
       INNER JOIN Books B ON C.BookID = B.BookID
+      LEFT JOIN Content_Genre CG ON C.ContentID = CG.ContentID
+      LEFT JOIN Genres G ON CG.GenreID = G.GenreID
       WHERE B.Rating IS NOT NULL
+      GROUP BY C.ContentID, B.BookID, B.Title, B.Description, B.Image, B.Rating
       UNION ALL
       SELECT 
         C.ContentID,
-        NULL AS BookID, NULL AS BookTitle, NULL AS BookDesc, NULL AS BookImage, NULL AS BookRating,
-        M.MovieID, M.Title AS MovieTitle, M.Description AS MovieDesc, M.Image AS MovieImage, M.Rating AS Rating,
-        NULL AS GameID, NULL AS GameTitle, NULL AS GameDesc, NULL AS GameImage, NULL AS GameRating
+        M.MovieID AS ItemID,
+        'Movie' AS ContentType,
+        M.Title,
+        M.Description,
+        M.Image,
+        M.Rating,
+        STRING_AGG(G.Name, ', ') AS Genres
       FROM Content C
       INNER JOIN Movies M ON C.MovieID = M.MovieID
+      LEFT JOIN Content_Genre CG ON C.ContentID = CG.ContentID
+      LEFT JOIN Genres G ON CG.GenreID = G.GenreID
       WHERE M.Rating IS NOT NULL
+      GROUP BY C.ContentID, M.MovieID, M.Title, M.Description, M.Image, M.Rating
       UNION ALL
       SELECT 
         C.ContentID,
-        NULL AS BookID, NULL AS BookTitle, NULL AS BookDesc, NULL AS BookImage, NULL AS BookRating,
-        NULL AS MovieID, NULL AS MovieTitle, NULL AS MovieDesc, NULL AS MovieImage, NULL AS MovieRating,
-        G.GameID, G.Title AS GameTitle, G.Description AS GameDesc, G.Image AS GameImage, G.Rating AS Rating
+        G.GameID AS ItemID,
+        'Game' AS ContentType,
+        G.Title,
+        G.Description,
+        G.Image,
+        G.Rating,
+        STRING_AGG(G2.Name, ', ') AS Genres
       FROM Content C
       INNER JOIN Games G ON C.GameID = G.GameID
+      LEFT JOIN Content_Genre CG ON C.ContentID = CG.ContentID
+      LEFT JOIN Genres G2 ON CG.GenreID = G2.GenreID
       WHERE G.Rating IS NOT NULL
+      GROUP BY C.ContentID, G.GameID, G.Title, G.Description, G.Image, G.Rating
       ORDER BY Rating DESC, ContentID DESC
     `);
 
-    const items = result.recordset.map(row => {
-      let type = '';
-      let title = '';
-      let description = '';
-      let fullDescription = '';
-      let image = '';
-      let rating = 0;
+    const items = result.recordset.map(row => ({
+      id: row.ContentID,
+      ItemID: row.ItemID,
+      ContentType: row.ContentType,
+      type: row.ContentType.toLowerCase() + 's', // 'books', 'movies', 'games' for compatibility
+      title: row.Title,
+      description: truncateDescription(row.Description),
+      fullDescription: row.Description || '',
+      img: row.Image || '/images/placeholder.jpg',
+      Genres: row.Genres || '',
+      rating: row.Rating || 0
+    }));
 
-      if (row.BookID) {
-        type = 'books';
-        title = row.BookTitle;
-        description = truncateDescription(row.BookDesc);
-        fullDescription = row.BookDesc || '';
-        image = row.BookImage;
-        rating = row.BookRating || 0;
-      } else if (row.MovieID) {
-        type = 'movies';
-        title = row.MovieTitle;
-        description = truncateDescription(row.MovieDesc);
-        fullDescription = row.MovieDesc || '';
-        image = row.MovieImage;
-        rating = row.MovieRating || 0;
-      } else if (row.GameID) {
-        type = 'games';
-        title = row.GameTitle;
-        description = truncateDescription(row.GameDesc);
-        fullDescription = row.GameDesc || '';
-        image = row.GameImage;
-        rating = row.GameRating || 0;
-      }
-
-      return {
-        id: row.ContentID,
-        type,
-        title,
-        description, // Truncated for cards
-        fullDescription, // Full for details
-        img: image || '/images/placeholder.jpg',
-        rating
-      };
-    });
-
-    console.log('getBestRated items:', items); // Debug log
+    console.log('getBestRated items:', items);
     return items;
   } catch (error) {
     console.error('Error in getBestRated:', error);
@@ -87,83 +79,125 @@ async function getBestRated() {
 
 
 async function getRandomBooks() {
-  const pool = await poolPromise;
+  try {
+    const pool = await poolPromise;
 
-  const result = await pool.request().query(`
-    SELECT TOP 10
-      C.ContentID,
-      B.BookID, 
-      B.Title AS BookTitle, 
-      B.Description AS BookDesc, 
-      B.Image AS BookImage
-    FROM Content C
-    INNER JOIN Books B ON C.BookID = B.BookID
-    ORDER BY NEWID()
-  `);
+    const result = await pool.request().query(`
+      SELECT TOP 10
+        C.ContentID,
+        B.BookID AS ItemID,
+        'Book' AS ContentType,
+        B.Title,
+        B.Description,
+        B.Image,
+        STRING_AGG(G.Name, ', ') AS Genres
+      FROM Content C
+      INNER JOIN Books B ON C.BookID = B.BookID
+      LEFT JOIN Content_Genre CG ON C.ContentID = CG.ContentID
+      LEFT JOIN Genres G ON CG.GenreID = G.GenreID
+      GROUP BY C.ContentID, B.BookID, B.Title, B.Description, B.Image
+      ORDER BY NEWID()
+    `);
 
-  const items = result.recordset.map(row => ({
-    id: row.ContentID,
-    type: 'books',
-    title: row.BookTitle,
-    description: truncateDescription(row.BookDesc),
-    img: row.BookImage || '/images/placeholder.jpg'
-  }));
+    const items = result.recordset.map(row => ({
+      id: row.ContentID,
+      ItemID: row.ItemID,
+      ContentType: row.ContentType,
+      type: 'books',
+      title: row.Title,
+      description: truncateDescription(row.Description),
+      img: row.Image || '/images/placeholder.jpg',
+      Genres: row.Genres || ''
+    }));
 
-  return items;
+    console.log('getRandomBooks items:', items);
+    return items;
+  } catch (error) {
+    console.error('Error in getRandomBooks:', error);
+    throw error;
+  }
 }
 
 
 async function getRandomMovies() {
-  const pool = await poolPromise;
+  try {
+    const pool = await poolPromise;
 
-  const result = await pool.request().query(`
-    SELECT TOP 10
-      C.ContentID,
-      M.MovieID, 
-      M.Title AS MovieTitle, 
-      M.Description AS MovieDesc, 
-      M.Image AS MovieImage
-    FROM Content C
-    INNER JOIN Movies M ON C.MovieID = M.MovieID
-    ORDER BY NEWID()
-  `);
+    const result = await pool.request().query(`
+      SELECT TOP 10
+        C.ContentID,
+        M.MovieID AS ItemID,
+        'Movie' AS ContentType,
+        M.Title,
+        M.Description,
+        M.Image,
+        STRING_AGG(G.Name, ', ') AS Genres
+      FROM Content C
+      INNER JOIN Movies M ON C.MovieID = M.MovieID
+      LEFT JOIN Content_Genre CG ON C.ContentID = CG.ContentID
+      LEFT JOIN Genres G ON CG.GenreID = G.GenreID
+      GROUP BY C.ContentID, M.MovieID, M.Title, M.Description, M.Image
+      ORDER BY NEWID()
+    `);
 
-  const items = result.recordset.map(row => ({
-    id: row.ContentID,
-    type: 'movies',
-    title: row.MovieTitle,
-    description: truncateDescription(row.MovieDesc),
-    img: row.MovieImage || '/images/placeholder.jpg'
-  }));
+    const items = result.recordset.map(row => ({
+      id: row.ContentID,
+      ItemID: row.ItemID,
+      ContentType: row.ContentType,
+      type: 'movies',
+      title: row.Title,
+      description: truncateDescription(row.Description),
+      img: row.Image || '/images/placeholder.jpg',
+      Genres: row.Genres || ''
+    }));
 
-  return items;
+    console.log('getRandomMovies items:', items);
+    return items;
+  } catch (error) {
+    console.error('Error in getRandomMovies:', error);
+    throw error;
+  }
 }
 
 
 async function getRandomGames() {
-  const pool = await poolPromise;
+  try {
+    const pool = await poolPromise;
 
-  const result = await pool.request().query(`
-    SELECT TOP 10
-      C.ContentID,
-      G.GameID, 
-      G.Title AS GameTitle, 
-      G.Description AS GameDesc, 
-      G.Image AS GameImage
-    FROM Content C
-    INNER JOIN Games G ON C.GameID = G.GameID
-    ORDER BY NEWID()
-  `);
+    const result = await pool.request().query(`
+      SELECT TOP 10
+        C.ContentID,
+        G.GameID AS ItemID,
+        'Game' AS ContentType,
+        G.Title,
+        G.Description,
+        G.Image,
+        STRING_AGG(G2.Name, ', ') AS Genres
+      FROM Content C
+      INNER JOIN Games G ON C.GameID = G.GameID
+      LEFT JOIN Content_Genre CG ON C.ContentID = CG.ContentID
+      LEFT JOIN Genres G2 ON CG.GenreID = G2.GenreID
+      GROUP BY C.ContentID, G.GameID, G.Title, G.Description, G.Image
+      ORDER BY NEWID()
+    `);
 
-  const items = result.recordset.map(row => ({
-    id: row.ContentID,
-    type: 'games',
-    title: row.GameTitle,
-    description: truncateDescription(row.GameDesc),
-    img: row.GameImage || '/images/placeholder.jpg'
-  }));
+    const items = result.recordset.map(row => ({
+      id: row.ContentID,
+      ItemID: row.ItemID,
+      ContentType: row.ContentType,
+      type: 'games',
+      title: row.Title,
+      description: truncateDescription(row.Description),
+      img: row.Image || '/images/placeholder.jpg',
+      Genres: row.Genres || ''
+    }));
 
-  return items;
+    console.log('getRandomGames items:', items);
+    return items;
+  } catch (error) {
+    console.error('Error in getRandomGames:', error);
+    throw error;
+  }
 }
 
 
