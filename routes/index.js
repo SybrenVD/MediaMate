@@ -1,9 +1,9 @@
 var express = require("express");
 var router = express.Router();
-const { upload } = require('../config/multer');
+const upload = require('../config/multer');
 
 //backend Home-page
-const { getHomePageContent } = require("../modules/home");
+const { getBestRated, getRandomBooks, getRandomMovies, getRandomGames } = require("../modules/home");
 const { getContentByTypeAndId } = require("../modules/detail");
 const { registerUser } = require("../modules/register");
 const { loginUser } = require("../modules/login");
@@ -32,8 +32,10 @@ function isAuthenticated(req, res, next) {
 /* GET home page. */
 router.get("/", async function (req, res) {
   try {
-    const mostViewedContent = await getHomePageContent();
-    const bestRatedContent = await getHomePageContent();
+    const bestRatedContent = await getBestRated();
+    const randomBooksContent = await getRandomBooks();
+    const randomMoviesContent = await getRandomMovies();
+    const randomGamesContent = await getRandomGames();
 
     res.render("index", {
       title: "Home",
@@ -42,8 +44,10 @@ router.get("/", async function (req, res) {
         cta: "Welcome to MediaMate",
         shortDescription: "Find the best in entertainment"
       },
-      mostViewedContent,
-      bestRatedContent
+      bestRatedContent,
+      randomBooksContent,
+      randomMoviesContent,
+      randomGamesContent
     });
   } catch (error) {
     console.error("Error loading homepage content:", error);

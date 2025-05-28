@@ -1,43 +1,48 @@
-const { poolPromise } = require('../config/db'); // Adjust path to your db config
+const { sql, poolPromise } = require('../config/db'); // Adjust the path to your dbConfig file
 
-async function updateUserImages() {
-  try {
-    const pool = await poolPromise;
+// List of tables and their VARCHAR columns with lengths
+const varcharColumns = [
+    { table: 'Users', column: 'Username', length: '25' },
+    { table: 'Users', column: 'Email', length: '254' },
+    { table: 'Users', column: 'PasswordHash', length: '255' },
+    { table: 'Users', column: 'UserType', length: '5' },
+    { table: 'Users', column: 'Image', length: '255' },
+    { table: 'AdminPanelLogs', column: 'ActionDescription', length: 'MAX' },
+    { table: 'Communities', column: 'ChatName', length: '30' },
+    { table: 'Communities', column: 'Keywords', length: '150' },
+    { table: 'Communities', column: 'Image', length: '255' },
+    { table: 'Genres', column: 'Name', length: '20' },
+    { table: 'Requests', column: 'Status', length: '50' },
+    { table: 'Requests', column: 'Description', length: '500' },
+    { table: 'Requests', column: 'ContentType', length: '5' }
+];
 
-    // Query all users with .jpg images
-    const result = await pool.request()
-      .query("SELECT UserID, Username, Image FROM Users WHERE Image LIKE '%.jpg'");
+async function changeVarcharToNvarchar() {
+    try {
+        // Use the existing poolPromise from dbConfig
+        const pool = await poolPromise;
+        console.log('Using existing database connection.');
 
-    const users = result.recordset;
+        // Generate and execute ALTER TABLE statements
+        for (const col of varcharColumns) {
+            const length = col.length === 'MAX' ? 'MAX' : `(${col.length})`;
+            const query = `ALTER TABLE ${col.table} ALTER COLUMN ${col.column} NVARCHAR${length}`;
+            try {
+                await pool.request().query(query);
+                console.log(`Successfully changed ${col.table}.${col.column} to NVARCHAR${length}`);
+            } catch (err) {
+                console.error(`Error altering ${col.table}.${col.column}:`, err.message);
+            }
+        }
 
-    if (users.length === 0) {
-      console.log('No users with .jpg images found.');
-      return;
+        console.log('All VARCHAR columns have been processed.');
+    } catch (err) {
+        console.error('Error during execution:', err.message);
+    } finally {
+        // No need to close the pool since it's managed by dbConfig
+        console.log('Script execution completed.');
     }
-
-    for (const user of users) {
-      const newImage = user.Image.replace('.jpg', '.png');
-      try {
-        await pool.request()
-          .input('UserID', user.UserID)
-          .input('Image', newImage)
-          .query('UPDATE Users SET Image = @Image WHERE UserID = @UserID');
-        console.log(`Updated image for UserID ${user.UserID} (${user.Username}): ${user.Image} -> ${newImage}`);
-      } catch (error) {
-        console.error(`Error updating image for UserID ${user.UserID} (${user.Username}):`, error.message);
-      }
-    }
-
-    console.log('All image updates completed.');
-  } catch (error) {
-    console.error('Error connecting to database or querying users:', error.message);
-  } finally {
-    // Close the database connection
-    await pool.close();
-  }
 }
 
 // Run the script
-updateUserImages().catch((error) => {
-  console.error('Script execution failed:', error.message);
-});
+changeVarcharToNvarchar().catch(err => console.error('Script execution failed:', err));

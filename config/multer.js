@@ -16,15 +16,14 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, uniqueSuffix + path.extname(file.originalName));
-  },
+  }
 });
 
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    // Check if file exists and has originalName
-    if (!file || !file.originalName) {
-      return cb(new Error('No file uploaded or invalid file data'));
+    if (!file) {
+      return cb(new Error('No file uploaded'));
     }
     const filetypes = /jpeg|jpg|png/;
     const extname = filetypes.test(path.extname(file.originalName).toLowerCase());
@@ -36,4 +35,4 @@ const upload = multer({
   }
 });
 
-module.exports = { upload }; // Export for use in router
+module.exports = upload;
