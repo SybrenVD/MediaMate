@@ -2,7 +2,7 @@ var express = require("express");
 var router = express.Router();
 const upload = require('../config/multer');
 
-//backend Home-page
+//modules
 const { getBestRated, getRandomBooks, getRandomMovies, getRandomGames } = require("../modules/home");
 const { getContentByTypeAndId } = require("../modules/detail");
 const { registerUser } = require("../modules/register");
