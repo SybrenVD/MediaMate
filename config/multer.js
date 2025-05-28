@@ -15,18 +15,19 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalName));
+    cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
 
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    if (!file) {
-      return cb(new Error('No file uploaded'));
+    // Check if file and originalname exist
+    if (!file || !file.originalname) {
+      return cb(new Error('No file uploaded or invalid file'));
     }
     const filetypes = /jpeg|jpg|png/;
-    const extname = filetypes.test(path.extname(file.originalName).toLowerCase());
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);
     if (extname && mimetype) {
       return cb(null, true);
