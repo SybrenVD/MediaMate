@@ -1,48 +1,43 @@
 require('dotenv').config();
 const axios = require('axios');
-const sql = require('mssql');
 const striptags = require('striptags');
+const { sql, poolPromise } = require('../../config/db'); // Adjust path if needed
 
-async function fetchWithRetry(url, retries = 3, delay = 1000) {
+async function fetchWithRetry(url, params, retries = 3, delay = 20) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const response = await axios.get(url);
+      const response = await axios.get(url, { params });
       return response;
     } catch (error) {
       if (error.response && (error.response.status === 429 || error.response.status === 502 || error.response.status === 503)) {
         if (attempt === retries) {
-          throw new Error(`Failed after ${retries} attempts: ${error.message}`);
+          throw new Error(`Failed after ${retries} attempts: ${error.message} (Status: ${error.response?.status})`);
         }
-        console.log(`Attempt ${attempt} failed with status ${error.response.status}. Retrying in ${delay}ms...`);
+        console.log(`Attempt ${attempt} failed with status ${error.response.status} for URL ${url}. Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       } else {
-        throw error;
+        throw new Error(`Request failed: ${error.message} (Status: ${error.response?.status || 'N/A'})`);
       }
     }
   }
 }
 
 async function main() {
-  const config = {
-    user: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    server: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT, 10),
-    database: process.env.DB_DATABASE,
-    options: {
-      encrypt: true,
-      trustServerCertificate: true
-    }
-  };
-
-  const pool = await sql.connect(config);
+  let pool;
+  try {
+    pool = await poolPromise;
+    console.log('Connected to SQL Server.');
+  } catch (err) {
+    console.error('Database connection failed:', err.message);
+    process.exit(1);
+  }
 
   // Ensure a default user exists
   const userResult = await pool.request()
-    .input('Username', sql.VarChar, 'Admin')
-    .input('Email', sql.VarChar, null)
-    .input('PasswordHash', sql.VarChar, 'Tp:r7576jX')
-    .input('UserType', sql.VarChar, 'Admin')
+    .input('Username', sql.NVarChar, 'Admin')
+    .input('Email', sql.NVarChar, null)
+    .input('PasswordHash', sql.NVarChar, 'Tp:r7576jX')
+    .input('UserType', sql.NVarChar, 'Admin')
     .query(`
       IF NOT EXISTS (SELECT 1 FROM Users WHERE Username = @Username)
       INSERT INTO Users (Username, Email, PasswordHash, UserType)
@@ -94,7 +89,7 @@ async function main() {
   // Insert genres, respecting existing ones
   for (const genre of gameGenres) {
     await pool.request()
-      .input('Name', sql.VarChar, genre)
+      .input('Name', sql.NVarChar, genre)
       .query(`
         IF NOT EXISTS (SELECT 1 FROM Genres WHERE Name = @Name)
         INSERT INTO Genres (Name) VALUES (@Name)
@@ -110,7 +105,7 @@ async function main() {
   // Process games for each genre (initial pass)
   for (const genre of gameGenres) {
     const genreIdResult = await pool.request()
-      .input('Name', sql.VarChar, genre)
+      .input('Name', sql.NVarChar, genre)
       .query('SELECT GenreID FROM Genres WHERE Name = @Name');
     const genreId = genreIdResult.recordset[0].GenreID;
 
@@ -119,15 +114,20 @@ async function main() {
     for (let page = 1; page <= 5; page++) {
       try {
         // Add delay to avoid rate limits
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 20));
 
-        const response = await fetchWithRetry('https://api.rawg.io/api/games', {
+        const params = {
           key: 'f161c5ceeac2444a950ccf2fe1cdebb4',
-          genres: rawgGenreMap[genre].includes('battle-royale') || rawgGenreMap[genre].includes('moba') || rawgGenreMap[genre].includes('open-world') || rawgGenreMap[genre].includes('horror') || rawgGenreMap[genre].includes('visual-novel') || rawgGenreMap[genre].includes('music') || rawgGenreMap[genre].includes('survival') || rawgGenreMap[genre].includes('sandbox') || rawgGenreMap[genre].includes('stealth') ? undefined : rawgGenreMap[genre],
-          tags: rawgGenreMap[genre].includes('battle-royale') || rawgGenreMap[genre].includes('moba') || rawgGenreMap[genre].includes('open-world') || rawgGenreMap[genre].includes('horror') || rawgGenreMap[genre].includes('visual-novel') || rawgGenreMap[genre].includes('music') || rawgGenreMap[genre].includes('survival') || rawgGenreMap[genre].includes('sandbox') || rawgGenreMap[genre].includes('stealth') ? rawgGenreMap[genre] : undefined,
           page: page,
           page_size: 40
-        });
+        };
+        if (['battle-royale', 'moba', 'open-world', 'horror', 'visual-novel', 'music', 'survival', 'sandbox', 'stealth'].includes(rawgGenreMap[genre])) {
+          params.tags = rawgGenreMap[genre];
+        } else {
+          params.genres = rawgGenreMap[genre];
+        }
+
+        const response = await fetchWithRetry('https://api.rawg.io/api/games', params);
         const games = response.data.results || [];
 
         if (games.length === 0) {
@@ -138,6 +138,15 @@ async function main() {
         for (const game of games) {
           const title = game.name || 'No title';
 
+          // Check if game already exists
+          const existingGame = await pool.request()
+            .input('Title', sql.NVarChar, title)
+            .query('SELECT GameID FROM Games WHERE Title = @Title');
+          if (existingGame.recordset.length > 0) {
+            console.log(`Game "${title}" already exists, skipping.`);
+            continue;
+          }
+
           // Fetch detailed game data for description
           let description = 'No description';
           try {
@@ -145,16 +154,14 @@ async function main() {
               .replace(/[^a-z0-9\s-]/g, '')
               .trim()
               .replace(/\s+/g, '-');
-            const detailUrl = `https://api.rawg.io/api/games/${slug}?key=f161c5ceeac2444a950ccf2fe1cdebb4`;
-            await new Promise(resolve => setTimeout(resolve, 200)); // Rate limit delay
-            const detailResponse = await fetchWithRetry(detailUrl);
+            const detailUrl = `https://api.rawg.io/api/games/${slug}`;
+            await new Promise(resolve => setTimeout(resolve, 20)); // Rate limit delay
+            const detailResponse = await fetchWithRetry(detailUrl, { key: 'f161c5ceeac2444a950ccf2fe1cdebb4' });
             const gameData = detailResponse.data;
 
             description = gameData.description_raw || gameData.description || 'No description';
             description = typeof description === 'string' ? description : String(description);
-            // Strip HTML tags
             description = striptags(description);
-            // Truncate to 2000 characters
             if (description.length > 2000) {
               console.log(`Truncating description for game "${title}": Original length = ${description.length}`);
               description = description.substring(0, 2000);
@@ -175,13 +182,13 @@ async function main() {
             } else if (/^\d{4}-\d{2}$/.test(releaseDate)) {
               releaseDate = `${releaseDate}-01`;
             } else if (!/^\d{4}-\d{2}-\d{2}$/.test(releaseDate)) {
-              console.log(`Invalid date format for game "${title}": ${releaseDate}, setting to NULL`);
+              console.log(`Invalid date format for game "${title}" : ${releaseDate}, setting to NULL`);
               releaseDate = null;
             }
             if (releaseDate) {
               const dateObj = new Date(releaseDate);
               if (isNaN(dateObj.getTime()) || dateObj.getFullYear() < 1000 || dateObj.getFullYear() > 9999) {
-                console.log(`Invalid date for game "${title}": ${releaseDate}, setting to NULL`);
+                console.log(`Invalid date for game "${title}" : ${releaseDate}, setting to NULL`);
                 releaseDate = null;
               }
             }
@@ -202,7 +209,7 @@ async function main() {
               OUTPUT INSERTED.GameID
               VALUES (@Title, @Description, @ReleaseDate, NULL, @Image, @AddedByUserID)
             `);
-          
+
           const gameId = gameResult.recordset[0].GameID;
 
           // Insert into Content table
@@ -213,7 +220,7 @@ async function main() {
               OUTPUT INSERTED.ContentID
               VALUES (@GameID)
             `);
-          
+
           const contentId = contentResult.recordset[0].ContentID;
 
           // Link to genre in Content_Genre table
@@ -229,10 +236,6 @@ async function main() {
           totalGamesInserted++;
         }
       } catch (error) {
-        if (error.response && error.response.status === 404) {
-          console.log(`No more games found for genre "${genre}" on page ${page}.`);
-          break;
-        }
         console.error(`Error fetching games for genre "${genre}" on page ${page}:`, error.message);
         break;
       }
@@ -249,7 +252,6 @@ async function main() {
   if (shortfall > 0) {
     console.log(`Total games inserted: ${totalGamesInserted}, shortfall: ${shortfall}. Fetching additional games.`);
 
-    // Prioritize high-yield genres
     const highYieldGenres = ['Action', 'Adventure', 'RPG', 'Shooter'];
     let remainingShortfall = shortfall;
 
@@ -257,22 +259,27 @@ async function main() {
       if (remainingShortfall <= 0) break;
 
       const genreIdResult = await pool.request()
-        .input('Name', sql.VarChar, genre)
+        .input('Name', sql.NVarChar, genre)
         .query('SELECT GenreID FROM Genres WHERE Name = @Name');
       const genreId = genreIdResult.recordset[0].GenreID;
 
       let page = 6;
       while (remainingShortfall > 0) {
         try {
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 2000));
 
-          const response = await fetchWithRetry('https://api.rawg.io/api/games', {
+          const params = {
             key: 'f161c5ceeac2444a950ccf2fe1cdebb4',
-            genres: rawgGenreMap[genre].includes('battle-royale') || rawgGenreMap[genre].includes('moba') || rawgGenreMap[genre].includes('open-world') || rawgGenreMap[genre].includes('horror') || rawgGenreMap[genre].includes('visual-novel') || rawgGenreMap[genre].includes('music') || rawgGenreMap[genre].includes('survival') || rawgGenreMap[genre].includes('sandbox') || rawgGenreMap[genre].includes('stealth') ? undefined : rawgGenreMap[genre],
-            tags: rawgGenreMap[genre].includes('battle-royale') || rawgGenreMap[genre].includes('moba') || rawgGenreMap[genre].includes('open-world') || rawgGenreMap[genre].includes('horror') || rawgGenreMap[genre].includes('visual-novel') || rawgGenreMap[genre].includes('music') || rawgGenreMap[genre].includes('survival') || rawgGenreMap[genre].includes('sandbox') || rawgGenreMap[genre].includes('stealth') ? rawgGenreMap[genre] : undefined,
             page: page,
             page_size: 40
-          });
+          };
+          if (['battle-royale', 'moba', 'open-world', 'horror', 'visual-novel', 'music', 'survival', 'sandbox', 'stealth'].includes(rawgGenreMap[genre])) {
+            params.tags = rawgGenreMap[genre];
+          } else {
+            params.genres = rawgGenreMap[genre];
+          }
+
+          const response = await fetchWithRetry('https://api.rawg.io/api/games', params);
           const games = response.data.results || [];
 
           if (games.length === 0) {
@@ -283,6 +290,15 @@ async function main() {
           for (const game of games) {
             const title = game.name || 'No title';
 
+            // Check if game already exists
+            const existingGame = await pool.request()
+              .input('Title', sql.NVarChar, title)
+              .query('SELECT GameID FROM Games WHERE Title = @Title');
+            if (existingGame.recordset.length > 0) {
+              console.log(`Game "${title}" already exists, skipping.`);
+              continue;
+            }
+
             // Fetch detailed game data for description
             let description = 'No description';
             try {
@@ -290,16 +306,14 @@ async function main() {
                 .replace(/[^a-z0-9\s-]/g, '')
                 .trim()
                 .replace(/\s+/g, '-');
-              const detailUrl = `https://api.rawg.io/api/games/${slug}?key=f161c5ceeac2444a950ccf2fe1cdebb4`;
-              await new Promise(resolve => setTimeout(resolve, 200)); // Rate limit delay
-              const detailResponse = await fetchWithRetry(detailUrl);
+              const detailUrl = `https://api.rawg.io/api/games/${slug}`;
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              const detailResponse = await fetchWithRetry(detailUrl, { key: 'f161c5ceeac2444a950ccf2fe1cdebb4' });
               const gameData = detailResponse.data;
 
               description = gameData.description_raw || gameData.description || 'No description';
               description = typeof description === 'string' ? description : String(description);
-              // Strip HTML tags
               description = striptags(description);
-              // Truncate to 2000 characters
               if (description.length > 2000) {
                 console.log(`Truncating description for game "${title}": Original length = ${description.length}`);
                 description = description.substring(0, 2000);
@@ -347,7 +361,7 @@ async function main() {
                 OUTPUT INSERTED.GameID
                 VALUES (@Title, @Description, @ReleaseDate, NULL, @Image, @AddedByUserID)
               `);
-            
+
             const gameId = gameResult.recordset[0].GameID;
 
             // Insert into Content table
@@ -358,7 +372,7 @@ async function main() {
                 OUTPUT INSERTED.ContentID
                 VALUES (@GameID)
               `);
-            
+
             const contentId = contentResult.recordset[0].ContentID;
 
             // Link to genre in Content_Genre table
@@ -377,10 +391,6 @@ async function main() {
             if (remainingShortfall <= 0) break;
           }
         } catch (error) {
-          if (error.response && error.response.status === 404) {
-            console.log(`No more games found for genre "${genre}" on page ${page} for shortfall.`);
-            break;
-          }
           console.error(`Error fetching shortfall games for genre "${genre}" on page ${page}:`, error.message);
           break;
         }
