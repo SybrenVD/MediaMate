@@ -971,7 +971,8 @@ router.get("/testroom", function(req,res){
 router.get('/create-community', (req, res) => {
   res.render('create-community', {
     title: 'Create Community',
-    active: 'create-community'
+    active: 'create-community',
+    error: null
   });
 });
 
@@ -979,8 +980,14 @@ router.get('/create-community', (req, res) => {
 router.post('/create-community', upload.single('image'), (req, res) => {
   const { name, keywords } = req.body;
   const imageFile = req.file;
+
+  // Check for required fields
   if (!name || !keywords || !imageFile) {
-    return res.status(400).send('All fields are required.');
+    return res.status(400).render('create-community', {
+      title: 'Create Community',
+      active: 'create-community',
+      error: 'All fields (name, keywords, image) are required.'
+    });
   }
 
   console.log('✅ Community created:');
