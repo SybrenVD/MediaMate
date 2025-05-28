@@ -11,9 +11,11 @@
     <div class="tab-content" id="nav-tabContent">
       {{#each rooms}}
           <div class="tab-pane fade {{#if @first}}show active{{/if}}"
-             id="list-{{chatId}}"
+             id="list-{{this.chatId}}"
              role="tabpanel"
-             aria-labelledby="list-{{chatId}}-list">
+             aria-labelledby="list-{{this.chatId}}-list"
+             data-room-id="{{this.chatId}}"
+             data-room-name="{{this.chatName}}">
               <div class="p-2">
                 <div class="d-flex flex-row mb-3">
                   <img src="{{img}}" alt="imgChat" style="max-width: 100px; max-height: 100px;" />
@@ -27,13 +29,13 @@
                   </div>
                 </div>
               </div>
-              <div class="p-2 d-flex flex-column mb-3">
+              <div id="messages-{{this.chatId}}" class="p-2 d-flex flex-column mb-3">
                 {{#each (lookup ../messagesByRoom chatId)}}
                   {{> messagepartial}}
                 {{/each}}
               </div>
               <div class="mt-auto p-3 border-top">
-                <form class="d-flex gap-2">
+                <form class="d-flex gap-2" data-room-id="{{this.chatId}}">
                   <input type="text" class="form-control">
                   <button class="btn btn-secondary">⬆</button>
                 </form>
@@ -44,3 +46,111 @@
   </div>
 </div>
 
+<!-- Socket.IO & jQuery -->
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function() {
+    const socket = io();
+    let currentUser = null;
+    let currentRoom = null;
+    
+    // 获取用户名
+    const username = prompt('Enter your username') || 'Anonymous';
+    
+    // 登录
+    socket.emit('login', username, (user) => {
+      currentUser = user;
+      console.log('Logged in as', user);
+      
+      // 默认加入第一个房间
+      const firstRoom = $('.tab-pane.active').data('room-name');
+      if (firstRoom) {
+        joinRoom(firstRoom);
+      }
+    });
+    
+    // 加入房间函数
+    function joinRoom(roomName) {
+      if (!currentUser) return;
+      
+      socket.emit('join room', roomName, (data) => {
+        currentRoom = data.room;
+        console.log('Joined room:', data.room.RoomName);
+        
+        // 显示加入消息
+        const messagesContainer = $(`#messages-${data.room.RoomID}`);
+        messagesContainer.append(`<div class="alert alert-info">Joined room: ${data.room.RoomName}</div>`);
+        
+        // 加载历史消息
+        data.messages.forEach(msg => {
+          messagesContainer.append(`
+            <div class="message mb-2">
+              <div class="d-flex align-items-start">
+                <img src="" alt="${msg.Username}" class="rounded-circle me-2" width="30">
+                <strong>${msg.Username}</strong>
+              </div>
+              <div class="ms-4">
+                <p class="mb-0">${msg.Content}</p>
+                <small class="text-muted">${new Date(msg.Time).toLocaleTimeString()}</small>
+              </div>
+            </div>
+          `);
+        });
+        
+        // 滚动到底部
+        messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+      });
+    }
+    
+    // 房间切换事件
+    $('.list-group-item').on('click', function() {
+      const roomName = $(this).data('room-name');
+      if (roomName) {
+        joinRoom(roomName);
+      }
+    });
+    
+    // 消息发送
+    $('.room-form').on('submit', function(e) {
+      e.preventDefault();
+      const roomId = $(this).data('room-id');
+      const input = $(this).find('.message-input');
+      const message = input.val().trim();
+      
+      if (message && currentRoom && currentRoom.RoomID == roomId) {
+        socket.emit('chat message', message);
+        input.val('');
+      }
+    });
+    
+    // 接收新消息
+    socket.on('chat message', function(data) {
+      const messagesContainer = $(`#messages-${data.roomId}`);
+      messagesContainer.append(`
+        <div class="message mb-2">
+          <div class="d-flex align-items-start">
+            <img src="" alt="${data.username}" class="rounded-circle me-2" width="30">
+            <strong>${data.username}</strong>
+          </div>
+          <div class="ms-4">
+            <p class="mb-0">${data.message}</p>
+            <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+          </div>
+        </div>
+      `);
+      
+      // 滚动到底部
+      messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+    });
+  });
+</script>
+
+<style>
+  .message {
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+    max-width: 80%;
+  }
+</style>

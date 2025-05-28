@@ -13,6 +13,7 @@ const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = requir
 
 
 const e = require("express");
+const { poolPromise } = require("../config/db");
 
 //toevoegen pagina
 const addedItems = []; // tijdelijk opgeslagen inhoud
@@ -932,30 +933,29 @@ router.post('/admin/edit/:id', async (req, res) => {
 
 
 /*GET groeplist+room */
-router.get("/chatroom", function(req, res) {
-  const rooms = [
-    {chatId: 0, chatName: "A", tags: "", img: "https://huiji-public.huijistatic.com/isaac/uploads/0/04/3DS_Detailed_Pandora%27s_Box.png", members:{ creatorId: 0, membersId: 0}},
-    {chatId: 1, chatName: "B", tags: "", img: "https://huiji-public.huijistatic.com/isaac/uploads/3/3b/3DS_Detailed_Converter.png", creatorId: 0, membersId: 0},
-    {chatId: 2, chatName: "C", tags: "", img: "", creatorId: 0, membersId: 0},
-    {chatId: 3, chatName: "D", tags: "", img: "", creatorId: 0, membersId: 0}
-  ];
-
-  const allMessages = {
-    0: [
-      {messageId: 0, fromId: 0, time: Date.now(), content: "Ja?", chatId: 0}
-    ],
-    1: [
-      {messageId: 0, fromId: 0, time: Date.now(), content: "...Nee?", chatId: 1}
-    ],
-    2: [],
-    3: []
-  };
+router.get("/chatroom", async function(req, res) {
+  try {
+    const pool = await poolPromise;
+    const roomResult = await pool.request().query('SELECT RoomID AS chatId, RoomName AS chatName FROM Communities');
+    const rooms = roomResult.recordset;
+    rooms.forEach(room => {
+      room.img = "";
+      room.members = "";
+    });
+    const messagesByRoom = {};
+    for (const room of rooms) {
+      const msgResult = await pool.request().input('RoomID', sql.Int, room.chatId).query(`SELECT TOP 50 MessageID AS messageId, FromUser as fromId, Time AS time, Content AS content FROM Messages WHERE RoomID = @RoomID ORDER BY Time DESC`);
+      messagesByRoom[room.chatId] = msgResult.recordset;
+    }
 
   res.render("chatroom", {
     title: "Chatrooms",
     rooms,
     messagesByRoom: allMessages
   });
+} catch (err) {
+  console.error('Error loading chatroom', err);
+}
 });
 /*Get test chatroom*/
 router.get("/testroom", function(req,res){

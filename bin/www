@@ -37,18 +37,22 @@ io.on('connection', (socket) => {
             console.error('Login error', err);
         }
     });
-//enter/create room
+//enter room
     socket.on('join room', async (roomname, callback) => {
         try {
             const pool = await poolPromise;
             const user = socket.data.user;
             if (!user) return;
-
-            let result = await pool.request()
-                .input('RoomName', sql.NVarChar, roomname)
-                .query('SELECT * FROM Communities WHERE RoomName = @RoomName');
-    
-            let room = result.recordset[0];
+//leave room
+      if (socket.data.room) {
+        socket.leave(`room_${socket.data.room.RoomID}`);
+      }
+//search/create room
+      let result = await pool.request()
+        .input('RoomName', sql.NVarChar, roomname)
+        .query('SELECT * FROM Communities WHERE RoomName = @RoomName');
+      let room = result.recordset[0];
+//create new room
             if (!room) {
                 result = await pool.request()
                     .input('RoomName', sql.NVarChar, roomname)
@@ -56,11 +60,13 @@ io.on('connection', (socket) => {
                     .query('INSERT INTO Communities (RoomName, CreatorID) OUTPUT INSERTED.RoomID VALUES (@RoomName, @CreatorID)');
                 room = { RoomID: result.recordset[0].RoomID, roomname, CreatorID: user.UserID };
             }
+//add lid
             await pool.request()
                 .input('RoomID', sql.Int, room.RoomID)
                 .input('UserID', sql.Int, user.UserID)
                 .query(`IF NOT EXISTS (
                     SELECT * FROM Favorites WHERE RoomID = @RoomID AND UserID = @UserID) INSERT INTO Favorites (RoomID, UserID) VALUES (@RoomID, @UserID)`);
+//join room                    
             socket.join(`room_${room.RoomID}`);
             socket.data.room = room;
 //history msg
@@ -79,7 +85,7 @@ io.on('connection', (socket) => {
             const user = socket.data.user;
             const room = socket.data.room;
             if (!user || !room ||!msg) return;
-
+//save msg
             const timestamp = new Date().toISOString();
             await pool.request()
                 .input('RoomID', sql.Int, room.RoomID)
@@ -88,6 +94,7 @@ io.on('connection', (socket) => {
                 .input('Time', sql.DateTime2, timestamp)
                 .query(`INSERT INTO Messages (RoomID, FromUser, Content, Time) VALUES (@RoomID, @FromUser, @Content, @Time)`);
             const message = `[${user.Username}] ${msg}`;
+//broad msg
             io.to(`room_${room.RoomID}`).emit('chat message', message);
         } catch (err) {
             console.error('Message error:', err);
@@ -96,6 +103,9 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         console.log('user disconnected');
+        if (socket.data.room) {
+            socket.leave(`room_${socket.data.room.RoomID}`);
+        }
     });
 });
 
