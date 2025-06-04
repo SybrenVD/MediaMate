@@ -10,6 +10,7 @@ const { loginUser } = require("../modules/login");
 const { validateRegisterInput, validateLoginInput, validateUpdateInput, verifyCurrentPassword } = require("../modules/userValidation");
 const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = require('../modules/user');
 const { searchAllContent } = require('../modules/search');
+const { getCommunities } = require('../modules/community');
 // const { io } = require("../modules/chatroom");
 
 
@@ -576,10 +577,22 @@ router.post("/contact", function (req, res)
 });
 });
 
-router.get('/community', function (req, res) {
-  res.render('community', {
-    title: 'Community'
-  });
+
+router.get('/community', async function (req, res) {
+  try {
+    const communities = await getCommunities();
+    res.render('community', {
+      title: 'Community',
+      communities // gebruik met {{#each communities}} in hbs
+    });
+  } catch (error) {
+    console.error("❌ Community load error:", error);
+    res.render('community', {
+      title: 'Community',
+      error: 'Veriler yüklenemedi.',
+      communities: []
+    });
+  }
 });
 
 // GET: form
