@@ -35,9 +35,9 @@
                 {{/each}}
               </div>
               <div class="mt-auto p-3 border-top">
-                <form class="d-flex gap-2" data-room-id="{{this.RoomID}}">
-                  <input type="text" class="form-control message-input">
-                  <button class="btn btn-secondary">⬆</button>
+                <form id="message-form" class="d-flex gap-2" data-room-id="{{this.RoomID}}">
+                  <input type="text" id="message-input" class="form-control message-input">
+                  <button type="submit" class="btn btn-secondary">⬆</button>
                 </form>
               </div>
           </div>
@@ -48,102 +48,51 @@
 
 <!-- Socket.IO & jQuery -->
 <script src="/socket.io/socket.io.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
   $(document).ready(function() {
     const socket = io();
-    let currentUser = null;
-    let currentRoom = null;
-    
-    // 获取用户名
-    const username = prompt('Enter your username') || 'Anonymous';
-    
-    // 登录
-    socket.emit('login', username, (user) => {
-      currentUser = user;
-      console.log('Logged in as', user);
-      
-      // 默认加入第一个房间
-      const firstRoom = $('.tab-pane.active').data('room-name');
-      if (firstRoom) {
-        joinRoom(firstRoom);
-      }
+    const currentUser = {
+      id: '{{user.UserID}}',
+      username: '{{user.Username}}',
+      image: '{{user.Image}}'
+    };
+    const currentRoom = {
+      id: '{{currentRoom.RoomID}}',
+      name: '{{currentRoom.ChatName}}',
+      image: '{{currentRoom.Image}}'
+    };
+//join room
+  socket.emit('join room', {
+    userId: user.id, roomId: currentRoom.id
     });
-    
-    // 加入房间函数
-    function joinRoom(roomName) {
-      if (!currentUser) return;
-      
-      socket.emit('join room', roomName, (data) => {
-        currentRoom = data.room;
-        console.log('Joined room:', data.room.ChatName);
-        
-        // 显示加入消息
-        const messagesContainer = $(`#messages-${data.room.RoomID}`);
-        messagesContainer.append(`<div class="alert alert-info">Joined room: ${data.room.ChatName}</div>`);
-        
-        // 加载历史消息
-        data.messages.forEach(msg => {
-          messagesContainer.append(`
-            <div class="message mb-2">
-              <div class="d-flex align-items-start">
-                <img src="" alt="${msg.Username}" class="rounded-circle me-2" width="30">
-                <strong>${msg.Username}</strong>
-              </div>
-              <div class="ms-4">
-                <p class="mb-0">${msg.Content}</p>
-                <small class="text-muted">${new Date(msg.Time).toLocaleTimeString()}</small>
-              </div>
-            </div>
-          `);
-        });
-        
-        // 滚动到底部
-        messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
-      });
-    }
-    
-    // 房间切换事件
-    $('.list-group-item').on('click', function() {
-      const roomName = $(this).data('room-name');
-      if (roomName) {
-        joinRoom(roomName);
-      }
-    });
-    
-    // 消息发送
-    $('form[data-room-id]').on('submit', function(e) {
+    console.log('Joined room: ', currentRoom.name);
+    const messagesContainer = $(`#messages-${currentRoom.id}`);
+    scrollTop(messagesContainer);
+  });
+//msg send
+    $('form[data-room-id="${currentRoom.id}"]').on('submit', function(e) {
       e.preventDefault();
-      const roomId = $(this).data('room-id');
       const input = $(this).find('.message-input');
       const message = input.val().trim();
-      
-      if (message && currentRoom && currentRoom.RoomID == roomId) {
+      if(message) {
+        scrollToBottom($(`#messages-${currentRoom.id}`));
+//to server
         socket.emit('chat message', message);
         input.val('');
+        input.focus();
       }
     });
-    
-    // 接收新消息
-    socket.on('chat message', function({ roomId, username, message, time }) {
-      const messagesContainer = $(`#messages-${data.roomId}`);
-      messagesContainer.append(`
-        <div class="message mb-2">
-          <div class="d-flex align-items-start">
-            <img src="" alt="${username}" class="rounded-circle me-2" width="30">
-            <strong>${username}</strong>
-          </div>
-          <div class="ms-4">
-            <p class="mb-0">${message}</p>
-            <small class="text-muted">${new Date(time).toLocaleTimeString()}</small>
-          </div>
-        </div>
-      `);
-      
-      // 滚动到底部
-      messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+//get new msg
+    socket.on('chat message', function(data) {
+//show msg
+      if (data.roomId == currentRoom.id) {
+        appendMessage($(`#messages-${currentRoom.id}`), {
+          username: data.username, message: data.message, time: data.time, isSelf: data.username === currentUser.username
+        });
+        scrollToBottom($(`#messages-${currentRoom.id}`));
+      }
     });
-  });
+    messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
 </script>
 
 <style>
