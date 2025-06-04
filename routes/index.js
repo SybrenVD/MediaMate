@@ -30,6 +30,7 @@ function isAuthenticated(req, res, next) {
   res.redirect("/login");
 }
 
+// Homepage GET route
 router.get('/', async function (req, res) {
   try {
     const bestRatedContent = await getBestRated();
@@ -68,22 +69,43 @@ router.get('/', async function (req, res) {
   }
 });
 
-/* POST search */
+// Search POST route
 router.post('/search', async function (req, res) {
   console.log('POST /search received:', req.body);
-  const query = req.body.query?.trim();
-  if (!query) {
-    console.log('No query provided, redirecting with error');
-    return res.redirect('/search?error=Please enter a search query');
+  const query = req.body.query?.trim() || '';
+  let genres = [];
+  try {
+    genres = req.body.genres ? JSON.parse(req.body.genres) : [];
+    if (!Array.isArray(genres)) {
+      genres = [];
+    }
+  } catch (error) {
+    console.error('Error parsing genres:', error);
+    genres = [];
   }
-  console.log(`Redirecting to /search?query=${encodeURIComponent(query)}`);
-  res.redirect(`/search?query=${encodeURIComponent(query)}`);
+
+  const queryParams = new URLSearchParams({ query });
+  if (genres.length > 0) {
+    queryParams.append('genres', JSON.stringify(genres));
+  }
+  console.log(`Redirecting to /search?${queryParams.toString()}`);
+  res.redirect(`/search?${queryParams.toString()}`);
 });
 
-/* GET search results */
+// Search GET route
 router.get('/search', async function (req, res) {
   console.log('GET /search received:', req.query);
   const query = req.query.query?.trim() || '';
+  let genres = [];
+  try {
+    genres = req.query.genres ? JSON.parse(req.query.genres) : [];
+    if (!Array.isArray(genres)) {
+      genres = [];
+    }
+  } catch (error) {
+    console.error('Error parsing genres:', error);
+    genres = [];
+  }
   const page = parseInt(req.query.page) || 1;
   const error = req.query.error;
 
@@ -92,30 +114,42 @@ router.get('/search', async function (req, res) {
     let searchError = error;
     let currentPage = 1;
     let totalPages = 1;
+    let startPage = 1;
+    let endPage = 1;
 
-    if (query) {
-      const result = await searchAllContent(query, page);
-      searchResults = Array.isArray(result.searchResults) ? result.searchResults : [];
-      currentPage = result.currentPage;
-      totalPages = result.totalPages;
-      // Log searchResults details
-      console.log('Search Results:', searchResults);
-      console.log('Search Results Type:', Array.isArray(searchResults) ? 'Array' : typeof searchResults);
-      console.log('Search Results Length:', searchResults.length);
-      if (searchResults.length === 0) {
-        searchError = 'No results found';
-      }
-    } else if (!error) {
-      searchError = 'Please enter a search query';
+    // Call searchAllContent for any query or genres
+    const result = await searchAllContent(query, page, 40, genres);
+    searchResults = Array.isArray(result.searchResults) ? result.searchResults : [];
+    currentPage = result.currentPage;
+    totalPages = result.totalPages;
+
+    // Pagination logic
+    const pageWindow = 2;
+    startPage = Math.max(2, currentPage - pageWindow);
+    endPage = Math.min(totalPages - 1, currentPage + pageWindow);
+
+    if (currentPage <= 3) {
+      startPage = 2;
+      endPage = Math.min(5, totalPages - 1);
+    }
+    if (currentPage >= totalPages - 2) {
+      startPage = Math.max(totalPages - 4, 2);
+      endPage = totalPages - 1;
     }
 
-    // Log data passed to render
+    if (searchResults.length === 0) {
+      searchError = 'No results found';
+    }
+
     const renderData = {
       title: 'Search Results',
       searchResults,
       searchQuery: query,
+      selectedGenres: genres,
       currentPage,
       totalPages,
+      startPage,
+      endPage,
       error: searchError,
       range: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start),
       eq: (a, b) => a === b,
@@ -123,19 +157,22 @@ router.get('/search', async function (req, res) {
       lt: (a, b) => a < b,
       add: (a, b) => a + b,
       subtract: (a, b) => a - b,
-      json: (context) => JSON.stringify(context, null, 2) // Added for debug
+      json: (context) => JSON.stringify(context, null, 2)
     };
     console.log('Render Data:', renderData);
 
-    res.render('search', renderData); // Updated to 'search'
+    res.render('search', renderData);
   } catch (error) {
     console.error('Error performing search:', error);
-    res.status(500).render('search', { // Updated to 'search'
+    res.status(500).render('search', {
       title: 'Search Results',
       searchResults: [],
       searchQuery: query,
+      selectedGenres: genres,
       currentPage: 1,
       totalPages: 1,
+      startPage: 1,
+      endPage: 1,
       error: 'Search failed, please try again',
       range: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start),
       eq: (a, b) => a === b,

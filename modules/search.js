@@ -1,11 +1,17 @@
 const { sql, poolPromise } = require('../config/db'); // Adjust path if needed
 
-async function searchAllContent(query, page = 1, pageSize = 40) {
+async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
   try {
-    const pool = await poolPromise;
+    console.log(`Search parameters: query=${query}, page=${page}, pageSize=${pageSize}, genres=${JSON.stringify(genres)}`);
+    
+    const pool = await poolPromise.catch(err => {
+      console.error('Database connection error:', err.message);
+      throw new Error('Database connection failed');
+    });
+    console.log('Database connection established');
 
     // Sanitize query to prevent SQL injection
-    const sanitizedQuery = `%${query.replace(/[%_]/g, '')}%`;
+    const sanitizedQuery = query ? `%${query.replace(/[%_]/g, '')}%` : '';
     const offset = (page - 1) * pageSize;
 
     const request = pool.request();
@@ -13,167 +19,129 @@ async function searchAllContent(query, page = 1, pageSize = 40) {
     request.input('offset', sql.Int, offset);
     request.input('pageSize', sql.Int, pageSize);
 
-    // Query to search Books, Movies, Games by Title, Genre, Description
-    const result = await request.query(`
+    // Build dynamic genre filter
+    let genreFilter = '';
+    if (genres.length > 0) {
+      const sanitizedGenres = genres.map(genre => genre.replace(/['"]/g, ''));
+      genreFilter = `AND Genres.Name IN (${sanitizedGenres.map((_, i) => `@genre${i}`).join(', ')})`;
+      sanitizedGenres.forEach((genre, i) => {
+        request.input(`genre${i}`, sql.NVarChar, genre);
+      });
+    }
+
+    // SQL query with empty query handling
+    const sqlQuery = `
       WITH SearchResults AS (
-        -- Books: Title (Rank 1)
+        -- Books: All or Title search
         SELECT 
           b.BookID AS ItemID,
           'Book' AS ContentType,
           b.Title,
           b.Image,
           b.Description,
-          STRING_AGG(g.Name, ', ') AS Genres,
-          1 AS Rank
+          STRING_AGG(Genres.Name, ', ') AS Genres,
+          CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
         FROM Books b
         JOIN Content c ON c.BookID = b.BookID
         LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres g ON g.GenreID = cg.GenreID
-        WHERE b.Title LIKE @query
+        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE @query = '' OR b.Title LIKE @query
+        ${genreFilter}
         GROUP BY b.BookID, b.Title, b.Image, b.Description
 
         UNION ALL
 
-        -- Books: Genre (Rank 2)
+        -- Books: Description search (only when query is not empty)
         SELECT 
           b.BookID AS ItemID,
           'Book' AS ContentType,
           b.Title,
           b.Image,
           b.Description,
-          STRING_AGG(g.Name, ', ') AS Genres,
+          STRING_AGG(Genres.Name, ', ') AS Genres,
           2 AS Rank
         FROM Books b
         JOIN Content c ON c.BookID = b.BookID
-        JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        JOIN Genres g ON g.GenreID = cg.GenreID
-        WHERE g.Name LIKE @query
-        GROUP BY b.BookID, b.Title, b.Image, b.Description
-
-        UNION ALL
-
-        -- Books: Description (Rank 3)
-        SELECT 
-          b.BookID AS ItemID,
-          'Book' AS ContentType,
-          b.Title,
-          b.Image,
-          b.Description,
-          STRING_AGG(g.Name, ', ') AS Genres,
-          3 AS Rank
-        FROM Books b
-        JOIN Content c ON c.BookID = b.BookID
         LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres g ON g.GenreID = cg.GenreID
-        WHERE b.Description LIKE @query
+        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE @query != '' AND b.Description LIKE @query
+        ${genreFilter}
         GROUP BY b.BookID, b.Title, b.Image, b.Description
 
         UNION ALL
 
-        -- Movies: Title (Rank 1)
+        -- Movies: All or Title search
         SELECT 
           m.MovieID AS ItemID,
           'Movie' AS ContentType,
           m.Title,
           m.Image,
           m.Description,
-          STRING_AGG(g.Name, ', ') AS Genres,
-          1 AS Rank
+          STRING_AGG(Genres.Name, ', ') AS Genres,
+          CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
         FROM Movies m
         JOIN Content c ON c.MovieID = m.MovieID
         LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres g ON g.GenreID = cg.GenreID
-        WHERE m.Title LIKE @query
+        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE @query = '' OR m.Title LIKE @query
+        ${genreFilter}
         GROUP BY m.MovieID, m.Title, m.Image, m.Description
 
         UNION ALL
 
-        -- Movies: Genre (Rank 2)
+        -- Movies: Description search (only when query is not empty)
         SELECT 
           m.MovieID AS ItemID,
           'Movie' AS ContentType,
           m.Title,
           m.Image,
           m.Description,
-          STRING_AGG(g.Name, ', ') AS Genres,
+          STRING_AGG(Genres.Name, ', ') AS Genres,
           2 AS Rank
         FROM Movies m
         JOIN Content c ON c.MovieID = m.MovieID
-        JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        JOIN Genres g ON g.GenreID = cg.GenreID
-        WHERE g.Name LIKE @query
-        GROUP BY m.MovieID, m.Title, m.Image, m.Description
-
-        UNION ALL
-
-        -- Movies: Description (Rank 3)
-        SELECT 
-          m.MovieID AS ItemID,
-          'Movie' AS ContentType,
-          m.Title,
-          m.Image,
-          m.Description,
-          STRING_AGG(g.Name, ', ') AS Genres,
-          3 AS Rank
-        FROM Movies m
-        JOIN Content c ON c.MovieID = m.MovieID
         LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres g ON g.GenreID = cg.GenreID
-        WHERE m.Description LIKE @query
+        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE @query != '' AND m.Description LIKE @query
+        ${genreFilter}
         GROUP BY m.MovieID, m.Title, m.Image, m.Description
 
         UNION ALL
 
-        -- Games: Title (Rank 1)
+        -- Games: All or Title search
         SELECT 
           g.GameID AS ItemID,
           'Game' AS ContentType,
           g.Title,
           g.Image,
           g.Description,
-          STRING_AGG(g2.Name, ', ') AS Genres,
-          1 AS Rank
+          STRING_AGG(Genres.Name, ', ') AS Genres,
+          CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
         FROM Games g
         JOIN Content c ON c.GameID = g.GameID
         LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres g2 ON g2.GenreID = cg.GenreID
-        WHERE g.Title LIKE @query
+        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE @query = '' OR g.Title LIKE @query
+        ${genreFilter}
         GROUP BY g.GameID, g.Title, g.Image, g.Description
 
         UNION ALL
 
-        -- Games: Genre (Rank 2)
+        -- Games: Description search (only when query is not empty)
         SELECT 
           g.GameID AS ItemID,
           'Game' AS ContentType,
           g.Title,
           g.Image,
           g.Description,
-          STRING_AGG(g2.Name, ', ') AS Genres,
+          STRING_AGG(Genres.Name, ', ') AS Genres,
           2 AS Rank
         FROM Games g
         JOIN Content c ON c.GameID = g.GameID
-        JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        JOIN Genres g2 ON g2.GenreID = cg.GenreID
-        WHERE g2.Name LIKE @query
-        GROUP BY g.GameID, g.Title, g.Image, g.Description
-
-        UNION ALL
-
-        -- Games: Description (Rank 3)
-        SELECT 
-          g.GameID AS ItemID,
-          'Game' AS ContentType,
-          g.Title,
-          g.Image,
-          g.Description,
-          STRING_AGG(g2.Name, ', ') AS Genres,
-          3 AS Rank
-        FROM Games g
-        JOIN Content c ON c.GameID = g.GameID
         LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres g2 ON g2.GenreID = cg.GenreID
-        WHERE g.Description LIKE @query
+        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE @query != '' AND g.Description LIKE @query
+        ${genreFilter}
         GROUP BY g.GameID, g.Title, g.Image, g.Description
       )
       SELECT 
@@ -192,24 +160,37 @@ async function searchAllContent(query, page = 1, pageSize = 40) {
           Image,
           Genres,
           Description,
-          Rank
+          MIN(Rank) AS Rank
         FROM SearchResults
-        ORDER BY Rank, Title
+        GROUP BY ItemID, ContentType, Title, Image, Genres, Description
+        ORDER BY MIN(Rank), Title
         OFFSET @offset ROWS
         FETCH NEXT @pageSize ROWS ONLY
       ) AS OrderedResults;
-    `);
+    `;
+
+    console.log('Generated SQL Query:', sqlQuery);
+    console.log('Query parameters:', { query: sanitizedQuery, offset, pageSize });
+
+    const result = await request.query(sqlQuery).catch(err => {
+      console.error('SQL query error:', err.message);
+      throw new Error('SQL query failed');
+    });
+
+    console.log('Query result recordset:', result.recordset);
 
     const searchResults = result.recordset.map(row => ({
       ItemID: row.ItemID,
       ContentType: row.ContentType,
       Title: row.Title,
       Image: row.Image,
-      Genres: row.Genres,
+      Genres: row.Genres || '',
       Description: row.Description
     }));
     const totalCount = result.recordset.length > 0 ? result.recordset[0].TotalCount : 0;
     const totalPages = Math.ceil(totalCount / pageSize);
+
+    console.log(`Search results: ${searchResults.length} items, totalCount: ${totalCount}, totalPages: ${totalPages}`);
 
     return {
       searchResults,
@@ -218,7 +199,7 @@ async function searchAllContent(query, page = 1, pageSize = 40) {
       totalCount
     };
   } catch (err) {
-    console.error('Error executing search query:', err.message);
+    console.error('Search error:', err.message);
     throw new Error('Failed to perform search');
   }
 }

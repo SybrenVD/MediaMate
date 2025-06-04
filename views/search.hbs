@@ -41,36 +41,59 @@
         </div>
 
         <!-- Pagination -->
-        <nav aria-label="Page navigation" class="mt-5">
-            <ul class="pagination justify-content-center">
-                {{#if (gt currentPage 1)}}
-                <li class="page-item">
-                    <a class="page-link"
-                        href="/search?page={{subtract currentPage 1}}{{#if searchQuery}}&query={{searchQuery}}{{/if}}">Previous</a>
+        <nav aria-label="Search results pagination" class="mt-5">
+            <ul class="pagination custom-pagination justify-content-center">
+                <!-- Previous Link -->
+                <li class="page-item {{#if (eq currentPage 1)}}disabled{{/if}}">
+                    <a class="page-link" href="/search?page={{subtract currentPage 1}}{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}"
+                       {{#if (eq currentPage 1)}}aria-disabled="true"{{/if}}>Previous</a>
                 </li>
-                {{else}}
+
+                <!-- Page Numbers (Simplified) -->
+                {{#if (gt totalPages 1)}}
+                <!-- Always show page 1 -->
+                <li class="page-item {{#if (eq 1 currentPage)}}active{{/if}}">
+                    <a class="page-link" href="/search?page=1{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}">1</a>
+                </li>
+
+                <!-- Ellipsis if startPage > 2 -->
+                {{#if (gt startPage 2)}}
                 <li class="page-item disabled">
-                    <span class="page-link">Previous</span>
+                    <span class="page-link">...</span>
                 </li>
                 {{/if}}
 
-                {{#each (range 1 totalPages)}}
+                <!-- Show page numbers from startPage to endPage -->
+                {{#each (rangeHelper startPage endPage)}}
+                {{#if (gt this 1)}} <!-- Skip page 1 as it's already added -->
+                {{#if (lte this ../totalPages)}} <!-- Ensure we don't exceed totalPages -->
                 <li class="page-item {{#if (eq this ../currentPage)}}active{{/if}}">
-                    <a class="page-link"
-                        href="/search?page={{this}}{{#if ../searchQuery}}&query={{../searchQuery}}{{/if}}">{{this}}</a>
+                    <a class="page-link" href="/search?page={{this}}{{#if ../searchQuery}}&query={{encodeURIComponent ../searchQuery}}{{/if}}{{#if ../selectedGenres.length}}&genres={{join ../selectedGenres ','}}{{/if}}">{{this}}</a>
                 </li>
+                {{/if}}
+                {{/if}}
                 {{/each}}
 
-                {{#if (lt currentPage totalPages)}}
-                <li class="page-item">
-                    <a class="page-link"
-                        href="/search?page={{add currentPage 1}}{{#if searchQuery}}&query={{searchQuery}}{{/if}}">Next</a>
-                </li>
-                {{else}}
+                <!-- Ellipsis if endPage < totalPages - 1 -->
+                {{#if (lt endPage (subtract totalPages 1))}}
                 <li class="page-item disabled">
-                    <span class="page-link">Next</span>
+                    <span class="page-link">...</span>
                 </li>
                 {{/if}}
+
+                <!-- Always show last page if > 1 -->
+                {{#if (gt totalPages 1)}}
+                <li class="page-item {{#if (eq totalPages currentPage)}}active{{/if}}">
+                    <a class="page-link" href="/search?page={{totalPages}}{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}">{{totalPages}}</a>
+                </li>
+                {{/if}}
+                {{/if}}
+
+                <!-- Next Link -->
+                <li class="page-item {{#if (eq currentPage totalPages)}}disabled{{/if}}">
+                    <a class="page-link" href="/search?page={{add currentPage 1}}{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}"
+                       {{#if (eq currentPage totalPages)}}aria-disabled="true"{{/if}}>Next</a>
+                </li>
             </ul>
         </nav>
         {{else}}
@@ -78,8 +101,5 @@
             No results found. Try a different search!
         </div>
         {{/if}}
-
-        <!-- Debug Output -->
-        <pre>{{json this}}</pre>
     </div>
 </div>
