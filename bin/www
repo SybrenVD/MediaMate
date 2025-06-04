@@ -18,19 +18,22 @@ io.on('connection', (socket) => {
   console.log('user conneted');
 //login
     socket.on('authenticate', async (userId, callback) => {
-        pool.request().input('IserID', sql.Int, userId).query('SELECT * FROM Users WHERE UserID = @UserID').then(result => {
-            if(result.recordset.length === 0) {
-                return callback({error: 'User Not Found (ㄒoㄒ)'});
-            }
-            const user = result.recordset[0];
-            socket.data.user = {
-                UserID: user.UserID, Username: user.Username
-            };
-            callback({success: true});
-        }).catch (err => {
+        try{
+            const pool = await poolPromise;
+            const result = await pool.request().input('UserID', sql.Int, userId).query('SELECT * FROM Users WHERE UserID = @UserID');
+
+        if (result.recordset.length === 0) {
+            return callback({ error: 'User Not Found (ㄒoㄒ)' });
+        }
+        const user = result.recordset[0];
+        socket.data.user = {
+            UserID: user.UserID, Username: user.Username
+        };
+        callback({success: true});
+        } catch (err) {
             console.error('Login error', err);
             callback({error: 'Authentication err'});
-        });
+        }
     });
 //enter room
     socket.on('join room', async (roomname, callback) => {
