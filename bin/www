@@ -17,24 +17,22 @@ const io = socketIo(server);
 io.on('connection', (socket) => {
   console.log('user conneted');
 //login
-    socket.on('login', async (username, callback) => {
-        try {
+    socket.on('authenticate', async (userId, callback) => {
+        try{
             const pool = await poolPromise;
-            let result = await pool.request()
-                .input('Username', sql.NVarChar, username)
-                .query('SELECT * FROM Users WHERE Username = @username');
+            const result = await pool.request().input('UserID', sql.Int, userId).query('SELECT * FROM Users WHERE UserID = @UserID');
 
-            let user = result.recordset[0];
-            if (!user) {
-                result = await pool.request()
-                    .input('Username', sql.NVarChar, username)
-                    .query('INSERT INTO Users (Username) OUTPUT INSERTED.UserID VALUES (@username)');
-                user = { UserID: result.recordset[0].UserID, Username: username };
-            }
-            socket.data.user = user;
-            callback(user);
+        if (result.recordset.length === 0) {
+            return callback({ error: 'User Not Found (ㄒoㄒ)' });
+        }
+        const user = result.recordset[0];
+        socket.data.user = {
+            UserID: user.UserID, Username: user.Username
+        };
+        callback({success: true});
         } catch (err) {
             console.error('Login error', err);
+            callback({error: 'Authentication err'});
         }
     });
 //enter room

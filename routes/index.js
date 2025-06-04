@@ -1096,27 +1096,38 @@ router.post('/admin/edit/:id', async (req, res) => {
 
 /*GET chatroom */
 router.get("/chatroom", async function(req, res) {
+//check login
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+  const RoomID = req.query.RoomID;
+  if (!RoomID) {
+    return res.status(400).send('Community ID Not Found (ㄒoㄒ)');
+  }
   try {
     const pool = await poolPromise;
-    const roomResult = await pool.request().query('SELECT RoomID, ChatName FROM Communities');
-    const rooms = roomResult.recordset;
-    // rooms.forEach(room => {
-    //   room.Image = "";
-    //   room.members = "";
-    // });
-    const messagesByRoom = {};
-    for (const room of rooms) {
-      const msgResult = await pool.request().input('RoomID', sql.Int, room.RoomID).query(`SELECT TOP 50 MessageID, FromUser, Time, Content FROM Messages WHERE RoomID = @RoomID ORDER BY Time DESC`);
-      messagesByRoom[room.RoomID] = msgResult.recordset;
+//get Room info
+    const roomResult = await pool.request().input('RoomID', sql.Int, RoomID).query('SELECT * FROM Communities WHERE RoomID = @RoomID');
+    if(!room) {
+      return res.status(404).send('Community Not Found (ㄒoㄒ)');
     }
-
+    const membersResult = await pool.request().input('RoomID', sql.Int, RoomID).query(`SELECT u.Username, u.Image FROM Favorites f JOIN Users u ON f.UserID = u.UserID WHERE f.RoomID = @RoomID`);
+//get his msg
+    const messagesResult = await pool.request().input('RoomID', sql.Int, RoomID).query(`SELECT Messages.Content, Messages.Time, Users.Username, Users.Image FROM Messages JOIN Users ON Messages.FromUser = Users.UserID WHERE RoomID = @RoomID ORDER BY Messages.MessageID ASC`);
+//get fav-room-list
+    const userCommunitiesResult = await pool.request().input('UserID', sql.Int, req.session.user.UserID).query(`SELECT c.CommunityID, c.ChatName, c.Image FROM Communities c JOIN Favorites f ON c.RoomID = f.RoomID WHERE f.UserID = @UserID`);
   res.render("chatroom", {
-    title: "Chatrooms",
-    rooms,
-    messagesByRoom
+    user: req.session.user,
+    currentRoom: {
+      room: roomResult.recordset[0],
+      members: membersResult.recordset
+    },
+    rooms: userCommunitiesResult.recordset,
+    messages: messagesResult.recordset
   });
 } catch (err) {
   console.error('Error loading chatroom', err);
+  res.status(500).send('Server Error (ㄒoㄒ)')
 }
 });
 /*Get test chatroom*/
