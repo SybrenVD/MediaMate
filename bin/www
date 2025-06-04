@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import { error } from 'console';
-
 const app = require('../app');
 const http = require('http');
 //chatroom env
