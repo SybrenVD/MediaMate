@@ -55,7 +55,6 @@ router.get("/", async function (req, res) {
   }
 });
 
-
 const heroData = {
   games: {
     cta: "Discover Exciting Games",
@@ -74,19 +73,24 @@ const heroData = {
   }
 };
 
-// Route for category list page
-router.get("/:type", async (req, res) => {
+// List page: /category/games
+router.get("/category/:type", async (req, res) => {
   const type = req.params.type;
-  const items = await getCategoryContent(type);
 
+  const items = await getCategoryContent(type);
   if (!items) {
     return res.status(404).render("error", { message: "Category not found or error retrieving items." });
   }
 
-  res.render("category", { items, category: type.charAt(0).toUpperCase() + type.slice(1) });
+  res.render("category", {
+    items,
+    title: type.charAt(0).toUpperCase() + type.slice(1),
+    type,
+    hero: heroData[type]
+  });
 });
 
-// Route for individual content detail page
+// Detail page: /category/games/123
 router.get("/category/:type/:id", async (req, res) => {
   const { type, id } = req.params;
   const from = req.query.from || "category";
@@ -111,6 +115,8 @@ router.get("/category/:type/:id", async (req, res) => {
     res.status(500).send("Error retrieving item detail");
   }
 });
+
+
 
 // Contact Page - GET
 

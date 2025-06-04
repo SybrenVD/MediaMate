@@ -47,7 +47,7 @@
     <div class="row text-start ps-0 p-4">
       <h3 class="text-danger">Top Rated</h3>
     </div>
-    {{> slider content=items }}
+    {{> slider_alt content=items type=type }}
   </div>
 
   <!-- Category Items Grid -->
@@ -58,18 +58,7 @@
     <div class="row row-cols-1 row-cols-md-4 g-4">
       {{#each items}}
         <div class="col">
-          <div class="card h-100">
-            <a href="/category/{{../type}}/{{id}}" class="text-decoration-none text-dark">
-              <img src="{{image}}" class="card-img-top" alt="{{name}}">
-              <div class="card-body">
-                <h5 class="card-title">{{name}}</h5>
-                <p class="card-text">{{description}}</p>
-              </div>
-            </a>
-            <div class="card-footer text-end">
-              {{> iheart }}
-            </div>
-          </div>
+          {{> card_alt type=../type }}
         </div>
       {{/each}}
     </div>
@@ -96,6 +85,16 @@
     border-radius: 5px;
     display: inline-block;
     max-width: 40%;
+  }
+
+  .slider-container {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .slider {
+    display: flex;
+    gap: 1rem;
   }
 </style>
 

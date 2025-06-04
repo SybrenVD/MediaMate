@@ -1,37 +1,48 @@
 const { poolPromise } = require('../config/db');
 
 async function getCategoryContent(type) {
-  const validTypes = {
+  const validTables = {
     games: 'Games',
     books: 'Books',
     movies: 'Movies',
   };
 
-  const table = validTypes[type.toLowerCase()];
+  const table = validTables[type.toLowerCase()];
   if (!table) return null;
+
+  // Determine the correct ID column
+  const idColumn = table.slice(0, -1) + 'ID'; // Games -> GameID
 
   try {
     const pool = await poolPromise;
-    const result = await pool.request().query(
-      `SELECT ${table}ID as id, Title, Description, Image, ReleaseDate FROM ${table} ORDER BY ${table}ID LIMIT 20`
-    );
 
-    if (!result.recordset.length) return [];
+    const query = `
+      SELECT TOP 20 
+        ${idColumn} AS id, 
+        Title, 
+        Description, 
+        ISNULL(Image, '/images/placeholder.jpg') AS Image, 
+        ReleaseDate 
+      FROM ${table} 
+      ORDER BY ${idColumn} DESC`;
+
+    const result = await pool.request().query(query);
 
     return result.recordset.map(item => ({
       id: item.id,
       name: item.Title,
       description: item.Description,
-      image: item.Image || '/images/placeholder.jpg',
+      image: item.Image,
       releaseDate: item.ReleaseDate,
     }));
-  } catch (error) {
-    console.error('DB error:', error);
+  } catch (err) {
+    console.error('Error fetching category content:', err);
     return null;
   }
 }
 
 module.exports = { getCategoryContent };
+
 
 
 

@@ -1,10 +1,13 @@
-<a href="/category/{{../type}}/{{id}}" class="text-decoration-none text-dark">
-  <div class="card h-100 shadow-sm">
-    <img src="{{image}}" class="card-img-top" alt="{{name}}">
-    <div class="card-body d-flex flex-column">
-      <h5 class="card-title">{{name}}</h5>
-      <p class="card-text text-truncate">{{description}}</p>
-      {{> iheart }}
+<div class="card h-100 bg-danger text-white" style="min-width: 200px; max-width: 250px;">
+  <a href="/category/{{type}}/{{id}}" class="text-decoration-none text-light">
+    <img src="{{image}}" class="card-img-top" alt="{{name}}" onerror="this.src='/images/default.png';">
+    <div class="card-body">
+      <h6 class="card-title">{{name}}</h6>
+      <p class="card-text">{{#if description}}{{description}}{{else}}No description{{/if}}</p>
     </div>
+  </a>
+  <div class="card-footer text-end">
+    {{> iheart }}
   </div>
-</a>
+</div>
+
