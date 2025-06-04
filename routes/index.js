@@ -36,8 +36,6 @@ router.get('/', async function (req, res) {
     const randomBooksContent = await getRandomBooks();
     const randomMoviesContent = await getRandomMovies();
     const randomGamesContent = await getRandomGames();
-    console.log('Homepage data:', { bestRatedContent, randomBooksContent, randomMoviesContent, randomGamesContent }); // Debug
-
     res.render('index', {
       title: 'Home',
       banner: '/images/BannerHome.jpg',
@@ -45,6 +43,7 @@ router.get('/', async function (req, res) {
         cta: 'Welcome to MediaMate',
         shortDescription: 'Find the best in entertainment'
       },
+      searchQuery: '',
       bestRatedContent,
       randomBooksContent,
       randomMoviesContent,
@@ -52,13 +51,14 @@ router.get('/', async function (req, res) {
     });
   } catch (error) {
     console.error('Error loading homepage content:', error);
-    res.status(500).render('index', {
+    res.render('index', {
       title: 'Home',
       banner: '/images/BannerHome.jpg',
       hero: {
         cta: 'Welcome to MediaMate',
         shortDescription: 'Find the best in entertainment'
       },
+      searchQuery: '',
       bestRatedContent: [],
       randomBooksContent: [],
       randomMoviesContent: [],

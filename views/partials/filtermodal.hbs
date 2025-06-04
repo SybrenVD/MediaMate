@@ -1,0 +1,293 @@
+<!-- Genre Filter Modal -->
+    <div class="modal fade" id="genreFilterModal" tabindex="-1" aria-labelledby="genreFilterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="background-color: #231F20; color: #f4d1d1;">
+                <div class="modal-header" style="background-color: #8b1d2e; color: white;">
+                    <h5 class="modal-title" id="genreFilterModalLabel">Filter by Genre</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="genreFilterForm" action="/search" method="POST">
+                        <!-- Hidden input to preserve search query -->
+                        <input type="hidden" name="query" value="{{searchQuery}}">
+                        <div class="row row-cols-3">
+                            <!-- General Genres -->
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Art" id="genreArt">
+                                    <label class="form-check-label" for="genreArt">Art</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Biography" id="genreBiography">
+                                    <label class="form-check-label" for="genreBiography">Biography</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Business" id="genreBusiness">
+                                    <label class="form-check-label" for="genreBusiness">Business</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Children" id="genreChildren">
+                                    <label class="form-check-label" for="genreChildren">Children</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Comics" id="genreComics">
+                                    <label class="form-check-label" for="genreComics">Comics</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Computers" id="genreComputers">
+                                    <label class="form-check-label" for="genreComputers">Computers</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Cooking" id="genreCooking">
+                                    <label class="form-check-label" for="genreCooking">Cooking</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Education" id="genreEducation">
+                                    <label class="form-check-label" for="genreEducation">Education</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Fiction" id="genreFiction">
+                                    <label class="form-check-label" for="genreFiction">Fiction</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Health" id="genreHealth">
+                                    <label class="form-check-label" for="genreHealth">Health</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="History" id="genreHistory">
+                                    <label class="form-check-label" for="genreHistory">History</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Horror" id="genreHorror">
+                                    <label class="form-check-label" for="genreHorror">Horror</label>
+                                </div>
+                            </div>
+                            <!-- More General and Movie-Specific Genres -->
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Law" id="genreLaw">
+                                    <label class="form-check-label" for="genreLaw">Law</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Mathematics" id="genreMathematics">
+                                    <label class="form-check-label" for="genreMathematics">Mathematics</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Medical" id="genreMedical">
+                                    <label class="form-check-label" for="genreMedical">Medical</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Music" id="genreMusic">
+                                    <label class="form-check-label" for="genreMusic">Music</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Philosophy" id="genrePhilosophy">
+                                    <label class="form-check-label" for="genrePhilosophy">Philosophy</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Poetry" id="genrePoetry">
+                                    <label class="form-check-label" for="genrePoetry">Poetry</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Psychology" id="genrePsychology">
+                                    <label class="form-check-label" for="genrePsychology">Psychology</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Religion" id="genreReligion">
+                                    <label class="form-check-label" for="genreReligion">Religion</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Romance" id="genreRomance">
+                                    <label class="form-check-label" for="genreRomance">Romance</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Science" id="genreScience">
+                                    <label class="form-check-label" for="genreScience">Science</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Science Fiction" id="genreScienceFiction">
+                                    <label class="form-check-label" for="genreScienceFiction">Science Fiction</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Self-Help" id="genreSelfHelp">
+                                    <label class="form-check-label" for="genreSelfHelp">Self-Help</label>
+                                </div>
+                            </div>
+                            <!-- Movie and Game-Specific Genres -->
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Sports" id="genreSports">
+                                    <label class="form-check-label" for="genreSports">Sports</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Technology" id="genreTechnology">
+                                    <label class="form-check-label" for="genreTechnology">Technology</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Travel" id="genreTravel">
+                                    <label class="form-check-label" for="genreTravel">Travel</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Action" id="genreAction">
+                                    <label class="form-check-label" for="genreAction">Action</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Adventure" id="genreAdventure">
+                                    <label class="form-check-label" for="genreAdventure">Adventure</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Animation" id="genreAnimation">
+                                    <label class="form-check-label" for="genreAnimation">Animation</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Comedy" id="genreComedy">
+                                    <label class="form-check-label" for="genreComedy">Comedy</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Crime" id="genreCrime">
+                                    <label class="form-check-label" for="genreCrime">Crime</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Documentary" id="genreDocumentary">
+                                    <label class="form-check-label" for="genreDocumentary">Documentary</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Drama" id="genreDrama">
+                                    <label class="form-check-label" for="genreDrama">Drama</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Family" id="genreFamily">
+                                    <label class="form-check-label" for="genreFamily">Family</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Fantasy" id="genreFantasy">
+                                    <label class="form-check-label" for="genreFantasy">Fantasy</label>
+                                </div>
+                            </div>
+                            <!-- Game-Specific Genres -->
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Mystery" id="genreMystery">
+                                    <label class="form-check-label" for="genreMystery">Mystery</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="TV Movie" id="genreTVMovie">
+                                    <label class="form-check-label" for="genreTVMovie">TV Movie</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Thriller" id="genreThriller">
+                                    <label class="form-check-label" for="genreThriller">Thriller</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="War" id="genreWar">
+                                    <label class="form-check-label" for="genreWar">War</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Western" id="genreWestern">
+                                    <label class="form-check-label" for="genreWestern">Western</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="RPG" id="genreRPG">
+                                    <label class="form-check-label" for="genreRPG">RPG</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Shooter" id="genreShooter">
+                                    <label class="form-check-label" for="genreShooter">Shooter</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Strategy" id="genreStrategy">
+                                    <label class="form-check-label" for="genreStrategy">Strategy</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Simulation" id="genreSimulation">
+                                    <label class="form-check-label" for="genreSimulation">Simulation</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Puzzle" id="genrePuzzle">
+                                    <label class="form-check-label" for="genrePuzzle">Puzzle</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Arcade" id="genreArcade">
+                                    <label class="form-check-label" for="genreArcade">Arcade</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Platformer" id="genrePlatformer">
+                                    <label class="form-check-label" for="genrePlatformer">Platformer</label>
+                                </div>
+                            </div>
+                            <!-- More Game-Specific Genres -->
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Fighting" id="genreFighting">
+                                    <label class="form-check-label" for="genreFighting">Fighting</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Racing" id="genreRacing">
+                                    <label class="form-check-label" for="genreRacing">Racing</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Multiplayer" id="genreMultiplayer">
+                                    <label class="form-check-label" for="genreMultiplayer">Multiplayer</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Battle Royale" id="genreBattleRoyale">
+                                    <label class="form-check-label" for="genreBattleRoyale">Battle Royale</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="MOBA" id="genreMOBA">
+                                    <label class="form-check-label" for="genreMOBA">MOBA</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Survival" id="genreSurvival">
+                                    <label class="form-check-label" for="genreSurvival">Survival</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Open World" id="genreOpenWorld">
+                                    <label class="form-check-label" for="genreOpenWorld">Open World</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Sandbox" id="genreSandbox">
+                                    <label class="form-check-label" for="genreSandbox">Sandbox</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Stealth" id="genreStealth">
+                                    <label class="form-check-label" for="genreStealth">Stealth</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Visual Novel" id="genreVisualNovel">
+                                    <label class="form-check-label" for="genreVisualNovel">Visual Novel</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Idle" id="genreIdle">
+                                    <label class="form-check-label" for="genreIdle">Idle</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Card Game" id="genreCardGame">
+                                    <label class="form-check-label" for="genreCardGame">Card Game</label>
+                                </div>
+                            </div>
+                            <!-- Final Game-Specific Genres -->
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Board Game" id="genreBoardGame">
+                                    <label class="form-check-label" for="genreBoardGame">Board Game</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Trivia" id="genreTrivia">
+                                    <label class="form-check-label" for="genreTrivia">Trivia</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="genres" value="Educational" id="genreEducational">
+                                    <label class="form-check-label" for="genreEducational">Educational</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="genreFilterForm" class="btn" style="background-color: #8b1d2e; color: white;">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+    </div>

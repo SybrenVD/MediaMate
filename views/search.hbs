@@ -13,19 +13,15 @@
                         placeholder="Find books, movies, or games..." aria-label="Search"
                         style="border-color: #8b1d2e; background-color: #f4d1d1; color: #8b1d2e;"
                         value="{{searchQuery}}">
+                    <button type="button" class="btn" style="background-color: #8b1d2e; border-color: #8b1d2e;" data-bs-toggle="modal" data-bs-target="#genreFilterModal">
+                        <i class="bi bi-funnel" style="color: white;"></i>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
-</div>
 
-<!-- Search Results Grid -->
-<div class="container">
-    {{#if error}}
-    <div class="alert alert-danger" role="alert">
-        {{error}}
-    </div>
-    {{/if}}
+    {{>filtermodal}}
 
     <!-- Search Results Grid -->
     <div class="container">
@@ -82,4 +78,8 @@
             No results found. Try a different search!
         </div>
         {{/if}}
+
+        <!-- Debug Output -->
+        <pre>{{json this}}</pre>
     </div>
+</div>

@@ -19,7 +19,7 @@
         </div>
 
         <!-- Search Bar -->
-        <div class="row justify-content-center mb-5" style="position: relative; z-index: 3;">
+        <div class="row justify-content-center mb-5">
           <div class="col-md-6">
             <form class="d-flex" role="search" action="/search" method="POST">
               <div class="input-group input-group-lg">
@@ -28,11 +28,17 @@
                 </span>
                 <input class="form-control border-2" type="search" name="query"
                   placeholder="Find books, movies, or games..." aria-label="Search"
-                  style="border-color: #8b1d2e; background-color: #f4d1d1; color: #8b1d2e;">
+                  style="border-color: #8b1d2e; background-color: #f4d1d1; color: #8b1d2e;" value="{{searchQuery}}">
+                <button type="button" class="btn" style="background-color: #8b1d2e; border-color: #8b1d2e;"
+                  data-bs-toggle="modal" data-bs-target="#genreFilterModal">
+                  <i class="bi bi-funnel" style="color: white;"></i>
+                </button>
               </div>
             </form>
           </div>
         </div>
+
+        {{>filtermodal}}
 
       </div>
     </div>
