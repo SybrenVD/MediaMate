@@ -73,7 +73,10 @@ io.on('connection', (socket) => {
             const msgResult = await pool.request()
                     .input('RoomID', sql.Int, room.RoomID)
                     .query(`SELECT Messages.Content, Messages.Time, Users.Username FROM Messages JOIN Users ON Messages.FromUser = Users.UserID WHERE RoomID = @RoomID ORDER BY Messages.MessageID ASC`);
-            callback({ room: { RoomID: room.RoomID, ChatName: room.ChatName }, messages: msgResult.recordset });
+            const messages = msgResult.recordset.map(msg => ({
+                username: msg.Username, message: msg.Content, time: msg.Time
+            }));
+            callback({ room: { RoomID: room.RoomID, ChatName: room.ChatName }, messages: messages });
         } catch (err) {
             console.error('Join room error', err);
         }
