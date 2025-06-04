@@ -9,6 +9,7 @@ const { registerUser } = require("../modules/register");
 const { loginUser } = require("../modules/login");
 const { validateRegisterInput, validateLoginInput, validateUpdateInput, verifyCurrentPassword } = require("../modules/userValidation");
 const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = require('../modules/user');
+const { getCategoryContent } = require("../modules/category");
 // const { io } = require("../modules/chatroom");
 
 
@@ -55,366 +56,60 @@ router.get("/", async function (req, res) {
 });
 
 
+const heroData = {
+  games: {
+    cta: "Discover Exciting Games",
+    banner: "/images/Banner games.webp",
+    shortDescription: "Explore a curated list of top games"
+  },
+  books: {
+    cta: "Explore Great Reads",
+    banner: "/images/BookBanner.jpg",
+    shortDescription: "Browse a hand-picked list of top books"
+  },
+  movies: {
+    cta: "Watch Blockbuster Films",
+    banner: "/images/MovieBanner2.jpg",
+    shortDescription: "Check out the most loved movies"
+  }
+};
 
-router.get("/category/:type", function (req, res) {
-  const { type } = req.params;
+// Route for category list page
+router.get("/:type", async (req, res) => {
+  const type = req.params.type;
+  const items = await getCategoryContent(type);
 
-  const dataMap = {
-    games: {
-      title: "Games",
-      type: "games", // Add type here
-      hero: {
-        cta: "Discover Exciting Games",
-        banner: "/images/Banner games.webp",
-        shortDescription: "Explore a curated list of top games"
-      },
-      items: [
-        {
-          id: "halo",
-          name: "Halo",
-          description: "A sci-fi FPS with rich lore.",
-          longDescription: "Halo is a military science fiction franchise centered on a war between humanity and an alliance of aliens known as the Covenant. Known for its storytelling and multiplayer combat.",
-          releaseDate: "2001-11-15",
-          estimatedTimeToFinish: "10-12 hours",
-          developer: "Bungie / 343 Industries",
-          image: "/images/Halo.jpg"
-        },
-        {
-          id: "zelda",
-          name: "Zelda",
-          description: "Adventure in a magical world.",
-          longDescription: "The Legend of Zelda is a high-fantasy action-adventure franchise with exploration, puzzle-solving, and epic storytelling set in the land of Hyrule.",
-          releaseDate: "1986-02-21",
-          estimatedTimeToFinish: "15-20 hours",
-          developer: "Nintendo",
-          image: "/images/zelda.jpg"
-        },
-        {
-          id: "minecraft",
-          name: "Minecraft",
-          description: "Build and explore endless worlds.",
-          longDescription: "Minecraft is a sandbox video game where players can build and explore virtual worlds made up of blocks. Known for its open-ended gameplay and creative possibilities.",
-          releaseDate: "2011-11-18",
-          estimatedTimeToFinish: "Endless / Sandbox",
-          developer: "Mojang Studios",
-          image: "/images/minecraft.jpg"
-        },
-        {
-          id: "super-mario",
-          name: "Super Mario",
-          description: "Classic platforming fun.",
-          longDescription: "Super Mario is a beloved platforming series featuring Mario's adventures to rescue Princess Peach from Bowser. Known for iconic level design and gameplay.",
-          releaseDate: "1985-09-13",
-          estimatedTimeToFinish: "6-8 hours",
-          developer: "Nintendo",
-          image: "/images/SuperMario.jpg"
-        }
-      ]
-    },
-
-    books: {
-      title: "Books",
-      type: "books", // Add type here
-      hero: {
-        cta: "Explore Great Reads",
-        banner: "/images/BookBanner.jpg",
-        shortDescription: "Browse a hand-picked list of top books"
-      },
-      items: [
-        {
-          id: "1984",
-          name: "1984",
-          description: "Dystopian classic by George Orwell.",
-          longDescription: "1984 is a chilling dystopian novel that critiques totalitarianism and extreme political ideology through the lens of a society under constant surveillance.",
-          releaseDate: "1949-06-08",
-          author: "George Orwell",
-          image: "/images/1984.jpg"
-        },
-        {
-          id: "dune",
-          name: "Dune",
-          description: "Epic sci-fi adventure.",
-          longDescription: "Dune tells the story of Paul Atreides as he navigates a complex interstellar struggle for power and control over the desert planet Arrakis and its valuable spice.",
-          releaseDate: "1965-08-01",
-          author: "Frank Herbert",
-          image: "/images/Dune.jpg"
-        },
-        {
-          id: "the-hobbit",
-          name: "The Hobbit",
-          description: "A journey through Middle-earth.",
-          longDescription: "The Hobbit follows Bilbo Baggins on an epic journey to help a group of dwarves reclaim their homeland from the dragon Smaug. A prelude to the Lord of the Rings.",
-          releaseDate: "1937-09-21",
-          author: "J.R.R. Tolkien",
-          image: "/images/TheHobbit.jpg"
-        },
-        {
-          id: "harry-potter",
-          name: "Harry Potter",
-          description: "Magic and mystery at Hogwarts.",
-          longDescription: "Harry Potter is a fantasy series chronicling a young wizard’s time at Hogwarts and his battle against the dark wizard Voldemort.",
-          releaseDate: "1997-06-26",
-          author: "J.K. Rowling",
-          image: "/images/HarryPotter.jpg"
-        }
-      ]
-    },
-
-    movies: {
-      title: "Movies",
-      type: "movies", // Add type here
-      hero: {
-        cta: "Watch Blockbuster Films",
-        banner: "/images/MovieBanner2.jpg",
-        shortDescription: "Check out the most loved movies"
-      },
-      items: [
-        {
-          id: "inception",
-          name: "Inception",
-          description: "A mind-bending thriller.",
-          longDescription: "Inception is a science fiction heist thriller where a skilled thief steals secrets by infiltrating the subconscious. Directed by Christopher Nolan.",
-          releaseDate: "2010-07-16",
-          length: "2h 28m",
-          director: "Christopher Nolan",
-          image: "/images/Inception.jpg"
-        },
-        {
-          id: "the-matrix",
-          name: "The Matrix",
-          description: "Enter the digital world.",
-          longDescription: "The Matrix follows Neo, who discovers the reality he knows is a simulation controlled by intelligent machines. A cyberpunk classic.",
-          releaseDate: "1999-03-31",
-          length: "2h 16m",
-          director: "Lana & Lilly Wachowski",
-          image: "/images/TheMatrix.jpg"
-        },
-        {
-          id: "interstellar",
-          name: "Interstellar",
-          description: "Explore space and time.",
-          longDescription: "Interstellar follows a team of explorers who travel through a wormhole in space to ensure humanity's survival. A blend of science and emotion.",
-          releaseDate: "2014-11-07",
-          length: "2h 49m",
-          director: "Christopher Nolan",
-          image: "/images/Interstellar.jpg"
-        },
-        {
-          id: "the-dark-knight",
-          name: "The Dark Knight",
-          description: "Gotham's greatest hero.",
-          longDescription: "The Dark Knight continues Batman’s fight against crime, introducing the Joker as his greatest adversary in a gritty and acclaimed superhero film.",
-          releaseDate: "2008-07-18",
-          length: "2h 32m",
-          director: "Christopher Nolan",
-          image: "/images/TheDarkKnight.jpg"
-        }
-      ]
-    }
-  };
-
-  const pageData = dataMap[type];
-
-  if (!pageData) {
-    return res.status(404).send("Category not found");
+  if (!items) {
+    return res.status(404).render("error", { message: "Category not found or error retrieving items." });
   }
 
-  res.render("category", {
-    ...pageData
-  });
+  res.render("category", { items, category: type.charAt(0).toUpperCase() + type.slice(1) });
 });
 
-  const dataMap = {
-    games: {
-      title: "Games",
-      type: "games",
-      hero: {
-        cta: "Discover Exciting Games",
-        banner: "/images/Banner games.webp",
-        shortDescription: "Explore a curated list of top games"
-      },
-      items: [
-        {
-          id: "halo",
-          name: "Halo",
-          description: "A sci-fi FPS with rich lore.",
-          longDescription: "Halo is a military science fiction franchise centered on a war between humanity and an alliance of aliens known as the Covenant. Known for its storytelling and multiplayer combat.",
-          releaseDate: "2001-11-15",
-          estimatedTimeToFinish: "10-12 hours",
-          developer: "Bungie / 343 Industries",
-          image: "/images/Halo.jpg"
-        },
-        {
-          id: "zelda",
-          name: "Zelda",
-          description: "Adventure in a magical world.",
-          longDescription: "The Legend of Zelda is a high-fantasy action-adventure franchise with exploration, puzzle-solving, and epic storytelling set in the land of Hyrule.",
-          releaseDate: "1986-02-21",
-          estimatedTimeToFinish: "15-20 hours",
-          developer: "Nintendo",
-          image: "/images/zelda.jpg"
-        },
-        {
-          id: "minecraft",
-          name: "Minecraft",
-          description: "Build and explore endless worlds.",
-          longDescription: "Minecraft is a sandbox video game where players can build and explore virtual worlds made up of blocks. Known for its open-ended gameplay and creative possibilities.",
-          releaseDate: "2011-11-18",
-          estimatedTimeToFinish: "Endless / Sandbox",
-          developer: "Mojang Studios",
-          image: "/images/minecraft.jpg"
-        },
-        {
-          id: "super-mario",
-          name: "Super Mario",
-          description: "Classic platforming fun.",
-          longDescription: "Super Mario is a beloved platforming series featuring Mario's adventures to rescue Princess Peach from Bowser. Known for iconic level design and gameplay.",
-          releaseDate: "1985-09-13",
-          estimatedTimeToFinish: "6-8 hours",
-          developer: "Nintendo",
-          image: "/images/SuperMario.jpg"
-        }
-      ]
-    },
-  
-    books: {
-      title: "Books",
-      type: "books",
-      hero: {
-        cta: "Explore Great Reads",
-        banner: "/images/BookBanner.jpg",
-        shortDescription: "Browse a hand-picked list of top books"
-      },
-      items: [
-        {
-          id: "1984",
-          name: "1984",
-          description: "Dystopian classic by George Orwell.",
-          longDescription: "1984 is a chilling dystopian novel that critiques totalitarianism and extreme political ideology through the lens of a society under constant surveillance.",
-          releaseDate: "1949-06-08",
-          author: "George Orwell",
-          image: "/images/1984.jpg"
-        },
-        {
-          id: "dune",
-          name: "Dune",
-          description: "Epic sci-fi adventure.",
-          longDescription: "Dune tells the story of Paul Atreides as he navigates a complex interstellar struggle for power and control over the desert planet Arrakis and its valuable spice.",
-          releaseDate: "1965-08-01",
-          author: "Frank Herbert",
-          image: "/images/Dune.jpg"
-        },
-        {
-          id: "the-hobbit",
-          name: "The Hobbit",
-          description: "A journey through Middle-earth.",
-          longDescription: "The Hobbit follows Bilbo Baggins on an epic journey to help a group of dwarves reclaim their homeland from the dragon Smaug. A prelude to the Lord of the Rings.",
-          releaseDate: "1937-09-21",
-          author: "J.R.R. Tolkien",
-          image: "/images/TheHobbit.jpg"
-        },
-        {
-          id: "harry-potter",
-          name: "Harry Potter",
-          description: "Magic and mystery at Hogwarts.",
-          longDescription: "Harry Potter is a fantasy series chronicling a young wizard’s time at Hogwarts and his battle against the dark wizard Voldemort.",
-          releaseDate: "1997-06-26",
-          author: "J.K. Rowling",
-          image: "/images/HarryPotter.jpg"
-        }
-      ]
-    },
-  
-    movies: {
-      title: "Movies",
-      type: "movies",
-      hero: {
-        cta: "Watch Blockbuster Films",
-        banner: "/images/MovieBanner2.jpg",
-        shortDescription: "Check out the most loved movies"
-      },
-      items: [
-        {
-          id: "inception",
-          name: "Inception",
-          description: "A mind-bending thriller.",
-          longDescription: "Inception is a science fiction heist thriller where a skilled thief steals secrets by infiltrating the subconscious. Directed by Christopher Nolan.",
-          releaseDate: "2010-07-16",
-          length: "2h 28m",
-          director: "Christopher Nolan",
-          image: "/images/Inception.jpg"
-        },
-        {
-          id: "the-matrix",
-          name: "The Matrix",
-          description: "Enter the digital world.",
-          longDescription: "The Matrix follows Neo, who discovers the reality he knows is a simulation controlled by intelligent machines. A cyberpunk classic.",
-          releaseDate: "1999-03-31",
-          length: "2h 16m",
-          director: "Lana & Lilly Wachowski",
-          image: "/images/TheMatrix.jpg"
-        },
-        {
-          id: "interstellar",
-          name: "Interstellar",
-          description: "Explore space and time.",
-          longDescription: "Interstellar follows a team of explorers who travel through a wormhole in space to ensure humanity's survival. A blend of science and emotion.",
-          releaseDate: "2014-11-07",
-          length: "2h 49m",
-          director: "Christopher Nolan",
-          image: "/images/Interstellar.jpg"
-        },
-        {
-          id: "the-dark-knight",
-          name: "The Dark Knight",
-          description: "Gotham's greatest hero.",
-          longDescription: "The Dark Knight continues Batman’s fight against crime, introducing the Joker as his greatest adversary in a gritty and acclaimed superhero film.",
-          releaseDate: "2008-07-18",
-          length: "2h 32m",
-          director: "Christopher Nolan",
-          image: "/images/TheDarkKnight.jpg"
-        }
-      ]
-    }
-  };
-  
-  // Category overview route
-  router.get("/category/:type", function (req, res) {
-    const { type } = req.params;
-    const pageData = dataMap[type];
-  
-    if (!pageData) {
-      return res.status(404).send("Category not found");
-    }
-  
-    res.render("category", {
-      title: pageData.title,
-      type: pageData.type,
-      hero: pageData.hero,
-      items: pageData.items
-    });
-  });
-  
-  // Detail page route
-router.get("/category/:type/:id", async function (req, res) {
+// Route for individual content detail page
+router.get("/category/:type/:id", async (req, res) => {
   const { type, id } = req.params;
   const from = req.query.from || "category";
 
-  const itemData = await getContentByTypeAndId(type, parseInt(id));
+  try {
+    const itemData = await getContentByTypeAndId(type, id);
+    if (!itemData) return res.status(404).send("Item not found");
 
-  if (!itemData) return res.status(404).send("Item not found");
-
-  res.render("content-detail", {
-    item: {
-      name: itemData.Title,
-      description: itemData.Description,
-      image: itemData.Image || "/images/placeholder.jpg",
-      releaseDate: itemData.ReleaseDate
-    },
-    title: itemData.Title,
-    type,
-    from
-  });
+    res.render("content-detail", {
+      item: {
+        name: itemData.Title,
+        description: itemData.Description,
+        image: itemData.Image || "/images/placeholder.jpg",
+        releaseDate: itemData.ReleaseDate
+      },
+      title: itemData.Title,
+      type,
+      from
+    });
+  } catch (error) {
+    console.error("Error retrieving item detail", error);
+    res.status(500).send("Error retrieving item detail");
+  }
 });
 
 // Contact Page - GET

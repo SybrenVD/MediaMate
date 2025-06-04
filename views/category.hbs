@@ -24,14 +24,14 @@
             </div>
           </div>
 
-          <!-- Hero title (unchanged blur) -->
+          <!-- Hero title -->
           <div class="row p-1" style="position: relative; z-index: 3;">
             <div class="hero-text mx-auto">
               <h2 class="m-0">{{hero.cta}}</h2>
             </div>
           </div>
 
-          <!-- Hero description (smaller blur) -->
+          <!-- Hero description -->
           <div class="row" style="position: relative; z-index: 3;">
             <div class="hero-desc mx-auto">
               <p class="m-0">{{hero.shortDescription}}</p>
@@ -42,18 +42,42 @@
     </section>
   </header>
 
-<!-- Top Rated Section with Slider -->
-<div class="container overflow-hidden text-center my-5">
-  <div class="row text-start ps-0 p-4">
-    <h3 class="text-danger">Top Rated</h3>
+  <!-- Top Rated Section with Slider -->
+  <div class="container overflow-hidden text-center my-5">
+    <div class="row text-start ps-0 p-4">
+      <h3 class="text-danger">Top Rated</h3>
+    </div>
+    {{> slider content=items }}
   </div>
-  {{> slider content=items }}
-</div>
 
+  <!-- Category Items Grid -->
+  <div class="container my-5">
+    <div class="row text-start ps-0 p-4">
+      <h3 class="text-danger">Browse {{title}}</h3>
+    </div>
+    <div class="row row-cols-1 row-cols-md-4 g-4">
+      {{#each items}}
+        <div class="col">
+          <div class="card h-100">
+            <a href="/category/{{../type}}/{{id}}" class="text-decoration-none text-dark">
+              <img src="{{image}}" class="card-img-top" alt="{{name}}">
+              <div class="card-body">
+                <h5 class="card-title">{{name}}</h5>
+                <p class="card-text">{{description}}</p>
+              </div>
+            </a>
+            <div class="card-footer text-end">
+              {{> iheart }}
+            </div>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+</div>
 
 <!-- Styles -->
 <style>
-  /* Title styling (unchanged) */
   .hero-text {
     backdrop-filter: blur(4px);
     background-color: rgba(0, 0, 0, 0.35);
@@ -64,7 +88,6 @@
     max-width: 60%;
   }
 
-  /* Description styling (smaller) */
   .hero-desc {
     backdrop-filter: blur(2px);
     background-color: rgba(0, 0, 0, 0.25);
@@ -75,6 +98,7 @@
     max-width: 40%;
   }
 </style>
+
 
 
 
