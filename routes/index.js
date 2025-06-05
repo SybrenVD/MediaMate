@@ -549,6 +549,7 @@ router.get("/category/:type/:id", async function (req, res) {
   const from = req.query.from || "category";
 
   const itemData = await getContentByTypeAndId(type, parseInt(id));
+  console.log(itemData);
 
   if (!itemData) return res.status(404).send("Item not found");
 

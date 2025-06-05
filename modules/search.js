@@ -51,6 +51,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
         -- Books: All or Title search
         SELECT 
           b.BookID AS ItemID,
+          c.ContentID,
           'Book' AS ContentType,
           b.Title,
           b.Image,
@@ -62,13 +63,14 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
         ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
         ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
         WHERE (@query = '' OR b.Title LIKE @query) ${genreFilter}
-        GROUP BY b.BookID, b.Title, b.Image, b.Description
+        GROUP BY b.BookID, c.ContentID, b.Title, b.Image, b.Description
 
         UNION ALL
 
         -- Books: Description search
         SELECT 
           b.BookID AS ItemID,
+          c.ContentID,
           'Book' AS ContentType,
           b.Title,
           b.Image,
@@ -80,13 +82,14 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
         ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
         ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
         WHERE @query != '' AND b.Description LIKE @query ${genreFilter}
-        GROUP BY b.BookID, b.Title, b.Image, b.Description
+        GROUP BY b.BookID, c.ContentID, b.Title, b.Image, b.Description
 
         UNION ALL
 
         -- Movies: All or Title search
         SELECT 
           m.MovieID AS ItemID,
+          c.ContentID,
           'Movie' AS ContentType,
           m.Title,
           m.Image,
@@ -98,13 +101,14 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
         ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
         ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
         WHERE (@query = '' OR m.Title LIKE @query) ${genreFilter}
-        GROUP BY m.MovieID, m.Title, m.Image, m.Description
+        GROUP BY m.MovieID, c.ContentID, m.Title, m.Image, m.Description
 
         UNION ALL
 
         -- Movies: Description search
         SELECT 
           m.MovieID AS ItemID,
+          c.ContentID,
           'Movie' AS ContentType,
           m.Title,
           m.Image,
@@ -116,13 +120,14 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
         ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
         ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
         WHERE @query != '' AND m.Description LIKE @query ${genreFilter}
-        GROUP BY m.MovieID, m.Title, m.Image, m.Description
+        GROUP BY m.MovieID, c.ContentID, m.Title, m.Image, m.Description
 
         UNION ALL
 
         -- Games: All or Title search
         SELECT 
           g.GameID AS ItemID,
+          c.ContentID,
           'Game' AS ContentType,
           g.Title,
           g.Image,
@@ -134,13 +139,14 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
         ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
         ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
         WHERE (@query = '' OR g.Title LIKE @query) ${genreFilter}
-        GROUP BY g.GameID, g.Title, g.Image, g.Description
+        GROUP BY g.GameID, c.ContentID, g.Title, g.Image, g.Description
 
         UNION ALL
 
         -- Games: Description search
         SELECT 
           g.GameID AS ItemID,
+          c.ContentID,
           'Game' AS ContentType,
           g.Title,
           g.Image,
@@ -152,10 +158,11 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
         ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
         ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
         WHERE @query != '' AND g.Description LIKE @query ${genreFilter}
-        GROUP BY g.GameID, g.Title, g.Image, g.Description
+        GROUP BY g.GameID, c.ContentID, g.Title, g.Image, g.Description
       )
       SELECT 
         ItemID,
+        ContentID,
         ContentType,
         Title,
         Image,
@@ -165,6 +172,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
       FROM (
         SELECT DISTINCT
           ItemID,
+          ContentID,
           ContentType,
           Title,
           Image,
@@ -172,7 +180,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           Description,
           MIN(Rank) AS Rank
         FROM SearchResults
-        GROUP BY ItemID, ContentType, Title, Image, Genres, Description
+        GROUP BY ItemID, ContentID, ContentType, Title, Image, Genres, Description
         ORDER BY MIN(Rank), Title
         OFFSET @offset ROWS
         FETCH NEXT @pageSize ROWS ONLY
@@ -191,6 +199,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
 
     const searchResults = result.recordset.map(row => ({
       ItemID: row.ItemID,
+      ContentID: row.ContentID,
       ContentType: row.ContentType,
       Title: row.Title,
       Image: row.Image,

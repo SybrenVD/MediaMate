@@ -74,6 +74,25 @@ hbs.registerHelper("lte", function (a, b) {
   return a <= b;
 });
 
+hbs.registerHelper('toLowerCase', function(str) {
+  return str ? str.toLowerCase() : '';
+});
+
+hbs.registerHelper('pluralizeType', function(type) {
+  if (!type) return '';
+  const lowerType = type.toLowerCase();
+  switch (lowerType) {
+    case 'book':
+      return 'books';
+    case 'movie':
+      return 'movies';
+    case 'game':
+      return 'games';
+    default:
+      return lowerType;
+  }
+});
+
 // Middleware
 app.use(bodyParser.json());
 app.use(express.json());
