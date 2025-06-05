@@ -1,16 +1,35 @@
-<div class="col-12 col-md-4">
-  <div class="d-flex align-items-center p-3 rounded shadow-sm" style="background-color: #8b1d2e; color: white; border: 2px solid #6e1624;">
-    <img src="{{this.Image}}" alt="Icon" class="me-3 rounded-circle" style="width: 40px; height: 40px;">
-    <div>
-      <div class="d-flex justy-content-between">
-        <!-- Title in black -->
-        <a class="flex-grow-1" href="../chatroom?RoomID={{this.RoomID}}" style="text-decoration: none;">
-          <h5 class="mb-1" style="color: black;">Community {{this.ChatName}}</h5>
-        </a>
-        {{>iheart}}
+<div class="col-md-4 mb-4">
+  <div class="card shadow-sm border-0 rounded" style="background-color: #8b1d2e; color: white; position: relative; padding-top: 1.8rem;">
+
+
+
+
+    <div class="card-body">
+      <div class="d-flex align-items-center mb-3">
+        <!-- Community image -->
+        <img 
+          src="{{#if this.Image}}/uploads/{{this.Image}}{{else}}/images/community1.jpg{{/if}}"
+          alt="Community Icon" 
+          class="rounded-circle me-3" 
+          style="width: 50px; height: 50px; object-fit: cover;"
+        />
+        
+        <!-- Community name & heart -->
+      <div class="d-flex justify-content-between align-items-center w-100">
+  <h5 class="mb-0">Community {{this.ChatName}}</h5>
+  {{> iheart}}
       </div>
-      <!-- Description in light gray -->
-      <p class="mb-0" style="color: gray;">{{this.Keywords}}.</p>
+
+
+      </div>
+
+      <!-- Keywords -->
+      <p class="text-light">{{this.Keywords}}</p>
+
+      <!-- Join link -->
+      <a href="/chatroom?RoomID={{this.RoomID}}" class="btn btn-outline-light btn-sm">
+        Join Chat
+      </a>
     </div>
   </div>
 </div>
