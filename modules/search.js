@@ -27,12 +27,18 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
 
     // Build dynamic genre filter
     let genreFilter = '';
-    let genreJoinType = genres.length > 0 ? 'INNER' : 'LEFT'; // INNER JOIN for non-empty genres
+    let genreJoinType = genres.length > 0 ? 'INNER' : 'LEFT';
     let sanitizedGenres = [];
     if (genres.length > 0) {
       sanitizedGenres = genres.map(genre => genre.replace(/['"]/g, ''));
       console.log('Sanitized genres:', sanitizedGenres);
-      genreFilter = `AND Genres.Name IN (${sanitizedGenres.map((_, i) => `@genre${i}`).join(', ')})`;
+      genreFilter = `AND EXISTS (
+        SELECT 1
+        FROM Content_Genre cg2
+        JOIN Genres g2 ON g2.GenreID = cg2.GenreID
+        WHERE cg2.ContentID = c.ContentID
+        AND g2.Name IN (${sanitizedGenres.map((_, i) => `@genre${i}`).join(', ')})
+      )`;
       sanitizedGenres.forEach((genre, i) => {
         console.log(`Binding genre${i}: ${genre}`);
         request.input(`genre${i}`, sql.NVarChar, genre);
@@ -49,7 +55,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           b.Title,
           b.Image,
           b.Description,
-          STRING_AGG(Genres.Name, ', ') AS Genres,
+          CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
           CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
         FROM Books b
         JOIN Content c ON c.BookID = b.BookID
@@ -67,7 +73,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           b.Title,
           b.Image,
           b.Description,
-          STRING_AGG(Genres.Name, ', ') AS Genres,
+          CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
           2 AS Rank
         FROM Books b
         JOIN Content c ON c.BookID = b.BookID
@@ -85,7 +91,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           m.Title,
           m.Image,
           m.Description,
-          STRING_AGG(Genres.Name, ', ') AS Genres,
+          CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
           CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
         FROM Movies m
         JOIN Content c ON c.MovieID = m.MovieID
@@ -103,7 +109,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           m.Title,
           m.Image,
           m.Description,
-          STRING_AGG(Genres.Name, ', ') AS Genres,
+          CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
           2 AS Rank
         FROM Movies m
         JOIN Content c ON c.MovieID = m.MovieID
@@ -121,7 +127,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           g.Title,
           g.Image,
           g.Description,
-          STRING_AGG(Genres.Name, ', ') AS Genres,
+          CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
           CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
         FROM Games g
         JOIN Content c ON c.GameID = g.GameID
@@ -139,7 +145,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           g.Title,
           g.Image,
           g.Description,
-          STRING_AGG(Genres.Name, ', ') AS Genres,
+          CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
           2 AS Rank
         FROM Games g
         JOIN Content c ON c.GameID = g.GameID
