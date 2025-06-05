@@ -17,57 +17,64 @@ const io = socketIo(server);
 io.on('connection', (socket) => {
   console.log('user conneted');
 //login
-    socket.on('login', async (username, callback) => {
-        try {
+    socket.on('authenticate', async (userId, callback) => {
+        try{
             const pool = await poolPromise;
-            let result = await pool.request()
-                .input('Username', sql.NVarChar, username)
-                .query('SELECT * FROM Users WHERE Username = @username');
+            const result = await pool.request().input('UserID', sql.Int, userId).query('SELECT * FROM Users WHERE UserID = @UserID');
 
-            let user = result.recordset[0];
-            if (!user) {
-                result = await pool.request()
-                    .input('Username', sql.NVarChar, username)
-                    .query('INSERT INTO Users (Username) OUTPUT INSERTED.UserID VALUES (@username)');
-                user = { UserID: result.recordset[0].UserID, username };
-            }
-            socket.data.user = user;
-            callback(user);
+        if (result.recordset.length === 0) {
+            return callback({ error: 'User Not Found (ㄒoㄒ)' });
+        }
+        const user = result.recordset[0];
+        socket.data.user = {
+            UserID: user.UserID, Username: user.Username
+        };
+        callback({success: true});
         } catch (err) {
             console.error('Login error', err);
+            callback({error: 'Authentication err'});
         }
     });
-//enter/create room
+//enter room
     socket.on('join room', async (roomname, callback) => {
         try {
             const pool = await poolPromise;
             const user = socket.data.user;
             if (!user) return;
-
-            let result = await pool.request()
-                .input('RoomName', sql.NVarChar, roomname)
-                .query('SELECT * FROM Communities WHERE RoomName = @RoomName');
-    
-            let room = result.recordset[0];
+//leave room
+      if (socket.data.room) {
+        socket.leave(`room_${socket.data.room.RoomID}`);
+      }
+//search/create room
+      let result = await pool.request()
+        .input('ChatName', sql.NVarChar, roomname)
+        .query('SELECT * FROM Communities WHERE ChatName = @ChatName');
+      let room = result.recordset[0];
+//create new room
             if (!room) {
                 result = await pool.request()
-                    .input('RoomName', sql.NVarChar, roomname)
+                    .input('ChatName', sql.NVarChar, roomname)
                     .input('CreatorID', sql.Int, user.UserID)
-                    .query('INSERT INTO Communities (RoomName, CreatorID) OUTPUT INSERTED.RoomID VALUES (@RoomName, @CreatorID)');
-                room = { RoomID: result.recordset[0].RoomID, roomname, CreatorID: user.UserID };
+                    .query('INSERT INTO Communities (ChatName, CreatorID) OUTPUT INSERTED.RoomID VALUES (@ChatName, @CreatorID)');
+                room = { RoomID: result.recordset[0].RoomID, ChatName: roomname, CreatorID: user.UserID };
             }
+//add lid
             await pool.request()
                 .input('RoomID', sql.Int, room.RoomID)
                 .input('UserID', sql.Int, user.UserID)
                 .query(`IF NOT EXISTS (
                     SELECT * FROM Favorites WHERE RoomID = @RoomID AND UserID = @UserID) INSERT INTO Favorites (RoomID, UserID) VALUES (@RoomID, @UserID)`);
+//join room                    
             socket.join(`room_${room.RoomID}`);
             socket.data.room = room;
 //history msg
             const msgResult = await pool.request()
                     .input('RoomID', sql.Int, room.RoomID)
                     .query(`SELECT Messages.Content, Messages.Time, Users.Username FROM Messages JOIN Users ON Messages.FromUser = Users.UserID WHERE RoomID = @RoomID ORDER BY Messages.MessageID ASC`);
-            callback({ room: { RoomID: room.RoomID, RoomName: room.RoomName }, messages: msgResult.recordset });
+            const messages = msgResult.recordset.map(msg => ({
+                username: msg.Username, message: msg.Content, time: msg.Time
+            }));
+            callback({ room: { RoomID: room.RoomID, ChatName: room.ChatName }, messages: messages });
         } catch (err) {
             console.error('Join room error', err);
         }
@@ -79,7 +86,7 @@ io.on('connection', (socket) => {
             const user = socket.data.user;
             const room = socket.data.room;
             if (!user || !room ||!msg) return;
-
+//save msg
             const timestamp = new Date().toISOString();
             await pool.request()
                 .input('RoomID', sql.Int, room.RoomID)
@@ -88,7 +95,10 @@ io.on('connection', (socket) => {
                 .input('Time', sql.DateTime2, timestamp)
                 .query(`INSERT INTO Messages (RoomID, FromUser, Content, Time) VALUES (@RoomID, @FromUser, @Content, @Time)`);
             const message = `[${user.Username}] ${msg}`;
-            io.to(`room_${room.RoomID}`).emit('chat message', message);
+//broad msg
+            io.to(`room_${room.RoomID}`).emit('chat message', {
+                roomId: room.RoomID, username: user.Username, message: msg, time: timestamp
+            });
         } catch (err) {
             console.error('Message error:', err);
         }
@@ -96,6 +106,9 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         console.log('user disconnected');
+        if (socket.data.room) {
+            socket.leave(`room_${socket.data.room.RoomID}`);
+        }
     });
 });
 

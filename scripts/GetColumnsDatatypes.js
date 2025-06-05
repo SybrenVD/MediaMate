@@ -1,6 +1,6 @@
 const { sql, poolPromise } = require('../config/db'); // adjust if your config file is named differently
 
-const tableName = 'Users'; // change this to your table name
+const tableName = 'Communities'; // change this to your table name
 const schemaName = 'dbo'; // adjust if your table is under a different schema
 
 async function getColumnsWithTypes() {

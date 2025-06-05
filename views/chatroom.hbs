@@ -11,14 +11,16 @@
     <div class="tab-content" id="nav-tabContent">
       {{#each rooms}}
           <div class="tab-pane fade {{#if @first}}show active{{/if}}"
-             id="list-{{chatId}}"
+             id="list-{{this.RoomID}}"
              role="tabpanel"
-             aria-labelledby="list-{{chatId}}-list">
+             aria-labelledby="list-{{this.RoomID}}-list"
+             data-room-id="{{this.RoomID}}"
+             data-room-name="{{this.ChatName}}">
               <div class="p-2">
                 <div class="d-flex flex-row mb-3">
-                  <img src="{{img}}" alt="imgChat" style="max-width: 100px; max-height: 100px;" />
+                  <img src="{{this.Image}}" alt="imgChat" style="max-width: 100px; max-height: 100px;" />
                   <div class="btn-group">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">{{chatName}}</button>
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">{{this.ChatName}}</button>
                     <ul class="dropdown-menu">
                       {{#each this.members}}
                         {{>grouplidcard}}
@@ -27,15 +29,15 @@
                   </div>
                 </div>
               </div>
-              <div class="p-2 d-flex flex-column mb-3">
-                {{#each (lookup ../messagesByRoom chatId)}}
+              <div id="messages-{{this.RoomID}}" class="p-2 d-flex flex-column mb-3">
+                {{#each (lookup ../messagesByRoom RoomID)}}
                   {{> messagepartial}}
                 {{/each}}
               </div>
               <div class="mt-auto p-3 border-top">
-                <form class="d-flex gap-2">
-                  <input type="text" class="form-control">
-                  <button class="btn btn-secondary">⬆</button>
+                <form id="message-form" class="d-flex gap-2" data-room-id="{{this.RoomID}}">
+                  <input type="text" id="message-input" class="form-control message-input">
+                  <button type="submit" class="btn btn-secondary">⬆</button>
                 </form>
               </div>
           </div>
@@ -44,3 +46,60 @@
   </div>
 </div>
 
+<!-- Socket.IO & jQuery -->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  $(document).ready(function() {
+    const socket = io();
+    const currentUser = {
+      id: '{{user.UserID}}',
+      username: '{{user.Username}}',
+      image: '{{user.Image}}'
+    };
+    const currentRoom = {
+      id: '{{currentRoom.RoomID}}',
+      name: '{{currentRoom.ChatName}}',
+      image: '{{currentRoom.Image}}'
+    };
+//join room
+  socket.emit('join room', {
+    userId: user.id, roomId: currentRoom.id
+    });
+    console.log('Joined room: ', currentRoom.name);
+    const messagesContainer = $(`#messages-${currentRoom.id}`);
+    scrollTop(messagesContainer);
+  });
+//msg send
+    $('form[data-room-id="${currentRoom.id}"]').on('submit', function(e) {
+      e.preventDefault();
+      const input = $(this).find('.message-input');
+      const message = input.val().trim();
+      if(message) {
+        scrollToBottom($(`#messages-${currentRoom.id}`));
+//to server
+        socket.emit('chat message', message);
+        input.val('');
+        input.focus();
+      }
+    });
+//get new msg
+    socket.on('chat message', function(data) {
+//show msg
+      if (data.roomId == currentRoom.id) {
+        appendMessage($(`#messages-${currentRoom.id}`), {
+          username: data.username, message: data.message, time: data.time, isSelf: data.username === currentUser.username
+        });
+        scrollToBottom($(`#messages-${currentRoom.id}`));
+      }
+    });
+    messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+</script>
+
+<style>
+  .message {
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+    max-width: 80%;
+  }
+</style>

@@ -9,11 +9,14 @@ const { registerUser } = require("../modules/register");
 const { loginUser } = require("../modules/login");
 const { validateRegisterInput, validateLoginInput, validateUpdateInput, verifyCurrentPassword } = require("../modules/userValidation");
 const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = require('../modules/user');
+const { searchAllContent } = require('../modules/search');
+const { getCommunities } = require('../modules/community');
 const { getCategoryContent } = require("../modules/category");
 // const { io } = require("../modules/chatroom");
 
 
 const e = require("express");
+const { sql, poolPromise } = require("../config/db");
 
 //toevoegen pagina
 const addedItems = []; // tijdelijk opgeslagen inhoud
@@ -29,69 +32,237 @@ function isAuthenticated(req, res, next) {
   res.redirect("/login");
 }
 
-/* GET home page. */
-router.get("/", async function (req, res) {
+// Homepage GET route
+router.get('/', async function (req, res) {
   try {
     const bestRatedContent = await getBestRated();
     const randomBooksContent = await getRandomBooks();
     const randomMoviesContent = await getRandomMovies();
     const randomGamesContent = await getRandomGames();
-
-    res.render("index", {
-      title: "Home",
-      banner: "/images/BannerHome.jpg",
+    res.render('index', {
+      title: 'Home',
+      banner: '/images/BannerHome.jpg',
       hero: {
-        cta: "Welcome to MediaMate",
-        shortDescription: "Find the best in entertainment"
+        cta: 'Welcome to MediaMate',
+        shortDescription: 'Find the best in entertainment'
       },
+      searchQuery: '',
       bestRatedContent,
       randomBooksContent,
       randomMoviesContent,
       randomGamesContent
     });
   } catch (error) {
-    console.error("Error loading homepage content:", error);
-    res.status(500).send("Internal Server Error");
+    console.error('Error loading homepage content:', error);
+    res.render('index', {
+      title: 'Home',
+      banner: '/images/BannerHome.jpg',
+      hero: {
+        cta: 'Welcome to MediaMate',
+        shortDescription: 'Find the best in entertainment'
+      },
+      searchQuery: '',
+      bestRatedContent: [],
+      randomBooksContent: [],
+      randomMoviesContent: [],
+      randomGamesContent: [],
+      error: 'Failed to load content'
+    });
   }
 });
 
-const heroData = {
-  games: {
-    cta: "Discover Exciting Games",
-    banner: "/images/Banner games.webp",
-    shortDescription: "Explore a curated list of top games"
-  },
-  books: {
-    cta: "Explore Great Reads",
-    banner: "/images/BookBanner.jpg",
-    shortDescription: "Browse a hand-picked list of top books"
-  },
-  movies: {
-    cta: "Watch Blockbuster Films",
-    banner: "/images/MovieBanner2.jpg",
-    shortDescription: "Check out the most loved movies"
-  }
-};
+// Search POST route
+router.post('/search', async function (req, res) {
+  console.log('POST /search received:', req.body);
+  const query = req.body.query?.trim() || '';
+  let genres = [];
 
-// List page: /category/games
+  try {
+    if (req.body.genres) {
+      if (typeof req.body.genres === 'string') {
+        // Handle single string or comma-separated string
+        genres = req.body.genres.split(',').map(g => g.trim()).filter(g => g);
+      } else if (Array.isArray(req.body.genres)) {
+        // Handle multiple genres (e.g., genres=value1&genres=value2)
+        genres = req.body.genres;
+      }
+    } else if (req.body['genres[]']) {
+      // Handle genres[]=value1&genres[]=value2 (if form uses genres[])
+      genres = Array.isArray(req.body['genres[]'])
+        ? req.body['genres[]']
+        : [req.body['genres[]']];
+    }
+    if (!Array.isArray(genres)) {
+      console.warn('Genres is not an array after parsing:', genres);
+      genres = [];
+    }
+    console.log('Parsed genres:', genres);
+  } catch (error) {
+    console.error('Error parsing genres:', error.message);
+    genres = [];
+  }
+
+  const queryParams = new URLSearchParams({ query });
+  if (genres.length > 0) {
+    queryParams.append('genres', JSON.stringify(genres));
+  }
+  console.log(`Redirecting to /search?${queryParams.toString()}`);
+  res.redirect(`/search?${queryParams.toString()}`);
+});
+
+// Search GET route
+router.get('/search', async function (req, res) {
+  console.log('GET /search received:', req.query);
+  const query = req.query.query?.trim() || '';
+  let genres = [];
+  try {
+    genres = req.query.genres ? JSON.parse(req.query.genres) : [];
+    if (!Array.isArray(genres)) {
+      genres = [];
+    }
+  } catch (error) {
+    console.error('Error parsing genres:', error);
+    genres = [];
+  }
+  const page = parseInt(req.query.page) || 1;
+  const error = req.query.error;
+
+  try {
+    let searchResults = [];
+    let searchError = error;
+    let currentPage = 1;
+    let totalPages = 1;
+    let startPage = 1;
+    let endPage = 1;
+
+    // Call searchAllContent for any query or genres
+    const result = await searchAllContent(query, page, 40, genres);
+    searchResults = Array.isArray(result.searchResults) ? result.searchResults : [];
+    currentPage = result.currentPage;
+    totalPages = result.totalPages;
+
+    // Pagination logic
+    const pageWindow = 2;
+    startPage = Math.max(2, currentPage - pageWindow);
+    endPage = Math.min(totalPages - 1, currentPage + pageWindow);
+
+    if (currentPage <= 3) {
+      startPage = 2;
+      endPage = Math.min(5, totalPages - 1);
+    }
+    if (currentPage >= totalPages - 2) {
+      startPage = Math.max(totalPages - 4, 2);
+      endPage = totalPages - 1;
+    }
+
+    if (searchResults.length === 0) {
+      searchError = 'No results found';
+    }
+
+    const renderData = {
+      title: 'Search Results',
+      searchResults,
+      searchQuery: query,
+      selectedGenres: genres,
+      currentPage,
+      totalPages,
+      startPage,
+      endPage,
+      error: searchError,
+      range: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start),
+      eq: (a, b) => a === b,
+      gt: (a, b) => a > b,
+      lt: (a, b) => a < b,
+      add: (a, b) => a + b,
+      subtract: (a, b) => a - b,
+      json: (context) => JSON.stringify(context, null, 2)
+    };
+    console.log('Render Data:', renderData);
+
+    res.render('search', renderData);
+  } catch (error) {
+    console.error('Error performing search:', error);
+    res.status(500).render('search', {
+      title: 'Search Results',
+      searchResults: [],
+      searchQuery: query,
+      selectedGenres: genres,
+      currentPage: 1,
+      totalPages: 1,
+      startPage: 1,
+      endPage: 1,
+      error: 'Search failed, please try again',
+      range: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start),
+      eq: (a, b) => a === b,
+      gt: (a, b) => a > b,
+      lt: (a, b) => a < b,
+      add: (a, b) => a + b,
+      subtract: (a, b) => a - b,
+      json: (context) => JSON.stringify(context, null, 2)
+    });
+  }
+});
+
 router.get("/category/:type", async (req, res) => {
-  const type = req.params.type;
+  const { type } = req.params;
 
-  const items = await getCategoryContent(type);
-  if (!items) {
-    return res.status(404).render("error", { message: "Category not found or error retrieving items." });
+  const dataMap = {
+    games: {
+      title: "Games",
+      type: "games",
+      hero: {
+        cta: "Discover Exciting Games",
+        banner: "/images/Banner games.webp",
+        shortDescription: "Explore a curated list of top games"
+      }
+    },
+    books: {
+      title: "Books",
+      type: "books",
+      hero: {
+        cta: "Explore Great Reads",
+        banner: "/images/BookBanner.jpg",
+        shortDescription: "Browse a hand-picked list of top books"
+      }
+    },
+    movies: {
+      title: "Movies",
+      type: "movies",
+      hero: {
+        cta: "Watch Blockbuster Films",
+        banner: "/images/MovieBanner2.jpg",
+        shortDescription: "Check out the most loved movies"
+      }
+    }
+  };
+
+  const pageData = dataMap[type];
+  if (!pageData) {
+    return res.status(404).send("Category not found");
   }
 
-  res.render("category", {
-    items,
-    title: type.charAt(0).toUpperCase() + type.slice(1),
-    type,
-    hero: heroData[type]
-  });
-});
+  try {
+    const items = await getCategoryContent(type);
+    console.log(`Items for category "${type}":`, items);
 
-// Detail page: /category/games/123
-router.get("/category/:type/:id", async (req, res) => {
+    if (!items || items.length === 0) {
+      return res.status(404).send("No items found for this category.");
+    }
+
+    res.render("category", {
+      title: pageData.title,
+      type: pageData.type,
+      hero: pageData.hero,
+      items
+    });
+  } catch (err) {
+    console.error("Error fetching category content:", err);
+    res.status(500).send("Error fetching category content");
+  }
+});
+  
+  // Detail page route
+router.get("/category/:type/:id", async function (req, res) {
   const { type, id } = req.params;
   const from = req.query.from || "category";
 
@@ -145,14 +316,30 @@ router.post("/contact", function (req, res)
 });
 });
 
-router.get('/community', function (req, res) {
-  res.render('community', {
-    title: 'Community'
-  });
+
+router.get('/community', async function (req, res) {
+  try {
+    const communities = await getCommunities();
+    res.render('community', {
+      title: 'Community',
+      communities // gebruik met {{#each communities}} in hbs
+    });
+  } catch (error) {
+    console.error("❌ Community load error:", error);
+    res.render('community', {
+      title: 'Community',
+      error: 'Veriler yüklenemedi.',
+      communities: []
+    });
+  }
 });
 
 // GET: form
 router.get('/create-community', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+
   res.render('create-community', {
     title: 'Create Community',
     active: 'create-community',
@@ -160,27 +347,6 @@ router.get('/create-community', (req, res) => {
   });
 });
 
-// POST: handle form
-router.post('/create-community', upload.single('image'), (req, res) => {
-  const { name, keywords } = req.body;
-  const imageFile = req.file;
-
-  // Check for required fields
-  if (!name || !keywords || !imageFile) {
-    return res.status(400).render('create-community', {
-      title: 'Create Community',
-      active: 'create-community',
-      error: 'All fields (name, keywords, image) are required.'
-    });
-  }
-
-  console.log('✅ Community created:');
-  console.log('Name:', name);
-  console.log('Keywords:', keywords.split(',').map(k => k.trim()));
-  console.log('Image file:', imageFile.filename);
-
-  res.send('Community created successfully!');
-});
 
 
 router.get("/faq", function (req, res, next) {
@@ -663,31 +829,42 @@ router.post('/admin/edit/:id', async (req, res) => {
 });
 
 
-/*GET groeplist+room */
-router.get("/chatroom", function(req, res) {
-  const rooms = [
-    {chatId: 0, chatName: "A", tags: "", img: "https://huiji-public.huijistatic.com/isaac/uploads/0/04/3DS_Detailed_Pandora%27s_Box.png", members:{ creatorId: 0, membersId: 0}},
-    {chatId: 1, chatName: "B", tags: "", img: "https://huiji-public.huijistatic.com/isaac/uploads/3/3b/3DS_Detailed_Converter.png", creatorId: 0, membersId: 0},
-    {chatId: 2, chatName: "C", tags: "", img: "", creatorId: 0, membersId: 0},
-    {chatId: 3, chatName: "D", tags: "", img: "", creatorId: 0, membersId: 0}
-  ];
-
-  const allMessages = {
-    0: [
-      {messageId: 0, fromId: 0, time: Date.now(), content: "Ja?", chatId: 0}
-    ],
-    1: [
-      {messageId: 0, fromId: 0, time: Date.now(), content: "...Nee?", chatId: 1}
-    ],
-    2: [],
-    3: []
-  };
-
+/*GET chatroom */
+router.get("/chatroom", async function(req, res) {
+//check login
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+  const RoomID = req.query.RoomID;
+  if (!RoomID) {
+    return res.status(400).send('Community Not Exists (ㄒoㄒ)');
+  }
+  try {
+    const pool = await poolPromise;
+//get Room info
+    const roomResult = await pool.request().input('RoomID', sql.Int, RoomID).query('SELECT * FROM Communities WHERE RoomID = @RoomID');
+    const room = roomResult.recordset[0];
+    if(!room) {
+      return res.status(404).send('Community Not Found (ㄒoㄒ)');
+    }
+    const membersResult = await pool.request().input('RoomID', sql.Int, RoomID).query(`SELECT u.Username, u.Image FROM Favorites f JOIN Users u ON f.UserID = u.UserID WHERE f.RoomID = @RoomID`);
+//get his msg
+    const messagesResult = await pool.request().input('RoomID', sql.Int, RoomID).query(`SELECT Messages.Content, Messages.Time, Users.Username, Users.Image FROM Messages JOIN Users ON Messages.FromUser = Users.UserID WHERE RoomID = @RoomID ORDER BY Messages.MessageID ASC`);
+//get fav-room-list
+    const userCommunitiesResult = await pool.request().input('UserID', sql.Int, req.session.user.UserID).query(`SELECT c.RoomID, c.ChatName, c.Image FROM Communities c JOIN Favorites f ON c.RoomID = f.RoomID WHERE f.UserID = @UserID`);
   res.render("chatroom", {
-    title: "Chatrooms",
-    rooms,
-    messagesByRoom: allMessages
+    user: req.session.user,
+    currentRoom: {
+      room: roomResult.recordset[0],
+      members: membersResult.recordset
+    },
+    rooms: userCommunitiesResult.recordset,
+    messages: messagesResult.recordset
   });
+} catch (err) {
+  console.error('Error loading chatroom', err);
+  res.status(500).send('Server Error (ㄒoㄒ)')
+}
 });
 /*Get test chatroom*/
 router.get("/testroom", function(req,res){
@@ -698,3 +875,4 @@ router.get("/testroom", function(req,res){
 
 
 module.exports = router;
+// module.exports = {sql, poolPromise};
