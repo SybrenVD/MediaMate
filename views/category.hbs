@@ -45,7 +45,7 @@
   <!-- Top Rated Section with Slider -->
   <div class="container overflow-hidden text-center my-5">
     <div class="row text-start ps-0 p-4">
-      <h3 class="text-danger">Top Rated</h3>
+      <h3 class="text-primary-custom">Top Rated</h3>
     </div>
     {{> slider_alt content=items type=type }}
   </div>
@@ -53,7 +53,7 @@
   <!-- Category Items Grid -->
   <div class="container my-5">
     <div class="row text-start ps-0 p-4">
-      <h3 class="text-danger">Browse {{title}}</h3>
+      <h3 class="text-primary-custom">Browse {{title}}</h3>
     </div>
     <div class="row row-cols-1 row-cols-md-4 g-4">
       {{#each items}}
@@ -67,6 +67,10 @@
 
 <!-- Styles -->
 <style>
+  .text-primary-custom {
+    color: #8b1d2e !important;
+  }
+
   .hero-text {
     backdrop-filter: blur(4px);
     background-color: rgba(0, 0, 0, 0.35);
@@ -97,6 +101,8 @@
     gap: 1rem;
   }
 </style>
+
+
 
 
 
