@@ -613,6 +613,10 @@ router.get('/community', async function (req, res) {
 
 // GET: form
 router.get('/create-community', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+
   res.render('create-community', {
     title: 'Create Community',
     active: 'create-community',
@@ -620,27 +624,6 @@ router.get('/create-community', (req, res) => {
   });
 });
 
-// POST: handle form
-router.post('/create-community', upload.single('image'), (req, res) => {
-  const { name, keywords } = req.body;
-  const imageFile = req.file;
-
-  // Check for required fields
-  if (!name || !keywords || !imageFile) {
-    return res.status(400).render('create-community', {
-      title: 'Create Community',
-      active: 'create-community',
-      error: 'All fields (name, keywords, image) are required.'
-    });
-  }
-
-  console.log('✅ Community created:');
-  console.log('Name:', name);
-  console.log('Keywords:', keywords.split(',').map(k => k.trim()));
-  console.log('Image file:', imageFile.filename);
-
-  res.send('Community created successfully!');
-});
 
 
 router.get("/faq", function (req, res, next) {
