@@ -74,6 +74,14 @@ hbs.registerHelper('rangeHelper', function(start, end) {
 hbs.registerHelper("lte", function (a, b) {
   return a <= b;
 });
+hbs.registerHelper("split", function (str) {
+  if (typeof str === "string") {
+    return str.split(",").map(s => s.trim());
+  }
+  return [];
+});
+
+
 
 // Middleware
 app.use(bodyParser.json());
