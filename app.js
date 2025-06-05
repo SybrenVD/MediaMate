@@ -8,6 +8,7 @@ const session = require("express-session");
 const bodyParser = require('body-parser');
 const indexRouter = require("./routes/index");
 const multer = require("multer");
+const communityRouter = require('./routes/community');
 
 // Init Express app
 const app = express();
@@ -93,6 +94,7 @@ app.use((req, res, next) => {
 
 // Use the routes that you have defined
 app.use("/", indexRouter);
+app.use("/community", communityRouter);
 
 // Catch 404 and forward to error handler
 app.use(function(req, res, next) {
