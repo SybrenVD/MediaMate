@@ -1065,12 +1065,13 @@ router.get("/chatroom", async function(req, res) {
   }
   const RoomID = req.query.RoomID;
   if (!RoomID) {
-    return res.status(400).send('Community ID Not Found (ㄒoㄒ)');
+    return res.status(400).send('Community Not Exists (ㄒoㄒ)');
   }
   try {
     const pool = await poolPromise;
 //get Room info
     const roomResult = await pool.request().input('RoomID', sql.Int, RoomID).query('SELECT * FROM Communities WHERE RoomID = @RoomID');
+    const room = roomResult.recordset[0];
     if(!room) {
       return res.status(404).send('Community Not Found (ㄒoㄒ)');
     }
@@ -1078,7 +1079,7 @@ router.get("/chatroom", async function(req, res) {
 //get his msg
     const messagesResult = await pool.request().input('RoomID', sql.Int, RoomID).query(`SELECT Messages.Content, Messages.Time, Users.Username, Users.Image FROM Messages JOIN Users ON Messages.FromUser = Users.UserID WHERE RoomID = @RoomID ORDER BY Messages.MessageID ASC`);
 //get fav-room-list
-    const userCommunitiesResult = await pool.request().input('UserID', sql.Int, req.session.user.UserID).query(`SELECT c.CommunityID, c.ChatName, c.Image FROM Communities c JOIN Favorites f ON c.RoomID = f.RoomID WHERE f.UserID = @UserID`);
+    const userCommunitiesResult = await pool.request().input('UserID', sql.Int, req.session.user.UserID).query(`SELECT c.RoomID, c.ChatName, c.Image FROM Communities c JOIN Favorites f ON c.RoomID = f.RoomID WHERE f.UserID = @UserID`);
   res.render("chatroom", {
     user: req.session.user,
     currentRoom: {
