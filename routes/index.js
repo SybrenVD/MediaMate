@@ -117,7 +117,6 @@ router.get("/category/:type/:id", async (req, res) => {
 });
 
 
-
 // Contact Page - GET
 
 router.get("/contact", function (req, res) {
