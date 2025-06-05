@@ -476,3 +476,29 @@ h4 {
   background-color: #757575;
   color: #ffffff;
 }
+
+/* Just for Community cards */
+.community-card {
+  padding: 0 !important;
+  min-height: auto !important;
+}
+
+.community-card .card-body {
+  padding: 1rem !important;
+}
+
+.community-tags {
+  margin-top: 0.5rem;
+  padding-bottom: 0.8rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.community-tag {
+  font-size: 0.75rem;
+  background-color: #f8d7da;
+  color: #8b1d2e;
+  border-radius: 12px;
+  padding: 4px 8px;
+  font-weight: 500;
+}

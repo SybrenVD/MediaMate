@@ -1,35 +1,31 @@
-<div class="col-md-4 mb-4">
-  <div class="card shadow-sm border-0 rounded" style="background-color: #8b1d2e; color: white; position: relative; padding-top: 1.8rem;">
+<div class="col-md-4 mb-4 d-flex">
+  <div class="card shadow-sm border-0 rounded w-100 d-flex flex-column justify-content-between community-card">
+    <div class="card-body d-flex flex-column p-3">
 
-
-
-
-    <div class="card-body">
-      <div class="d-flex align-items-center mb-3">
-        <!-- Community image -->
+      <!-- Image + Name + Heart -->
+      <div class="d-flex justify-content-between align-items-center mb-2">
         <img 
-          src="{{#if this.Image}}/uploads/{{this.Image}}{{else}}/images/community1.jpg{{/if}}"
-          alt="Community Icon" 
-          class="rounded-circle me-3" 
-          style="width: 50px; height: 50px; object-fit: cover;"
+          src="{{#if this.Image}}/uploads/{{this.Image}}{{else}}/images/community1.jpg{{/if}}" 
+          alt="Community Icon"
+          class="rounded-circle me-2"
+          style="width: 40px; height: 40px; object-fit: cover;"
         />
-        
-        <!-- Community name & heart -->
-      <div class="d-flex justify-content-between align-items-center w-100">
-  <h5 class="mb-0">Community {{this.ChatName}}</h5>
-  {{> iheart}}
+        <h6 class="mb-0 text-white flex-grow-1 ms-2">{{this.ChatName}}</h6>
+        {{> iheart}}
       </div>
 
-
-      </div>
-
-      <!-- Keywords -->
-      <p class="text-light">{{this.Keywords}}</p>
-
-      <!-- Join link -->
-      <a href="/chatroom?RoomID={{this.RoomID}}" class="btn btn-outline-light btn-sm">
+      <!-- Join Chat Button -->
+      <a href="/chatroom?RoomID={{this.RoomID}}" class="btn btn-outline-light btn-sm mt-auto w-100">
         Join Chat
       </a>
     </div>
+
+    <!-- Keywords Etiketleri -->
+    <div class="community-tags px-3 pb-3 d-flex flex-wrap gap-2">
+      {{#each (split this.Keywords) }}
+        <span class="badge bg-light text-dark community-tag">{{ this }}</span>
+      {{/each}}
+    </div>
   </div>
 </div>
+
