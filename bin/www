@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
         }
     });
 //enter room
-    socket.on('join room', async (roomname, callback) => {
+    socket.on('join room', async (roomId, callback) => {
         try {
             const pool = await poolPromise;
             const user = socket.data.user;
@@ -47,8 +47,8 @@ io.on('connection', (socket) => {
       }
 //search/create room
       let result = await pool.request()
-        .input('ChatName', sql.NVarChar, roomname)
-        .query('SELECT * FROM Communities WHERE ChatName = @ChatName');
+        .input('RoomID', sql.Int, roomId)
+        .query('SELECT * FROM Communities WHERE RoomID = @RoomID');
       let room = result.recordset[0];
 //create new room
             if (!room) {
