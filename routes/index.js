@@ -264,7 +264,7 @@ router.get("/category/:type", async (req, res) => {
  // Detail page route
 router.get("/category/:type/:id", async function (req, res) {
   const { type, id } = req.params;
-  const from = req.query.from || "category";
+  const from = type || "category";
   const normalizedType = type.toLowerCase();
   console.log(`Detail page request: type=${type}, id=${id}, from=${from}, normalizedType=${normalizedType}`);
 
