@@ -261,15 +261,26 @@ router.get("/category/:type", async (req, res) => {
   }
 });
   
-  // Detail page route
+ // Detail page route
 router.get("/category/:type/:id", async function (req, res) {
   const { type, id } = req.params;
   const from = req.query.from || "category";
+  const normalizedType = type.toLowerCase();
+  console.log(`Detail page request: type=${type}, id=${id}, from=${from}, normalizedType=${normalizedType}`);
 
-  const itemData = await getContentByTypeAndId(type, parseInt(id));
-  console.log(itemData);
+  try {
+    if (!['books', 'movies', 'games'].includes(normalizedType)) {
+      console.error(`Invalid type: ${normalizedType}`);
+      return res.status(400).render('error', { title: 'Invalid Type', error: 'Invalid content type' });
+    }
 
-  if (!itemData) return res.status(404).send("Item not found");
+    const itemData = await getContentByTypeAndId(normalizedType, parseInt(id));
+    console.log(`Item data: ${JSON.stringify(itemData)}`);
+
+    if (!itemData) {
+      console.error(`Item not found: type=${normalizedType}, id=${id}`);
+      return res.status(404).render('error', { title: 'Item Not Found', error: 'Item not found' });
+    }
 
     res.render("content-detail", {
       item: {
@@ -279,12 +290,12 @@ router.get("/category/:type/:id", async function (req, res) {
         releaseDate: itemData.ReleaseDate
       },
       title: itemData.Title,
-      type,
+      type: normalizedType,
       from
     });
   } catch (error) {
-    console.error("Error retrieving item detail", error);
-    res.status(500).send("Error retrieving item detail");
+    console.error(`Detail page error: type=${type}, id=${id}, error=${error.message}`);
+    res.status(500).render('error', { title: 'Server Error', error: 'Error retrieving item detail' });
   }
 });
 
