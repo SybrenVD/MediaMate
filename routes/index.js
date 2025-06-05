@@ -74,13 +74,29 @@ router.post('/search', async function (req, res) {
   console.log('POST /search received:', req.body);
   const query = req.body.query?.trim() || '';
   let genres = [];
+
   try {
-    genres = req.body.genres ? JSON.parse(req.body.genres) : [];
+    if (req.body.genres) {
+      if (typeof req.body.genres === 'string') {
+        // Handle single string or comma-separated string
+        genres = req.body.genres.split(',').map(g => g.trim()).filter(g => g);
+      } else if (Array.isArray(req.body.genres)) {
+        // Handle multiple genres (e.g., genres=value1&genres=value2)
+        genres = req.body.genres;
+      }
+    } else if (req.body['genres[]']) {
+      // Handle genres[]=value1&genres[]=value2 (if form uses genres[])
+      genres = Array.isArray(req.body['genres[]'])
+        ? req.body['genres[]']
+        : [req.body['genres[]']];
+    }
     if (!Array.isArray(genres)) {
+      console.warn('Genres is not an array after parsing:', genres);
       genres = [];
     }
+    console.log('Parsed genres:', genres);
   } catch (error) {
-    console.error('Error parsing genres:', error);
+    console.error('Error parsing genres:', error.message);
     genres = [];
   }
 

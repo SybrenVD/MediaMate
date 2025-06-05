@@ -1,9 +1,15 @@
-const { sql, poolPromise } = require('../config/db'); // Adjust path if needed
+const { sql, poolPromise } = require('../config/db');
 
 async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
   try {
     console.log(`Search parameters: query=${query}, page=${page}, pageSize=${pageSize}, genres=${JSON.stringify(genres)}`);
     
+    // Validate genres parameter
+    if (!Array.isArray(genres)) {
+      console.warn('Genres parameter is not an array:', genres);
+      genres = [];
+    }
+
     const pool = await poolPromise.catch(err => {
       console.error('Database connection error:', err.message);
       throw new Error('Database connection failed');
@@ -21,15 +27,19 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
 
     // Build dynamic genre filter
     let genreFilter = '';
+    let genreJoinType = genres.length > 0 ? 'INNER' : 'LEFT'; // INNER JOIN for non-empty genres
+    let sanitizedGenres = [];
     if (genres.length > 0) {
-      const sanitizedGenres = genres.map(genre => genre.replace(/['"]/g, ''));
+      sanitizedGenres = genres.map(genre => genre.replace(/['"]/g, ''));
+      console.log('Sanitized genres:', sanitizedGenres);
       genreFilter = `AND Genres.Name IN (${sanitizedGenres.map((_, i) => `@genre${i}`).join(', ')})`;
       sanitizedGenres.forEach((genre, i) => {
+        console.log(`Binding genre${i}: ${genre}`);
         request.input(`genre${i}`, sql.NVarChar, genre);
       });
     }
 
-    // SQL query with empty query handling
+    // SQL query
     const sqlQuery = `
       WITH SearchResults AS (
         -- Books: All or Title search
@@ -43,15 +53,14 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
         FROM Books b
         JOIN Content c ON c.BookID = b.BookID
-        LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
-        WHERE @query = '' OR b.Title LIKE @query
-        ${genreFilter}
+        ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
+        ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE (@query = '' OR b.Title LIKE @query) ${genreFilter}
         GROUP BY b.BookID, b.Title, b.Image, b.Description
 
         UNION ALL
 
-        -- Books: Description search (only when query is not empty)
+        -- Books: Description search
         SELECT 
           b.BookID AS ItemID,
           'Book' AS ContentType,
@@ -62,10 +71,9 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           2 AS Rank
         FROM Books b
         JOIN Content c ON c.BookID = b.BookID
-        LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
-        WHERE @query != '' AND b.Description LIKE @query
-        ${genreFilter}
+        ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
+        ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE @query != '' AND b.Description LIKE @query ${genreFilter}
         GROUP BY b.BookID, b.Title, b.Image, b.Description
 
         UNION ALL
@@ -81,15 +89,14 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
         FROM Movies m
         JOIN Content c ON c.MovieID = m.MovieID
-        LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
-        WHERE @query = '' OR m.Title LIKE @query
-        ${genreFilter}
+        ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
+        ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE (@query = '' OR m.Title LIKE @query) ${genreFilter}
         GROUP BY m.MovieID, m.Title, m.Image, m.Description
 
         UNION ALL
 
-        -- Movies: Description search (only when query is not empty)
+        -- Movies: Description search
         SELECT 
           m.MovieID AS ItemID,
           'Movie' AS ContentType,
@@ -100,10 +107,9 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           2 AS Rank
         FROM Movies m
         JOIN Content c ON c.MovieID = m.MovieID
-        LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
-        WHERE @query != '' AND m.Description LIKE @query
-        ${genreFilter}
+        ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
+        ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE @query != '' AND m.Description LIKE @query ${genreFilter}
         GROUP BY m.MovieID, m.Title, m.Image, m.Description
 
         UNION ALL
@@ -119,15 +125,14 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
         FROM Games g
         JOIN Content c ON c.GameID = g.GameID
-        LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
-        WHERE @query = '' OR g.Title LIKE @query
-        ${genreFilter}
+        ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
+        ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE (@query = '' OR g.Title LIKE @query) ${genreFilter}
         GROUP BY g.GameID, g.Title, g.Image, g.Description
 
         UNION ALL
 
-        -- Games: Description search (only when query is not empty)
+        -- Games: Description search
         SELECT 
           g.GameID AS ItemID,
           'Game' AS ContentType,
@@ -138,10 +143,9 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
           2 AS Rank
         FROM Games g
         JOIN Content c ON c.GameID = g.GameID
-        LEFT JOIN Content_Genre cg ON cg.ContentID = c.ContentID
-        LEFT JOIN Genres ON Genres.GenreID = cg.GenreID
-        WHERE @query != '' AND g.Description LIKE @query
-        ${genreFilter}
+        ${genreJoinType} JOIN Content_Genre cg ON cg.ContentID = c.ContentID
+        ${genreJoinType} JOIN Genres ON Genres.GenreID = cg.GenreID
+        WHERE @query != '' AND g.Description LIKE @query ${genreFilter}
         GROUP BY g.GameID, g.Title, g.Image, g.Description
       )
       SELECT 
@@ -170,7 +174,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = []) {
     `;
 
     console.log('Generated SQL Query:', sqlQuery);
-    console.log('Query parameters:', { query: sanitizedQuery, offset, pageSize });
+    console.log('Query parameters:', { query: sanitizedQuery, offset, pageSize, genres });
 
     const result = await request.query(sqlQuery).catch(err => {
       console.error('SQL query error:', err.message);
