@@ -1,4 +1,6 @@
 const { poolPromise } = require('../config/db');
+const { truncateDescription } = require('./truncate');
+const { truncateTitle } = require('./truncateTitle');
 
 async function getCategoryContent(type) {
   const validTables = {
@@ -10,8 +12,7 @@ async function getCategoryContent(type) {
   const table = validTables[type.toLowerCase()];
   if (!table) return null;
 
-  // Determine the correct ID column
-  const idColumn = table.slice(0, -1) + 'ID'; // Games -> GameID
+  const idColumn = table.slice(0, -1) + 'ID'; // e.g. Games -> GameID
 
   try {
     const pool = await poolPromise;
@@ -30,8 +31,8 @@ async function getCategoryContent(type) {
 
     return result.recordset.map(item => ({
       id: item.id,
-      name: item.Title,
-      description: item.Description,
+      name: truncateTitle(item.Title),          // truncate title here
+      description: truncateDescription(item.Description), // truncate description here
       image: item.Image,
       releaseDate: item.ReleaseDate,
     }));
@@ -42,6 +43,8 @@ async function getCategoryContent(type) {
 }
 
 module.exports = { getCategoryContent };
+
+
 
 
 
