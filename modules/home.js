@@ -60,7 +60,7 @@ async function getBestRated() {
       id: row.ContentID,
       ItemID: row.ItemID,
       ContentType: row.ContentType,
-      type: row.ContentType.toLowerCase() + 's', // 'books', 'movies', 'games' for compatibility
+      type: row.ContentType.toLowerCase() + 's',
       title: row.Title,
       description: truncateDescription(row.Description),
       fullDescription: row.Description || '',
