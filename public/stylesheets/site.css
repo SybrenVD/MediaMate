@@ -502,3 +502,14 @@ h4 {
   padding: 4px 8px;
   font-weight: 500;
 }
+
+
+/* Community Page */
+.community-card {
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.community-card:hover {
+  transform: scale(1.02);
+}
