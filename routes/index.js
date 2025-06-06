@@ -12,6 +12,7 @@ const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = requir
 const { searchAllContent } = require('../modules/search');
 const { getCommunities } = require('../modules/community');
 const { getCategoryContent } = require("../modules/category");
+const { submitOrUpdateReview } = require('../modules/review');
 // const { io } = require("../modules/chatroom");
 
 
@@ -262,43 +263,80 @@ router.get("/category/:type", async (req, res) => {
 });
   
  // Detail page route
-router.get("/category/:type/:id", async function (req, res) {
+// GET content detail page
+router.get('/category/:type/:id', async (req, res) => {
   const { type, id } = req.params;
-  const from = type || "category";
   const normalizedType = type.toLowerCase();
-  console.log(`Detail page request: type=${type}, id=${id}, from=${from}, normalizedType=${normalizedType}`);
+
+  if (!['books', 'movies', 'games'].includes(normalizedType)) {
+    return res.status(400).render('error', { title: 'Invalid Type', error: 'Invalid content type' });
+  }
 
   try {
-    if (!['books', 'movies', 'games'].includes(normalizedType)) {
-      console.error(`Invalid type: ${normalizedType}`);
-      return res.status(400).render('error', { title: 'Invalid Type', error: 'Invalid content type' });
-    }
-
     const itemData = await getContentByTypeAndId(normalizedType, parseInt(id));
-    console.log(`Item data: ${JSON.stringify(itemData)}`);
-
     if (!itemData) {
-      console.error(`Item not found: type=${normalizedType}, id=${id}`);
       return res.status(404).render('error', { title: 'Item Not Found', error: 'Item not found' });
     }
 
-    res.render("content-detail", {
+    const pool = await poolPromise;
+    const reviewsResult = await pool.request()
+      .input('ContentID', sql.Int, id)
+      .query(`
+        SELECT R.Rating, R.Comment, R.ReviewDate, U.Username
+        FROM Reviews R
+        JOIN Users U ON R.UserID = U.UserID
+        WHERE R.ContentID = @ContentID
+        ORDER BY R.ReviewDate DESC
+      `);
+
+const averageResult = await pool.request()
+  .input('ContentID', sql.Int, id)
+  .query(`SELECT AVG(CAST(Rating AS FLOAT)) AS AverageRating FROM Reviews WHERE ContentID = @ContentID`);
+
+
+    const userReviewResult = req.session.user ? await pool.request()
+      .input('ContentID', sql.Int, id)
+      .input('UserID', sql.Int, req.session.user.UserID)
+      .query(`
+        SELECT Rating, Comment
+        FROM Reviews
+        WHERE ContentID = @ContentID AND UserID = @UserID
+      `) : { recordset: [] };
+
+    res.render('content-detail', {
       item: {
+        id: itemData.ID || id,
         name: itemData.Title,
         description: itemData.Description,
-        image: itemData.Image || "/images/placeholder.jpg",
+        image: itemData.Image || '/images/placeholder.jpg',
         releaseDate: itemData.ReleaseDate
       },
       title: itemData.Title,
       type: normalizedType,
-      from
+      reviews: reviewsResult.recordset,
+      averageRating: averageResult.recordset[0].AverageRating?.toFixed(1) || null,
+      userReview: userReviewResult.recordset[0],
+      isAuthenticated: !!req.session.user
     });
   } catch (error) {
-    console.error(`Detail page error: type=${type}, id=${id}, error=${error.message}`);
+    console.error('Detail page error:', error);
     res.status(500).render('error', { title: 'Server Error', error: 'Error retrieving item detail' });
   }
 });
 
+router.post('/category/:type/:id/review', isAuthenticated, async (req, res) => {
+  const { type, id } = req.params;
+  const { rating, comment } = req.body;
+  const userID = req.session.user?.UserID;
+
+  try {
+    await submitOrUpdateReview(type, id, userID, rating, comment);
+    res.redirect(`/category/${type}/${id}`);
+  } catch (error) {
+    console.error('Review submission error:', error);
+    res.status(500).render('error', { title: 'Review Error', error: error.message });
+  }
+});
 
 // Contact Page - GET
 
