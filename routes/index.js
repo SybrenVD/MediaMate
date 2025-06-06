@@ -10,9 +10,10 @@ const { loginUser } = require("../modules/login");
 const { validateRegisterInput, validateLoginInput, validateUpdateInput, verifyCurrentPassword } = require("../modules/userValidation");
 const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = require('../modules/user');
 const { searchAllContent } = require('../modules/search');
-const { getCommunities } = require('../modules/community');
+const { getCommunities, createCommunity } = require('../modules/community');
 const { getCategoryContent } = require("../modules/category");
-const { searchCategoryContent } = require("../modules/searchCategory")
+const { searchCommunities } = require("../modules/searchCommunity")
+const { submitOrUpdateReview } = require('../modules/review');
 // const { io } = require("../modules/chatroom");
 
 
@@ -284,43 +285,80 @@ router.get("/category/:type", async (req, res) => {
 });
   
  // Detail page route
-router.get("/category/:type/:id", async function (req, res) {
+// GET content detail page
+router.get('/category/:type/:id', async (req, res) => {
   const { type, id } = req.params;
-  const from = type || "category";
   const normalizedType = type.toLowerCase();
-  console.log(`Detail page request: type=${type}, id=${id}, from=${from}, normalizedType=${normalizedType}`);
+
+  if (!['books', 'movies', 'games'].includes(normalizedType)) {
+    return res.status(400).render('error', { title: 'Invalid Type', error: 'Invalid content type' });
+  }
 
   try {
-    if (!['books', 'movies', 'games'].includes(normalizedType)) {
-      console.error(`Invalid type: ${normalizedType}`);
-      return res.status(400).render('error', { title: 'Invalid Type', error: 'Invalid content type' });
-    }
-
     const itemData = await getContentByTypeAndId(normalizedType, parseInt(id));
-    console.log(`Item data: ${JSON.stringify(itemData)}`);
-
     if (!itemData) {
-      console.error(`Item not found: type=${normalizedType}, id=${id}`);
       return res.status(404).render('error', { title: 'Item Not Found', error: 'Item not found' });
     }
 
-    res.render("content-detail", {
+    const pool = await poolPromise;
+    const reviewsResult = await pool.request()
+      .input('ContentID', sql.Int, id)
+      .query(`
+        SELECT R.Rating, R.Comment, R.ReviewDate, U.Username
+        FROM Reviews R
+        JOIN Users U ON R.UserID = U.UserID
+        WHERE R.ContentID = @ContentID
+        ORDER BY R.ReviewDate DESC
+      `);
+
+const averageResult = await pool.request()
+  .input('ContentID', sql.Int, id)
+  .query(`SELECT AVG(CAST(Rating AS FLOAT)) AS AverageRating FROM Reviews WHERE ContentID = @ContentID`);
+
+
+    const userReviewResult = req.session.user ? await pool.request()
+      .input('ContentID', sql.Int, id)
+      .input('UserID', sql.Int, req.session.user.UserID)
+      .query(`
+        SELECT Rating, Comment
+        FROM Reviews
+        WHERE ContentID = @ContentID AND UserID = @UserID
+      `) : { recordset: [] };
+
+    res.render('content-detail', {
       item: {
+        id: itemData.ID || id,
         name: itemData.Title,
         description: itemData.Description,
-        image: itemData.Image || "/images/placeholder.jpg",
+        image: itemData.Image || '/images/placeholder.jpg',
         releaseDate: itemData.ReleaseDate
       },
       title: itemData.Title,
       type: normalizedType,
-      from
+      reviews: reviewsResult.recordset,
+      averageRating: averageResult.recordset[0].AverageRating?.toFixed(1) || null,
+      userReview: userReviewResult.recordset[0],
+      isAuthenticated: !!req.session.user
     });
   } catch (error) {
-    console.error(`Detail page error: type=${type}, id=${id}, error=${error.message}`);
+    console.error('Detail page error:', error);
     res.status(500).render('error', { title: 'Server Error', error: 'Error retrieving item detail' });
   }
 });
 
+router.post('/category/:type/:id/review', isAuthenticated, async (req, res) => {
+  const { type, id } = req.params;
+  const { rating, comment } = req.body;
+  const userID = req.session.user?.UserID;
+
+  try {
+    await submitOrUpdateReview(type, id, userID, rating, comment);
+    res.redirect(`/category/${type}/${id}`);
+  } catch (error) {
+    console.error('Review submission error:', error);
+    res.status(500).render('error', { title: 'Review Error', error: error.message });
+  }
+});
 
 // Contact Page - GET
 
@@ -351,24 +389,47 @@ router.post("/contact", function (req, res)
 });
 
 
+router.post('/community', async function (req, res) {
+  console.log('POST /community received:', req.body);
+  const query = req.body.query?.trim() || '';
+  
+  const queryParams = new URLSearchParams({ query });
+  console.log(`Redirecting to /community?${queryParams.toString()}`);
+  res.redirect(`/community?${queryParams.toString()}`);
+});
+
 router.get('/community', async function (req, res) {
+  console.log('GET /community received:', req.query);
+  const query = req.query.query?.trim() || '';
+  
   try {
-    const communities = await getCommunities();
+    let communities = [];
+    if (query) {
+      communities = await searchCommunities(query);
+      console.log(`Search returned ${communities.length} communities`);
+    } else {
+      communities = await getCommunities();
+      console.log(`Random load returned ${communities.length} communities`);
+    }
+
     res.render('community', {
       title: 'Community',
-      communities // gebruik met {{#each communities}} in hbs
+      communities,
+      searchQuery: query,
+      error: communities.length === 0 && query ? 'No communities found for your search.' : null
     });
   } catch (error) {
-    console.error("❌ Community load error:", error);
+    console.error('❌ Community load error:', error.message, error);
     res.render('community', {
       title: 'Community',
-      error: 'Veriler yüklenemedi.',
-      communities: []
+      communities: [],
+      searchQuery: query,
+      error: 'Failed to load communities.'
     });
   }
 });
 
-// GET: form
+// GET: Render create community form
 router.get('/create-community', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
@@ -381,6 +442,46 @@ router.get('/create-community', (req, res) => {
   });
 });
 
+// POST: Handle create community form submission
+router.post('/create-community', async (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+
+  console.log('POST /create-community received:', req.body);
+  const { ChatName, Keywords, Image } = req.body;
+  const CreatorID = req.session.user.UserID; // Assumes UserID is stored in session
+
+  try {
+    // Basic validation
+    if (!ChatName || ChatName.trim().length === 0) {
+      throw new Error('Community name is required.');
+    }
+    if (ChatName.length > 30) {
+      throw new Error('Community name must be 30 characters or less.');
+    }
+    if (Keywords && Keywords.length > 150) {
+      throw new Error('Keywords must be 150 characters or less.');
+    }
+    if (Image && Image.length > 255) {
+      throw new Error('Image URL must be 255 characters or less.');
+    }
+
+    await createCommunity(ChatName.trim(), Keywords ? Keywords.trim() : null, Image ? Image.trim() : null, CreatorID);
+    console.log(`Community created: ${ChatName}`);
+    res.redirect('/community'); // Redirect to community page after creation
+  } catch (error) {
+    console.error('❌ Create community error:', error.message, error);
+    res.render('create-community', {
+      title: 'Create Community',
+      active: 'create-community',
+      error: error.message || 'Failed to create community. Please try again.',
+      ChatName,
+      Keywords,
+      Image
+    });
+  }
+});
 
 
 router.get("/faq", function (req, res, next) {
@@ -859,44 +960,90 @@ router.post('/admin/edit/:id', async (req, res) => {
   }
 });
 
+/*get chatroom */
+// routes/index.js
 
 
-/*GET chatroom */
 router.get("/chatroom", async function(req, res) {
-//check login
+  // 1. 必须登录
   if (!req.session.user) {
-    return res.redirect('/login');
+    return res.redirect("/login");
   }
-  const RoomID = req.query.RoomID;
-  if (!RoomID) {
-    return res.status(400).send('Community Not Exists (ㄒoㄒ)');
+
+  // 2. 从 URL query 里读 RoomID
+  const RoomID = parseInt(req.query.RoomID, 10);
+  if (isNaN(RoomID)) {
+    return res.status(400).send("Community ID Not Exists");
   }
+
   try {
     const pool = await poolPromise;
-//get Room info
-    const roomResult = await pool.request().input('RoomID', sql.Int, RoomID).query('SELECT * FROM Communities WHERE RoomID = @RoomID');
+
+    // 3. 查 Communities 里是不是有这个 RoomID
+    const roomResult = await pool.request()
+      .input("RoomID", sql.Int, RoomID)
+      .query("SELECT * FROM Communities WHERE RoomID = @RoomID");
     const room = roomResult.recordset[0];
-    if(!room) {
-      return res.status(404).send('Community Not Found (ㄒoㄒ)');
+    if (!room) {
+      return res.status(404).send("Community Not Found");
     }
-    const membersResult = await pool.request().input('RoomID', sql.Int, RoomID).query(`SELECT u.Username, u.Image FROM Favorites f JOIN Users u ON f.UserID = u.UserID WHERE f.RoomID = @RoomID`);
-//get his msg
-    const messagesResult = await pool.request().input('RoomID', sql.Int, RoomID).query(`SELECT Messages.Content, Messages.Time, Users.Username, Users.Image FROM Messages JOIN Users ON Messages.FromUser = Users.UserID WHERE RoomID = @RoomID ORDER BY Messages.MessageID ASC`);
-//get fav-room-list
-    const userCommunitiesResult = await pool.request().input('UserID', sql.Int, req.session.user.UserID).query(`SELECT c.RoomID, c.ChatName, c.Image FROM Communities c JOIN Favorites f ON c.RoomID = f.RoomID WHERE f.UserID = @UserID`);
-  res.render("chatroom", {
-    user: req.session.user,
-    currentRoom: {
-      room: roomResult.recordset[0],
-      members: membersResult.recordset
-    },
-    rooms: userCommunitiesResult.recordset,
-    messages: messagesResult.recordset
-  });
-} catch (err) {
-  console.error('Error loading chatroom', err);
-  res.status(500).send('Server Error (ㄒoㄒ)')
-}
+
+    // 4. 查这个房间已经收藏（Favorites）它的成员列表
+    const membersResult = await pool.request()
+      .input("RoomID", sql.Int, RoomID)
+      .query(`
+        SELECT u.UserID, u.Username, u.Image
+        FROM Favorites f
+        JOIN Users u ON f.UserID = u.UserID
+        WHERE f.RoomID = @RoomID
+      `);
+    const members = membersResult.recordset;
+
+    // 5. 查这个房间的历史消息
+    const messagesResult = await pool.request()
+      .input("RoomID", sql.Int, RoomID)
+      .query(`
+        SELECT m.MessageID, m.FromUser, u.Username, m.Content, m.Time, m.RoomID
+        FROM Messages m
+        JOIN Users u ON m.FromUser = u.UserID
+        WHERE m.RoomID = @RoomID
+        ORDER BY m.MessageID ASC
+      `);
+    const messages = messagesResult.recordset.map(r => ({
+      MessageID: r.MessageID,
+      FromUser: r.FromUser,
+      Username: r.Username,
+      Content: r.Content,
+      Time: r.Time,
+      RoomID: r.RoomID
+    }));
+
+    // 6. 左侧只显示当前用户真正“收藏（Favorites）”过的社区列表
+    const userCommunitiesResult = await pool.request()
+      .input("UserID", sql.Int, req.session.user.UserID)
+      .query(`
+        SELECT c.RoomID, c.ChatName, c.Image
+        FROM Communities c
+        JOIN Favorites f ON c.RoomID = f.RoomID
+        WHERE f.UserID = @UserID
+        ORDER BY c.ChatName ASC
+      `);
+    const rooms = userCommunitiesResult.recordset;
+
+    // 7. 渲染 chatroom.hbs，把 currentRoom、rooms、members、messages 全部给前端
+    return res.render("chatroom", {
+      user: req.session.user,
+      currentRoom: {
+        room: room,
+        members: members
+      },
+      rooms: rooms,
+      messages: messages
+    });
+  } catch (err) {
+    console.error("Error loading chatroom", err);
+    return res.status(500).send("Server Error");
+  }
 });
 /*Get test chatroom*/
 router.get("/testroom", function(req,res){

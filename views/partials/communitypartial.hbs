@@ -6,19 +6,16 @@
     onclick="window.location.href='/chatroom?RoomID={{this.RoomID}}';"
   >
     <div class="card-body d-flex flex-column p-3">
-
       <!-- Top: image, name, heart -->
       <div class="d-flex justify-content-between align-items-center mb-2">
         <img 
-          src="{{#if this.Image}}/uploads/{{this.Image}}{{else}}/images/community1.jpg{{/if}}" 
+          src="{{#if this.Image}}/Uploads/{{this.Image}}{{else}}/images/community1.jpg{{/if}}" 
           alt="Community Icon"
           class="rounded-circle me-2"
           style="width: 40px; height: 40px; object-fit: cover;"
         />
-
         <h6 class="mb-0 text-white flex-grow-1 ms-2">{{this.ChatName}}</h6>
-
-        <!-- Favorite form (no change) -->
+        <!-- Favorite form -->
         <form 
           method="POST" 
           action="/community/favorite/{{this.RoomID}}" 
@@ -28,13 +25,11 @@
           {{> iheart}} 
         </form>
       </div>
-
-      <!-- Join Chat button (optional, for accessibility) -->
+      <!-- Join Chat button -->
       <a href="/chatroom?RoomID={{this.RoomID}}" class="btn btn-outline-light btn-sm mt-auto w-100">
         Join Chat
       </a>
     </div>
-
     <!-- Tags under the card -->
     <div class="community-tags px-3 pb-3 d-flex flex-wrap gap-2">
       {{#each (split this.Keywords) }}
@@ -43,4 +38,3 @@
     </div>
   </div>
 </div>
-
