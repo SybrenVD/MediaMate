@@ -802,169 +802,167 @@ router.get("/add", isAuthenticated, function (req, res) {
 
 
 //post add route
-router.post("/add", isAuthenticated, function (req, res) {
-  const { type, title, description, image } = req.body;
+// POST: save new request to database with uploaded image
+router.post("/add", isAuthenticated, upload.single('image'), async function (req, res) {
+  const { type, title, description } = req.body;
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+  const userID = req.session.user.UserID;
 
-  if (!type || !title || !description) {
+  // Validate input
+  if (!type || !title || !description || !imagePath) {
     return res.render("add", {
       title: "Request",
       errorMessage: "All fields are required."
     });
   }
 
-  requests.push({
-    username: req.session.user,
-    type,
-    title,
-    description,
-    image,
-    status: "Pending"
-  });
+  try {
+    const pool = await poolPromise;
 
-  res.render("add", {
-    title: "Request",
-    successMessage: "Your request has been received."
-  });
+    await pool.request()
+      .input("UserID", sql.Int, userID)
+      .input("Status", sql.NVarChar, "Pending")
+      .input("Description", sql.NVarChar, description)
+      .input("ContentType", sql.NVarChar, type)
+      .input("Title", sql.NVarChar, title)
+      .input("Image", sql.NVarChar, imagePath)
+      .query(`
+        INSERT INTO Requests (UserID, Status, Description, ContentType, Title, Image)
+        VALUES (@UserID, @Status, @Description, @ContentType, @Title, @Image)
+      `);
 
-  
+    res.render("add", {
+      title: "Request",
+      successMessage: "Your request has been received."
+    });
+  } catch (err) {
+    console.error("Database insert error:", err);
+    res.render("add", {
+      title: "Request",
+      errorMessage: "Something went wrong while saving your request."
+    });
+  }
 });
 
 //admin-panel get
-router.get("/admin-panel", isAuthenticated, function (req, res) {
+router.get("/admin-panel", isAuthenticated, async function (req, res) {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .query(`
+        SELECT 
+          r.RequestID,
+          r.Title,
+          r.Description,
+          r.Status,
+          r.ContentType,
+          r.Image,
+          u.Username
+        FROM Requests r
+        JOIN Users u ON r.UserID = u.UserID
+        WHERE r.Status = 'Pending'
+      `);
 
-
-  const requests = [
-    {
-      requestID: "1", // Added unique ID
-      username: "test_user1",
-      type: "Bug Report",
-      title: "Login button not working",
-      description: "Clicking the login button does nothing on Chrome browser.",
-      image: "https://example.com/image1.png",
-      status: "Pending"
-    },
-    {
-      requestID: "2", // Added unique ID
-      username: "test_user2",
-      type: "Feature Request",
-      title: "Add dark mode",
-      description: "A dark mode option would be helpful for night-time browsing.",
-      image: "https://example.com/image2.png",
-      status: "Pending"
-    },
-    {
-      requestID: "3", // Added unique ID
-      username: "test_user3",
-      type: "Feedback",
-      title: "Great user interface!",
-      description: "The new dashboard layout is very intuitive and clean.",
-      image: "https://example.com/image3.png",
-      status: "Pending"
-    },
-    {
-      requestID: "4", // Added unique ID
-      username: "test_user3",
-      type: "Feedback",
-      title: "Great user interface!",
-      description: "The new dashboard layout is very intuitive and clean.",
-      image: "https://example.com/image3.png",
-      status: "Accepted"
-    }
-  ];
-
-  const pendingRequests = requests.filter(r => r.status === "Pending");
-
-  res.render("admin-panel", {
-    title: "Admin Panel",
-    requests: pendingRequests
-  });
-});
-
-router.get('/admin-panel/:requestID', (req, res) => {
-
-  const requests = [
-    {
-      requestID: "1", // Added unique ID
-      username: "test_user1",
-      type: "Book",
-      title: "Login button not working",
-      description: "Clicking the login button does nothing on Chrome browser.",
-      image: "https://example.com/image1.png",
-      status: "Pending"
-    },
-    {
-      requestID: "2", // Added unique ID
-      username: "test_user2",
-      type: "Book",
-      title: "Add dark mode",
-      description: "A dark mode option would be helpful for night-time browsing.",
-      image: "https://example.com/image2.png",
-      status: "Pending"
-    },
-    {
-      requestID: "3", // Added unique ID
-      username: "test_user3",
-      type: "Book",
-      title: "Great user interface!",
-      description: "The new dashboard layout is very intuitive and clean.",
-      image: "https://example.com/image3.png",
-      status: "Pending"
-    },
-    {
-      requestID: "4", // Added unique ID
-      username: "test_user3",
-      type: "Book",
-      title: "Great user interface!",
-      description: "The new dashboard layout is very intuitive and clean.",
-      image: "https://example.com/image3.png",
-      status: "Accepted"
-    }
-  ];
-
-  const requestID = req.params.requestID;
-  const foundRequest = requests.find(req => req.requestID === requestID);
-  console.log('Request ID:', req.params.requestID, typeof req.params.requestID);
-  // Query the database using requestID
-  // Example: db.findById(requestID)
-  // foundRequest as result
-  // Render the page with the request data
-  res.render('request-detail', { 
-    request: foundRequest 
-  });
-});
-router.post('/admin/edit/:id', async (req, res) => {
-  const action = req.body.action;
-  const requestId = req.params.id;
-
-  if (action === 'accept') {
-    // Update the request
-    await Request.findByIdAndUpdate(requestId, {
-      type: req.body.type,
-      title: req.body.title,
-      description: req.body.description,
-      image: req.body.image,
-      status: 'Accepted' // Update status to Accepted
+    res.render("admin-panel", {
+      title: "Admin Panel",
+      requests: result.recordset
     });
 
-    res.render('status', {
-      message: 'Request Accepted. Redirecting to admin panel...',
-      redirect: '/admin-panel'
+  } catch (error) {
+    console.error("Failed to load requests:", error);
+    res.render("admin-panel", {
+      title: "Admin Panel",
+      requests: [],
+      errorMessage: "Failed to load requests"
     });
   }
+});
 
-  if (action === 'decline') {
-    // Delete the request
-    await Request.findByIdAndDelete(requestId);
 
-    res.render('status', {
-      message: 'Request Declined. Redirecting to admin panel...',
-      redirect: '/admin-panel'
+
+
+router.get('/admin-panel/:requestID', async (req, res) => {
+  const requestID = req.params.requestID;
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input("RequestID", sql.Int, requestID)
+      .query(`
+        SELECT 
+          r.RequestID,
+          r.Title,
+          r.Description,
+          r.Status,
+          r.ContentType,
+          r.Image,
+          u.Username
+        FROM Requests r
+        JOIN Users u ON r.UserID = u.UserID
+        WHERE r.RequestID = @RequestID
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).render("error", { message: "Request not found" });
+    }
+
+    const request = result.recordset[0];
+
+    res.render("request-detail", {
+      request
     });
+  } catch (err) {
+    console.error("Error loading request detail:", err);
+    res.status(500).render("error", { message: "Failed to load request detail" });
+  }
+});
+
+
+router.post('/admin/edit/:id', async (req, res) => {
+  const action = req.body.action;
+  const requestId = parseInt(req.params.id);
+  const { type, title, description } = req.body;
+
+  try {
+    const pool = await poolPromise;
+
+    if (action === 'accept') {
+      await pool.request()
+        .input("RequestID", sql.Int, requestId)
+        .input("Type", sql.NVarChar, type)
+        .input("Title", sql.NVarChar, title)
+        .input("Description", sql.NVarChar, description)
+        .query(`
+          UPDATE Requests
+          SET ContentType = @Type, Title = @Title, Description = @Description, Status = 'Accepted'
+          WHERE RequestID = @RequestID
+        `);
+
+      return res.render('status', {
+        message: 'Request Accepted. Redirecting to admin panel...',
+        redirect: '/admin-panel'
+      });
+    }
+
+    if (action === 'decline') {
+      await pool.request()
+        .input("RequestID", sql.Int, requestId)
+        .query(`DELETE FROM Requests WHERE RequestID = @RequestID`);
+
+      return res.render('status', {
+        message: 'Request Declined. Redirecting to admin panel...',
+        redirect: '/admin-panel'
+      });
+    }
+  } catch (err) {
+    console.error("Admin edit error:", err);
+    res.status(500).render("error", { message: "Failed to process request" });
   }
 });
 
 /*get chatroom */
 // routes/index.js
+
 
 router.get("/chatroom", async function(req, res) {
   // 1. 必须登录
