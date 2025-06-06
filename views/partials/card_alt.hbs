@@ -1,0 +1,19 @@
+<div class="card h-100 shadow-sm" style="min-height: 330px; display: flex; flex-direction: column;">
+  <a href="/category/{{type}}/{{id}}?from={{type}}" class="text-decoration-none text-light" style="flex-grow: 1; display: flex; flex-direction: column;">
+    <img src="{{image}}" class="card-img-top" alt="{{name}}" onerror="this.src='/images/default.png';" style="height: 180px; object-fit: cover;">
+    <div class="card-body" style="flex-grow: 1;">
+      <div class="d-flex justify-content-between">
+        <h6 class="card-title">{{name}}</h6>
+        {{> iheart}}
+      </div>
+
+      <span class="badge bg-danger position-absolute bottom-0 start-0 m-3">
+        {{Genres}}
+      </span>
+      <span class="badge bg-secondary position-absolute bottom-0 end-0 m-3">
+        {{ContentType}}
+      </span>
+      
+    </div>
+  </a>
+</div>

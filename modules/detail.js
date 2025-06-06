@@ -1,8 +1,8 @@
-const { poolPromise } = require("../config/db");
+const { sql, poolPromise } = require("../config/db");
 
 async function getContentByTypeAndId(type, id) {
+  console.log(`getContentByTypeAndId: type=${type}, id=${id}`);
   const pool = await poolPromise;
-
   let query = "";
   if (type === "books") {
     query = `
@@ -26,21 +26,24 @@ async function getContentByTypeAndId(type, id) {
       WHERE C.ContentID = @Id
     `;
   } else {
+    console.error(`Invalid type: ${type}`);
     return null;
   }
-
-  const result = await pool.request()
-    .input("Id", id)
-    .query(query);
-
-
+  try {
+    const result = await pool.request()
+      .input("Id", id)
+      .query(query);
+    console.log(`Query result: ${JSON.stringify(result.recordset)}`);
     if (result.recordset[0]?.ReleaseDate) {
-  const rawDate = new Date(result.recordset[0].ReleaseDate);
-  const formattedDate = rawDate.toDateString(); // bvb: "Thu Jul 21 2022"
-  result.recordset[0].ReleaseDate = formattedDate;
-}
-
-  return result.recordset[0] || null;
+      const rawDate = new Date(result.recordset[0].ReleaseDate);
+      const formattedDate = rawDate.toDateString();
+      result.recordset[0].ReleaseDate = formattedDate;
+    }
+    return result.recordset[0] || null;
+  } catch (err) {
+    console.error(`Query error: ${err.message}`);
+    return null;
+  }
 }
 
 module.exports = { getContentByTypeAndId };

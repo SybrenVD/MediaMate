@@ -8,6 +8,7 @@ const session = require("express-session");
 const bodyParser = require('body-parser');
 const indexRouter = require("./routes/index");
 const multer = require("multer");
+const communityRouter = require('./routes/community');
 
 // Init Express app
 const app = express();
@@ -73,6 +74,33 @@ hbs.registerHelper('rangeHelper', function(start, end) {
 hbs.registerHelper("lte", function (a, b) {
   return a <= b;
 });
+hbs.registerHelper("split", function (str) {
+  if (typeof str === "string") {
+    return str.split(",").map(s => s.trim());
+  }
+  return [];
+});
+
+
+
+hbs.registerHelper('toLowerCase', function(str) {
+  return str ? str.toLowerCase() : '';
+});
+
+hbs.registerHelper('pluralizeType', function(type) {
+  if (!type) return '';
+  const lowerType = type.toLowerCase();
+  switch (lowerType) {
+    case 'book':
+      return 'books';
+    case 'movie':
+      return 'movies';
+    case 'game':
+      return 'games';
+    default:
+      return lowerType;
+  }
+});
 
 // Middleware
 app.use(bodyParser.json());
@@ -93,6 +121,7 @@ app.use((req, res, next) => {
 
 // Use the routes that you have defined
 app.use("/", indexRouter);
+app.use("/community", communityRouter);
 
 // Catch 404 and forward to error handler
 app.use(function(req, res, next) {
