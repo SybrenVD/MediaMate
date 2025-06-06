@@ -15,9 +15,9 @@
     <div class="col-md-6">
       <form class="d-flex" role="search" action="/community" method="POST">
         <div class="input-group input-group-lg">
-          <span class="input-group-text" style="background-color: #8b1d2e; border-color: #8b1d2e;">
+          <button type="submit" class="btn" style="background-color: #8b1d2e; border-color: #8b1d2e;">
             <i class="bi bi-search" style="color: white;"></i>
-          </span>
+          </button>
           <input 
             class="form-control border-2" 
             type="search" 
@@ -25,11 +25,7 @@
             placeholder="Search for a community (e.g., gaming,action)" 
             aria-label="Search"
             style="border-color: #8b1d2e; background-color: #f4d1d1; color: #8b1d2e;"
-            value="{{searchQuery}}"
-          >
-          <button type="submit" class="btn" style="background-color: #8b1d2e; border-color: #8b1d2e;">
-            <i class="bi bi-search" style="color: white;"></i>
-          </button>
+            value="{{searchQuery}}">
         </div>
       </form>
     </div>

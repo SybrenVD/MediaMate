@@ -1,7 +1,7 @@
 const { sql, poolPromise } = require('../config/db');
 
-async function getCommunities(searchQuery = '') {
-  console.log(`getCommunities: searchQuery=${searchQuery}`);
+async function searchCommunities(searchQuery) {
+  console.log(`searchCommunities: searchQuery=${searchQuery}`);
   try {
     const pool = await poolPromise;
     let query = `
@@ -14,12 +14,12 @@ async function getCommunities(searchQuery = '') {
       FROM Communities
     `;
     const params = {};
-    let searchResults = [];
+    let communities = [];
 
     if (searchQuery.trim()) {
       const keywords = searchQuery.split(',').map(k => k.trim().toLowerCase()).filter(k => k);
+      console.log(`Keywords parsed: ${keywords}`);
       if (keywords.length > 0) {
-        // Build LIKE conditions for Keywords and ChatName
         const keywordConditions = keywords.map((_, i) => `LOWER(Keywords) LIKE @keyword${i}`).join(' OR ');
         const chatNameConditions = keywords.map((_, i) => `LOWER(ChatName) LIKE @keyword${i}`).join(' OR ');
         
@@ -34,36 +34,38 @@ async function getCommunities(searchQuery = '') {
             ) DESC
         `;
 
-        // Add parameters for each keyword
         keywords.forEach((keyword, i) => {
           params[`keyword${i}`] = `%${keyword}%`;
+          console.log(`Parameter @keyword${i}: %${keyword}%`);
         });
+
+        console.log(`Executing query: ${query}`);
+        const request = pool.request();
+        for (const [key, value] of Object.entries(params)) {
+          request.input(key, sql.NVarChar, value);
+        }
+
+        const result = await request.query(query);
+        console.log(`Query returned ${result.recordset.length} communities`);
+
+        communities = result.recordset.map(item => ({
+          RoomID: item.RoomID,
+          ChatName: item.ChatName,
+          Keywords: item.Keywords || '',
+          Image: item.Image,
+          CreatorID: item.CreatorID
+        }));
       }
     } else {
-      query += ` ORDER BY ChatName ASC`;
+      console.log('No search query provided, returning empty results');
     }
 
-    const request = pool.request();
-    for (const [key, value] of Object.entries(params)) {
-      request.input(key, sql.NVarChar, value);
-    }
-
-    const result = await request.query(query);
-    console.log(`Found ${result.recordset.length} communities`);
-
-    searchResults = result.recordset.map(item => ({
-      RoomID: item.RoomID,
-      ChatName: item.ChatName,
-      Keywords: item.Keywords || '',
-      Image: item.Image,
-      CreatorID: item.CreatorID
-    }));
-
-    return { searchResults };
+    console.log(`Returning ${communities.length} communities`);
+    return communities;
   } catch (err) {
-    console.error(`Error fetching communities: ${err.message}`);
-    return { searchResults: [] };
+    console.error(`Error searching communities: ${err.message}`, err);
+    return [];
   }
 }
 
-module.exports = { getCommunities };
+module.exports = { searchCommunities };

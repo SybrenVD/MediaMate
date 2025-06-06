@@ -10,8 +10,9 @@ const { loginUser } = require("../modules/login");
 const { validateRegisterInput, validateLoginInput, validateUpdateInput, verifyCurrentPassword } = require("../modules/userValidation");
 const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = require('../modules/user');
 const { searchAllContent } = require('../modules/search');
-const { getCommunities } = require('../modules/community');
+const { getCommunities, createCommunity } = require('../modules/community');
 const { getCategoryContent } = require("../modules/category");
+const { searchCommunities } = require("../modules/searchCommunity")
 const { submitOrUpdateReview } = require('../modules/review');
 // const { io } = require("../modules/chatroom");
 
@@ -402,8 +403,14 @@ router.get('/community', async function (req, res) {
   const query = req.query.query?.trim() || '';
   
   try {
-    const { searchResults: communities } = await getCommunities(query);
-    console.log(`Rendering ${communities.length} communities`);
+    let communities = [];
+    if (query) {
+      communities = await searchCommunities(query);
+      console.log(`Search returned ${communities.length} communities`);
+    } else {
+      communities = await getCommunities();
+      console.log(`Random load returned ${communities.length} communities`);
+    }
 
     res.render('community', {
       title: 'Community',
@@ -412,7 +419,7 @@ router.get('/community', async function (req, res) {
       error: communities.length === 0 && query ? 'No communities found for your search.' : null
     });
   } catch (error) {
-    console.error('❌ Community load error:', error);
+    console.error('❌ Community load error:', error.message, error);
     res.render('community', {
       title: 'Community',
       communities: [],
@@ -422,7 +429,7 @@ router.get('/community', async function (req, res) {
   }
 });
 
-// GET: form
+// GET: Render create community form
 router.get('/create-community', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
@@ -435,6 +442,46 @@ router.get('/create-community', (req, res) => {
   });
 });
 
+// POST: Handle create community form submission
+router.post('/create-community', async (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+
+  console.log('POST /create-community received:', req.body);
+  const { ChatName, Keywords, Image } = req.body;
+  const CreatorID = req.session.user.UserID; // Assumes UserID is stored in session
+
+  try {
+    // Basic validation
+    if (!ChatName || ChatName.trim().length === 0) {
+      throw new Error('Community name is required.');
+    }
+    if (ChatName.length > 30) {
+      throw new Error('Community name must be 30 characters or less.');
+    }
+    if (Keywords && Keywords.length > 150) {
+      throw new Error('Keywords must be 150 characters or less.');
+    }
+    if (Image && Image.length > 255) {
+      throw new Error('Image URL must be 255 characters or less.');
+    }
+
+    await createCommunity(ChatName.trim(), Keywords ? Keywords.trim() : null, Image ? Image.trim() : null, CreatorID);
+    console.log(`Community created: ${ChatName}`);
+    res.redirect('/community'); // Redirect to community page after creation
+  } catch (error) {
+    console.error('❌ Create community error:', error.message, error);
+    res.render('create-community', {
+      title: 'Create Community',
+      active: 'create-community',
+      error: error.message || 'Failed to create community. Please try again.',
+      ChatName,
+      Keywords,
+      Image
+    });
+  }
+});
 
 
 router.get("/faq", function (req, res, next) {
