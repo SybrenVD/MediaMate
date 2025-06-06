@@ -10,15 +10,127 @@
       <p class="detail-date"><strong>Release Date:</strong> {{item.releaseDate}}</p>
     {{/if}}
 
+    {{#if averageRating}}
+      <p class="detail-rating"><strong>Average Rating:</strong> {{averageRating}} / 5</p>
+    {{/if}}
+
     {{#if item.description}}
       <p class="detail-description mt-3">{{item.description}}</p>
     {{else}}
       <p class="detail-description mt-3 text-muted fst-italic">No description available.</p>
     {{/if}}
 
-<a href="javascript:history.back()" class="btn btn-back mt-4">
-  <i class="bi bi-arrow-left-circle"></i> Back
-</a>
+    {{#if isAuthenticated}}
+      {{#if userReview}}
+        <p class="mt-3 text-success">You have already submitted a review.</p>
+      {{else}}
+        <button id="openReviewBtn" class="btn btn-warning mt-3 text-white">Leave a Review</button>
+      {{/if}}
+    {{else}}
+      <button id="loginRedirectBtn" class="btn btn-warning mt-3 text-white">Leave a Review</button>
+    {{/if}}
 
+    <a href="javascript:history.back()" class="btn btn-secondary mt-4">
+      <i class="bi bi-arrow-left-circle"></i> Back
+    </a>
+  </div>
+
+  <div class="reviews-section mt-5">
+    <h4>User Reviews</h4>
+    {{#if reviews.length}}
+      {{#each reviews}}
+        <div class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">{{this.Username}} - {{this.Rating}} / 5</h5>
+            <p class="card-text">{{this.Comment}}</p>
+            <p class="card-text"><small class="text-muted">{{this.ReviewDate}}</small></p>
+          </div>
+        </div>
+      {{/each}}
+    {{else}}
+      <p class="text-muted">No reviews yet.</p>
+    {{/if}}
   </div>
 </div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="/category/{{type}}/{{item.id}}/review" id="reviewForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="reviewModalLabel">Submit Your Review</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label">Rating</label>
+          <div class="star-rating mb-3">
+            {{#each (range 5 1)}}
+              <input type="radio" id="star{{this}}" name="rating" value="{{this}}" required>
+              <label for="star{{this}}" title="{{this}} stars">★</label>
+            {{/each}}
+          </div>
+          <div class="mb-3">
+            <label for="comment" class="form-label">Comment</label>
+            <textarea class="form-control" id="comment" name="comment" rows="4" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-warning text-white">Submit Review</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .star-rating {
+    direction: rtl;
+    font-size: 2rem;
+    unicode-bidi: bidi-override;
+    display: inline-block;
+  }
+  .star-rating input[type="radio"] {
+    display: none;
+  }
+  .star-rating label {
+    color: #ccc;
+    cursor: pointer;
+    user-select: none;
+  }
+  .star-rating input[type="radio"]:checked ~ label,
+  .star-rating label:hover,
+  .star-rating label:hover ~ label {
+    color: #f5b301;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const openReviewBtn = document.getElementById('openReviewBtn');
+    const loginRedirectBtn = document.getElementById('loginRedirectBtn');
+
+    if (openReviewBtn) {
+      openReviewBtn.addEventListener('click', () => {
+        const reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+        reviewModal.show();
+      });
+    }
+
+    if (loginRedirectBtn) {
+      loginRedirectBtn.addEventListener('click', () => {
+        window.location.href = '/login';
+      });
+    }
+  });
+</script>
+
+
+
+
+
+ 
+
+
+

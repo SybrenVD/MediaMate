@@ -102,6 +102,13 @@ hbs.registerHelper('pluralizeType', function(type) {
   }
 });
 
+hbs.registerHelper('range', function(from, to) {
+  let result = [];
+  for (let i = from; i >= to; i--) {
+    result.push(i);
+  }
+  return result;
+});
 // Middleware
 app.use(bodyParser.json());
 app.use(express.json());
