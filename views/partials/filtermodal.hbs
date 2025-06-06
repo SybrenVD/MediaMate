@@ -1,4 +1,3 @@
-<!-- Genre Filter Modal -->
 <div class="modal fade" id="genreFilterModal" tabindex="-1" aria-labelledby="genreFilterModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content" style="background-color: #231F20; color: #f4d1d1;">
@@ -13,7 +12,7 @@
             <div class="col">
               {{#each (array 'Art' 'Biography' 'Business' 'Children' 'Comics' 'Computers' 'Cooking' 'Education' 'Fiction' 'Health' 'History' 'Horror')}}
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="genres" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
+                <input class="form-check-input" type="checkbox" name="genres[]" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
                 <label class="form-check-label" for="genre{{this}}">{{this}}</label>
               </div>
               {{/each}}
@@ -22,7 +21,7 @@
             <div class="col">
               {{#each (array 'Law' 'Mathematics' 'Medical' 'Music' 'Philosophy' 'Poetry' 'Psychology' 'Religion' 'Romance' 'Science' 'Science Fiction' 'Self-Help')}}
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="genres" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
+                <input class="form-check-input" type="checkbox" name="genres[]" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
                 <label class="form-check-label" for="genre{{this}}">{{this}}</label>
               </div>
               {{/each}}
@@ -31,7 +30,7 @@
             <div class="col">
               {{#each (array 'Sports' 'Technology' 'Travel' 'Action' 'Adventure' 'Animation' 'Comedy' 'Crime' 'Documentary' 'Drama' 'Family' 'Fantasy')}}
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="genres" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
+                <input class="form-check-input" type="checkbox" name="genres[]" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
                 <label class="form-check-label" for="genre{{this}}">{{this}}</label>
               </div>
               {{/each}}
@@ -40,7 +39,7 @@
             <div class="col">
               {{#each (array 'Mystery' 'TV Movie' 'Thriller' 'War' 'Western' 'RPG' 'Shooter' 'Strategy' 'Simulation' 'Puzzle' 'Arcade' 'Platformer')}}
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="genres" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
+                <input class="form-check-input" type="checkbox" name="genres[]" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
                 <label class="form-check-label" for="genre{{this}}">{{this}}</label>
               </div>
               {{/each}}
@@ -49,7 +48,7 @@
             <div class="col">
               {{#each (array 'Fighting' 'Racing' 'Multiplayer' 'Battle Royale' 'MOBA' 'Survival' 'Open World' 'Sandbox' 'Stealth' 'Visual Novel' 'Idle' 'Card Game')}}
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="genres" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
+                <input class="form-check-input" type="checkbox" name="genres[]" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
                 <label class="form-check-label" for="genre{{this}}">{{this}}</label>
               </div>
               {{/each}}
@@ -58,17 +57,21 @@
             <div class="col">
               {{#each (array 'Board Game' 'Trivia' 'Educational')}}
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="genres" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
+                <input class="form-check-input" type="checkbox" name="genres[]" value="{{this}}" id="genre{{this}}" {{#if (includes ../selectedGenres this)}}checked{{/if}}>
                 <label class="form-check-label" for="genre{{this}}">{{this}}</label>
               </div>
               {{/each}}
             </div>
           </div>
+          <input type="hidden" name="query" value="{{searchQuery}}">
+          {{#if contentType}}
+            <input type="hidden" name="contentType" value="{{contentType}}">
+          {{/if}}
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" form="genreFilterForm" class="btn" style="background-color: #8b1d2e; color: white;" onclick="addQueryToFilter()">Apply Filters</button>
+        <button type="submit" form="genreFilterForm" class="btn" style="background-color: #8b1d2e; color: white;">Apply Filters</button>
       </div>
     </div>
   </div>
