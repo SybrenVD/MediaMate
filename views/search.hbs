@@ -4,8 +4,8 @@
     <!-- Search Bar -->
     <div class="row justify-content-center mb-5">
         <div class="col-md-6">
-            <form class="d-flex" role="search" action="/search" method="POST">
-                <div class="input-group input-group-lg">
+            <form class="d-flex" id="searchForm" role="search" action="/search" method="POST">
+                <div class="input-group">
                     <span class="input-group-text" style="background-color: #8b1d2e; border-color: #8b1d2e;">
                         <i class="bi bi-search" style="color: white;"></i>
                     </span>
@@ -13,6 +13,9 @@
                         placeholder="Find books, movies, or games..." aria-label="Search"
                         style="border-color: #8b1d2e; background-color: #f4d1d1; color: #8b1d2e;"
                         value="{{searchQuery}}">
+                    {{#if contentType}}
+                        <input type="hidden" name="contentType" value="{{contentType}}">
+                    {{/if}}
                     <button type="button" class="btn" style="background-color: #8b1d2e; border-color: #8b1d2e;" data-bs-toggle="modal" data-bs-target="#genreFilterModal">
                         <i class="bi bi-funnel" style="color: white;"></i>
                     </button>
@@ -21,7 +24,7 @@
         </div>
     </div>
 
-    {{>filtermodal}}
+    {{>filtermodal contentType=contentType}}
 
     <!-- Search Results Grid -->
     <div class="container">
@@ -45,7 +48,7 @@
             <ul class="pagination custom-pagination justify-content-center">
                 <!-- Previous Link -->
                 <li class="page-item {{#if (eq currentPage 1)}}disabled{{/if}}">
-                    <a class="page-link" href="/search?page={{subtract currentPage 1}}{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}"
+                    <a class="page-link" href="/search?page={{subtract currentPage 1}}{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}{{#if contentType}}&contentType={{encodeURIComponent contentType}}{{/if}}"
                        {{#if (eq currentPage 1)}}aria-disabled="true"{{/if}}>Previous</a>
                 </li>
 
@@ -53,7 +56,7 @@
                 {{#if (gt totalPages 1)}}
                 <!-- Always show page 1 -->
                 <li class="page-item {{#if (eq 1 currentPage)}}active{{/if}}">
-                    <a class="page-link" href="/search?page=1{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}">1</a>
+                    <a class="page-link" href="/search?page=1{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}{{#if contentType}}&contentType={{encodeURIComponent contentType}}{{/if}}">1</a>
                 </li>
 
                 <!-- Ellipsis if startPage > 2 -->
@@ -68,7 +71,7 @@
                 {{#if (gt this 1)}} <!-- Skip page 1 as it's already added -->
                 {{#if (lte this ../totalPages)}} <!-- Ensure we don't exceed totalPages -->
                 <li class="page-item {{#if (eq this ../currentPage)}}active{{/if}}">
-                    <a class="page-link" href="/search?page={{this}}{{#if ../searchQuery}}&query={{encodeURIComponent ../searchQuery}}{{/if}}{{#if ../selectedGenres.length}}&genres={{join ../selectedGenres ','}}{{/if}}">{{this}}</a>
+                    <a class="page-link" href="/search?page={{this}}{{#if ../searchQuery}}&query={{encodeURIComponent ../searchQuery}}{{/if}}{{#if ../selectedGenres.length}}&genres={{join ../selectedGenres ','}}{{/if}}{{#if ../contentType}}&contentType={{encodeURIComponent ../contentType}}{{/if}}">{{this}}</a>
                 </li>
                 {{/if}}
                 {{/if}}
@@ -84,14 +87,14 @@
                 <!-- Always show last page if > 1 -->
                 {{#if (gt totalPages 1)}}
                 <li class="page-item {{#if (eq totalPages currentPage)}}active{{/if}}">
-                    <a class="page-link" href="/search?page={{totalPages}}{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}">{{totalPages}}</a>
+                    <a class="page-link" href="/search?page={{totalPages}}{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}{{#if contentType}}&contentType={{encodeURIComponent contentType}}{{/if}}">{{totalPages}}</a>
                 </li>
                 {{/if}}
                 {{/if}}
 
                 <!-- Next Link -->
                 <li class="page-item {{#if (eq currentPage totalPages)}}disabled{{/if}}">
-                    <a class="page-link" href="/search?page={{add currentPage 1}}{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}"
+                    <a class="page-link" href="/search?page={{add currentPage 1}}{{#if searchQuery}}&query={{encodeURIComponent searchQuery}}{{/if}}{{#if selectedGenres.length}}&genres={{join selectedGenres ','}}{{/if}}{{#if contentType}}&contentType={{encodeURIComponent contentType}}{{/if}}"
                        {{#if (eq currentPage totalPages)}}aria-disabled="true"{{/if}}>Next</a>
                 </li>
             </ul>

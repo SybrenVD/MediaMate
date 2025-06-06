@@ -1,24 +1,24 @@
 <div class="container-fluid p-0">
   <header>
     <section class="hero">
-      <div class="banner" style="background-image: url('{{hero.banner}}'); background-size: cover; background-position: center; height: 400px; display: flex; justify-content: center; align-items: center;">
+      <div class="banner"
+        style="background-image: url('{{hero.banner}}'); background-size: cover; background-position: center; height: 400px; display: flex; justify-content: center; align-items: center;">
         <div class="container text-center" style="z-index: 2;">
-
           <!-- Search bar -->
           <div class="row mb-2">
             <div class="search col-12 d-flex justify-content-end" style="z-index: 4;">
-              <form class="d-flex" role="search">
+              <form class="d-flex" role="search" action="/search" method="get">
                 <div class="input-group input-group-sm">
                   <span class="input-group-text" style="background-color: #8b1d2e; border-color: #8b1d2e;">
                     <i class="bi bi-search" style="color: white;"></i>
                   </span>
-                  <input 
-                    class="form-control border-2" 
-                    type="search" 
-                    placeholder="Find your {{title}}" 
-                    aria-label="Search"
-                    style="border-color: #8b1d2e; background-color: #f4d1d1; color: #8b1d2e;"
-                  >
+                  <input class="form-control border-2" type="search" name="query" placeholder="Find your {{title}}"
+                    aria-label="Search" style="border-color: #8b1d2e; background-color: #f4d1d1; color: #8b1d2e;">
+                  <button type="button" class="btn" style="background-color: #8b1d2e; border-color: #8b1d2e;"
+                    data-bs-toggle="modal" data-bs-target="#genreFilterModal">
+                    <i class="bi bi-funnel" style="color: white;"></i>
+                  </button>
+                  <input type="hidden" name="contentType" value="{{type}}">
                 </div>
               </form>
             </div>
@@ -42,6 +42,8 @@
     </section>
   </header>
 
+  {{>filtermodal}}
+
   <!-- Top Rated Section with Slider -->
   <div class="container overflow-hidden text-center my-5">
     <div class="row text-start ps-0 p-4">
@@ -57,9 +59,9 @@
     </div>
     <div class="row row-cols-1 row-cols-md-4 g-4">
       {{#each items}}
-        <div class="col">
-          {{> card_alt type=../type }}
-        </div>
+      <div class="col">
+        {{> card_alt type=../type }}
+      </div>
       {{/each}}
     </div>
   </div>
@@ -101,15 +103,3 @@
     gap: 1rem;
   }
 </style>
-
-
-
-
-
-
-
-
-
-
-
-

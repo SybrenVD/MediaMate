@@ -43,7 +43,7 @@ async function getCategoryContent(type, page = 1, pageSize = 20) {
 
     const searchResults = result.recordset.map(item => ({
       id: item.id,
-      ItemID: item.id,
+      ItemID: item.id, // Assuming ContentID as ItemID
       ContentType: item.ContentType,
       type: type.toLowerCase(),
       name: truncateTitle(item.name),
@@ -57,9 +57,7 @@ async function getCategoryContent(type, page = 1, pageSize = 20) {
     const totalCount = result.recordset.length > 0 ? result.recordset[0].TotalCount : 0;
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    const returnValue = { searchResults, currentPage: page, totalPages, totalCount };
-    console.log(`Returning from getCategoryContent:`, returnValue);
-    return returnValue;
+    return { searchResults, currentPage: page, totalPages, totalCount };
   } catch (err) {
     console.error(`Error fetching category content: ${err.message}`);
     return { searchResults: [], currentPage: page, totalPages: 0, totalCount: 0 };

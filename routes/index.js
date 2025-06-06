@@ -12,6 +12,7 @@ const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = requir
 const { searchAllContent } = require('../modules/search');
 const { getCommunities } = require('../modules/community');
 const { getCategoryContent } = require("../modules/category");
+const { searchCategoryContent } = require("../modules/searchCategory")
 // const { io } = require("../modules/chatroom");
 
 
@@ -71,26 +72,24 @@ router.get('/', async function (req, res) {
   }
 });
 
-// Search POST route
+
 router.post('/search', async function (req, res) {
   console.log('POST /search received:', req.body);
   const query = req.body.query?.trim() || '';
+  const contentType = req.body.contentType || null;
   let genres = [];
 
   try {
     if (req.body.genres) {
       if (typeof req.body.genres === 'string') {
-        // Handle single string or comma-separated string
         genres = req.body.genres.split(',').map(g => g.trim()).filter(g => g);
       } else if (Array.isArray(req.body.genres)) {
-        // Handle multiple genres (e.g., genres=value1&genres=value2)
-        genres = req.body.genres;
+        genres = req.body.genres.map(g => g.trim()).filter(g => g);
       }
     } else if (req.body['genres[]']) {
-      // Handle genres[]=value1&genres[]=value2 (if form uses genres[])
       genres = Array.isArray(req.body['genres[]'])
-        ? req.body['genres[]']
-        : [req.body['genres[]']];
+        ? req.body['genres[]'].map(g => g.trim()).filter(g => g)
+        : [req.body['genres[]']].filter(g => g);
     }
     if (!Array.isArray(genres)) {
       console.warn('Genres is not an array after parsing:', genres);
@@ -104,21 +103,23 @@ router.post('/search', async function (req, res) {
 
   const queryParams = new URLSearchParams({ query });
   if (genres.length > 0) {
-    queryParams.append('genres', JSON.stringify(genres));
+    queryParams.append('genres', genres.join(','));
+  }
+  if (contentType) {
+    queryParams.append('contentType', contentType);
   }
   console.log(`Redirecting to /search?${queryParams.toString()}`);
   res.redirect(`/search?${queryParams.toString()}`);
 });
 
-// Search GET route
 router.get('/search', async function (req, res) {
   console.log('GET /search received:', req.query);
   const query = req.query.query?.trim() || '';
+  const contentType = req.query.contentType || null;
   let genres = [];
   try {
-    genres = req.query.genres ? JSON.parse(req.query.genres) : [];
-    if (!Array.isArray(genres)) {
-      genres = [];
+    if (req.query.genres) {
+      genres = req.query.genres.split(',').map(g => g.trim()).filter(g => g);
     }
   } catch (error) {
     console.error('Error parsing genres:', error);
@@ -135,13 +136,11 @@ router.get('/search', async function (req, res) {
     let startPage = 1;
     let endPage = 1;
 
-    // Call searchAllContent for any query or genres
-    const result = await searchAllContent(query, page, 40, genres);
+    const result = await searchAllContent(query, page, 40, genres, contentType);
     searchResults = Array.isArray(result.searchResults) ? result.searchResults : [];
     currentPage = result.currentPage;
     totalPages = result.totalPages;
 
-    // Pagination logic
     const pageWindow = 2;
     startPage = Math.max(2, currentPage - pageWindow);
     endPage = Math.min(totalPages - 1, currentPage + pageWindow);
@@ -161,21 +160,23 @@ router.get('/search', async function (req, res) {
 
     const renderData = {
       title: 'Search Results',
-      searchResults,
+      searchResults: searchResults.map(row => ({
+        ...row,
+        name: row.Title,
+        image: row.Image,
+        description: row.Description
+      })),
       searchQuery: query,
+      contentType,
       selectedGenres: genres,
       currentPage,
       totalPages,
       startPage,
       endPage,
       error: searchError,
-      range: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start),
-      eq: (a, b) => a === b,
-      gt: (a, b) => a > b,
-      lt: (a, b) => a < b,
-      add: (a, b) => a + b,
-      subtract: (a, b) => a - b,
-      json: (context) => JSON.stringify(context, null, 2)
+      encodeURIComponent: encodeURIComponent,
+      join: (arr, sep) => arr.join(sep),
+      rangeHelper: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start)
     };
     console.log('Render Data:', renderData);
 
@@ -186,66 +187,84 @@ router.get('/search', async function (req, res) {
       title: 'Search Results',
       searchResults: [],
       searchQuery: query,
+      contentType,
       selectedGenres: genres,
       currentPage: 1,
       totalPages: 1,
       startPage: 1,
       endPage: 1,
       error: 'Search failed, please try again',
-      range: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start),
-      eq: (a, b) => a === b,
-      gt: (a, b) => a > b,
-      lt: (a, b) => a < b,
-      add: (a, b) => a + b,
-      subtract: (a, b) => a - b,
-      json: (context) => JSON.stringify(context, null, 2)
+      encodeURIComponent: encodeURIComponent,
+      join: (arr, sep) => arr.join(sep),
+      rangeHelper: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start)
     });
   }
 });
 
+const dataMap = {
+  games: {
+    title: "Games",
+    type: "games",
+    hero: {
+      cta: "Discover Exciting Games",
+      banner: "/images/Banner games.webp",
+      shortDescription: "Explore a curated list of top games"
+    }
+  },
+  books: {
+    title: "Books",
+    type: "books",
+    hero: {
+      cta: "Explore Great Reads",
+      banner: "/images/BookBanner.jpg",
+      shortDescription: "Browse a hand-picked list of top books"
+    }
+  },
+  movies: {
+    title: "Movies",
+    type: "movies",
+    hero: {
+      cta: "Watch Blockbuster Films",
+      banner: "/images/MovieBanner2.jpg",
+      shortDescription: "Check out the most loved movies"
+    }
+  }
+};
+
 router.get("/category/:type", async (req, res) => {
   const { type } = req.params;
-
-  const dataMap = {
-    games: {
-      title: "Games",
-      type: "games",
-      hero: {
-        cta: "Discover Exciting Games",
-        banner: "/images/Banner games.webp",
-        shortDescription: "Explore a curated list of top games"
-      }
-    },
-    books: {
-      title: "Books",
-      type: "books",
-      hero: {
-        cta: "Explore Great Reads",
-        banner: "/images/BookBanner.jpg",
-        shortDescription: "Browse a hand-picked list of top books"
-      }
-    },
-    movies: {
-      title: "Movies",
-      type: "movies",
-      hero: {
-        cta: "Watch Blockbuster Films",
-        banner: "/images/MovieBanner2.jpg",
-        shortDescription: "Check out the most loved movies"
-      }
-    }
-  };
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = 20;
 
   const pageData = dataMap[type];
   if (!pageData) {
+    console.error(`Category not found for type: ${type}`);
     return res.status(404).send("Category not found");
   }
 
   try {
-    const items = await getCategoryContent(type);
-    console.log(`Items for category "${type}":`, items);
+    const result = await getCategoryContent(type, page, pageSize);
+    console.log(`Result from getCategoryContent:`, result);
 
-    if (!items || items.length === 0) {
+    let items = [];
+    let currentPage = page;
+    let totalPages = 1;
+    let totalCount = 0;
+
+    if (Array.isArray(result)) {
+      items = result;
+      totalCount = items.length; // Approximate count without total query
+      totalPages = Math.ceil(totalCount / pageSize);
+    } else {
+      const { searchResults = [], currentPage: resultPage = page, totalPages: resultTotalPages = 1, totalCount: resultTotalCount = 0 } = result || {};
+      items = searchResults;
+      currentPage = resultPage;
+      totalPages = resultTotalPages;
+      totalCount = resultTotalCount;
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      console.warn(`No items found for category "${type}" on page ${page}`);
       return res.status(404).send("No items found for this category.");
     }
 
@@ -253,10 +272,13 @@ router.get("/category/:type", async (req, res) => {
       title: pageData.title,
       type: pageData.type,
       hero: pageData.hero,
-      items
+      items,
+      currentPage,
+      totalPages,
+      totalCount
     });
   } catch (err) {
-    console.error("Error fetching category content:", err);
+    console.error(`Error fetching category content for "${type}":`, err);
     res.status(500).send("Error fetching category content");
   }
 });
