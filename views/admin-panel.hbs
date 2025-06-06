@@ -136,11 +136,12 @@
       </thead>
       <tbody>
         {{#each requests}}
-        <tr onclick="window.location='/admin-panel/{{this.requestID}}'" style="cursor:pointer;">
-          <td>{{this.username}}</td>
-          <td>{{this.title}}</td>
-          <td>{{this.type}}</td>
-          <td><span class="status">{{this.status}}</span></td>
+        <tr onclick="window.location='/admin-panel/{{this.RequestID}}'" style="cursor:pointer;">
+          <td>{{this.Username}}</td>
+          <td>{{this.Title}}</td>
+          <td>{{this.ContentType}}</td>
+          <td><span class="status">{{this.Status}}</span></td>
+
         </tr>
         {{/each}}
       </tbody>
