@@ -900,43 +900,89 @@ router.post('/admin/edit/:id', async (req, res) => {
   }
 });
 
+/*get chatroom */
+// routes/index.js
 
-/*GET chatroom */
 router.get("/chatroom", async function(req, res) {
-//check login
+  // 1. 必须登录
   if (!req.session.user) {
-    return res.redirect('/login');
+    return res.redirect("/login");
   }
-  const RoomID = req.query.RoomID;
-  if (!RoomID) {
-    return res.status(400).send('Community Not Exists (ㄒoㄒ)');
+
+  // 2. 从 URL query 里读 RoomID
+  const RoomID = parseInt(req.query.RoomID, 10);
+  if (isNaN(RoomID)) {
+    return res.status(400).send("Community ID Not Exists");
   }
+
   try {
     const pool = await poolPromise;
-//get Room info
-    const roomResult = await pool.request().input('RoomID', sql.Int, RoomID).query('SELECT * FROM Communities WHERE RoomID = @RoomID');
+
+    // 3. 查 Communities 里是不是有这个 RoomID
+    const roomResult = await pool.request()
+      .input("RoomID", sql.Int, RoomID)
+      .query("SELECT * FROM Communities WHERE RoomID = @RoomID");
     const room = roomResult.recordset[0];
-    if(!room) {
-      return res.status(404).send('Community Not Found (ㄒoㄒ)');
+    if (!room) {
+      return res.status(404).send("Community Not Found");
     }
-    const membersResult = await pool.request().input('RoomID', sql.Int, RoomID).query(`SELECT u.Username, u.Image FROM Favorites f JOIN Users u ON f.UserID = u.UserID WHERE f.RoomID = @RoomID`);
-//get his msg
-    const messagesResult = await pool.request().input('RoomID', sql.Int, RoomID).query(`SELECT Messages.Content, Messages.Time, Users.Username, Users.Image FROM Messages JOIN Users ON Messages.FromUser = Users.UserID WHERE RoomID = @RoomID ORDER BY Messages.MessageID ASC`);
-//get fav-room-list
-    const userCommunitiesResult = await pool.request().input('UserID', sql.Int, req.session.user.UserID).query(`SELECT c.RoomID, c.ChatName, c.Image FROM Communities c JOIN Favorites f ON c.RoomID = f.RoomID WHERE f.UserID = @UserID`);
-  res.render("chatroom", {
-    user: req.session.user,
-    currentRoom: {
-      room: roomResult.recordset[0],
-      members: membersResult.recordset
-    },
-    rooms: userCommunitiesResult.recordset,
-    messages: messagesResult.recordset
-  });
-} catch (err) {
-  console.error('Error loading chatroom', err);
-  res.status(500).send('Server Error (ㄒoㄒ)')
-}
+
+    // 4. 查这个房间已经收藏（Favorites）它的成员列表
+    const membersResult = await pool.request()
+      .input("RoomID", sql.Int, RoomID)
+      .query(`
+        SELECT u.UserID, u.Username, u.Image
+        FROM Favorites f
+        JOIN Users u ON f.UserID = u.UserID
+        WHERE f.RoomID = @RoomID
+      `);
+    const members = membersResult.recordset;
+
+    // 5. 查这个房间的历史消息
+    const messagesResult = await pool.request()
+      .input("RoomID", sql.Int, RoomID)
+      .query(`
+        SELECT m.MessageID, m.FromUser, u.Username, m.Content, m.Time, m.RoomID
+        FROM Messages m
+        JOIN Users u ON m.FromUser = u.UserID
+        WHERE m.RoomID = @RoomID
+        ORDER BY m.MessageID ASC
+      `);
+    const messages = messagesResult.recordset.map(r => ({
+      MessageID: r.MessageID,
+      FromUser: r.FromUser,
+      Username: r.Username,
+      Content: r.Content,
+      Time: r.Time,
+      RoomID: r.RoomID
+    }));
+
+    // 6. 左侧只显示当前用户真正“收藏（Favorites）”过的社区列表
+    const userCommunitiesResult = await pool.request()
+      .input("UserID", sql.Int, req.session.user.UserID)
+      .query(`
+        SELECT c.RoomID, c.ChatName, c.Image
+        FROM Communities c
+        JOIN Favorites f ON c.RoomID = f.RoomID
+        WHERE f.UserID = @UserID
+        ORDER BY c.ChatName ASC
+      `);
+    const rooms = userCommunitiesResult.recordset;
+
+    // 7. 渲染 chatroom.hbs，把 currentRoom、rooms、members、messages 全部给前端
+    return res.render("chatroom", {
+      user: req.session.user,
+      currentRoom: {
+        room: room,
+        members: members
+      },
+      rooms: rooms,
+      messages: messages
+    });
+  } catch (err) {
+    console.error("Error loading chatroom", err);
+    return res.status(500).send("Server Error");
+  }
 });
 /*Get test chatroom*/
 router.get("/testroom", function(req,res){
