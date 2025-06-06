@@ -13,7 +13,7 @@
   <!-- Search Bar -->
   <div class="row justify-content-center mb-5">
     <div class="col-md-6">
-      <form class="d-flex" role="search">
+      <form class="d-flex" role="search" action="/community" method="POST">
         <div class="input-group input-group-lg">
           <span class="input-group-text" style="background-color: #8b1d2e; border-color: #8b1d2e;">
             <i class="bi bi-search" style="color: white;"></i>
@@ -21,33 +21,40 @@
           <input 
             class="form-control border-2" 
             type="search" 
-            placeholder="Search for a community..." 
+            name="query"
+            placeholder="Search for a community (e.g., gaming,action)" 
             aria-label="Search"
             style="border-color: #8b1d2e; background-color: #f4d1d1; color: #8b1d2e;"
+            value="{{searchQuery}}"
           >
+          <button type="submit" class="btn" style="background-color: #8b1d2e; border-color: #8b1d2e;">
+            <i class="bi bi-search" style="color: white;"></i>
+          </button>
         </div>
       </form>
     </div>
   </div>
+
+  <!-- Error Message -->
+  {{#if error}}
+    <div class="alert alert-info" role="alert">
+      {{error}}
+    </div>
+  {{/if}}
 </div>
 
 <!-- Community Grid -->
 <div class="container">
   <div class="row g-4">
- 
- 
- {{#each communities}}
-  {{> communitypartial}}
-{{/each}}
-
-
+    {{#each communities}}
+      {{> communitypartial}}
+    {{/each}}
+    {{#unless communities.length}}
+      {{#unless error}}
+        <div class="alert alert-info" role="alert">
+          No communities available.
+        </div>
+      {{/unless}}
+    {{/unless}}
   </div>
 </div>
-
-
-
-
-
-
-
-

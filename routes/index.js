@@ -12,7 +12,7 @@ const { getUserById, checkDuplicateEmail, updateUser, getUserRequests } = requir
 const { searchAllContent } = require('../modules/search');
 const { getCommunities } = require('../modules/community');
 const { getCategoryContent } = require("../modules/category");
-const { searchCategoryContent } = require("../modules/searchCategory")
+
 // const { io } = require("../modules/chatroom");
 
 
@@ -351,19 +351,36 @@ router.post("/contact", function (req, res)
 });
 
 
+router.post('/community', async function (req, res) {
+  console.log('POST /community received:', req.body);
+  const query = req.body.query?.trim() || '';
+  
+  const queryParams = new URLSearchParams({ query });
+  console.log(`Redirecting to /community?${queryParams.toString()}`);
+  res.redirect(`/community?${queryParams.toString()}`);
+});
+
 router.get('/community', async function (req, res) {
+  console.log('GET /community received:', req.query);
+  const query = req.query.query?.trim() || '';
+  
   try {
-    const communities = await getCommunities();
+    const { searchResults: communities } = await getCommunities(query);
+    console.log(`Rendering ${communities.length} communities`);
+
     res.render('community', {
       title: 'Community',
-      communities // gebruik met {{#each communities}} in hbs
+      communities,
+      searchQuery: query,
+      error: communities.length === 0 && query ? 'No communities found for your search.' : null
     });
   } catch (error) {
-    console.error("❌ Community load error:", error);
+    console.error('❌ Community load error:', error);
     res.render('community', {
       title: 'Community',
-      error: 'Veriler yüklenemedi.',
-      communities: []
+      communities: [],
+      searchQuery: query,
+      error: 'Failed to load communities.'
     });
   }
 });
