@@ -13,7 +13,7 @@ const { searchAllContent } = require('../modules/search');
 const { getCommunities, createCommunity } = require('../modules/community');
 const { getCategoryContent } = require("../modules/category");
 const { searchCommunities } = require("../modules/searchCommunity")
-const { submitOrUpdateReview } = require('../modules/review');
+const { submitOrUpdateReviewByContentId } = require('../modules/review');
 // const { io } = require("../modules/chatroom");
 
 
@@ -347,13 +347,13 @@ const averageResult = await pool.request()
 });
 
 router.post('/category/:type/:id/review', isAuthenticated, async (req, res) => {
-  const { type, id } = req.params;
+  const { id } = req.params; // id is ContentID now
   const { rating, comment } = req.body;
   const userID = req.session.user?.UserID;
 
   try {
-    await submitOrUpdateReview(type, id, userID, rating, comment);
-    res.redirect(`/category/${type}/${id}`);
+    await submitOrUpdateReviewByContentId(parseInt(id), userID, parseInt(rating), comment);
+    res.redirect(`/category/${req.params.type}/${id}`);
   } catch (error) {
     console.error('Review submission error:', error);
     res.status(500).render('error', { title: 'Review Error', error: error.message });
