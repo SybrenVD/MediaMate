@@ -36,7 +36,8 @@
         <button id="loginRedirectBtn" class="btn btn-danger text-white">Leave a Review</button>
       {{/if}}
 
-      <a href="javascript:history.back()" class="btn btn-secondary">
+      <!-- Updated Back Button -->
+      <a href="#" onclick="handleBack()" class="btn btn-secondary">
         <i class="bi bi-arrow-left-circle"></i> Back
       </a>
     </div>
@@ -86,7 +87,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-danger text-white">Submit Review</button>
+          <!-- Set sessionStorage flag on submit -->
+          <button type="submit" class="btn btn-danger text-white" onclick="sessionStorage.setItem('justSubmittedReview', 'true')">Submit Review</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
@@ -94,6 +96,7 @@
   </div>
 </div>
 
+<!-- Rating Stars Styles -->
 <style>
   .star-rating {
     direction: rtl;
@@ -116,6 +119,7 @@
   }
 </style>
 
+<!-- Modal and Navigation Scripts -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const openReviewBtn = document.getElementById('openReviewBtn');
@@ -134,7 +138,19 @@
       });
     }
   });
+
+  function handleBack() {
+    const justSubmitted = sessionStorage.getItem('justSubmittedReview');
+
+    if (justSubmitted === 'true') {
+      sessionStorage.removeItem('justSubmittedReview');
+      history.go(-2); // Skip the review form submission step
+    } else {
+      history.back(); // Normal behavior
+    }
+  }
 </script>
+
 
 
 
