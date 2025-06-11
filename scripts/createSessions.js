@@ -13,7 +13,7 @@ async function createSessionsTable() {
         CREATE TABLE [dbo].[sessions] (
           [sid] NVARCHAR(255) NOT NULL PRIMARY KEY,
           [expires] DATETIME NOT NULL,
-          [data] NVARCHAR(MAX)
+          [session] NVARCHAR(MAX)
         )
       END
     `;
