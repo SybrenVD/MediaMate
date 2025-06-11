@@ -14,6 +14,8 @@ const { getCommunities, createCommunity } = require('../modules/community');
 const { getCategoryContent } = require("../modules/category");
 const { searchCommunities } = require("../modules/searchCommunity")
 const { submitOrUpdateReviewByContentId } = require('../modules/review');
+const { sendContactEmail } = require('../utils/email');
+const { body, validationResult } = require('express-validator');
 // const { io } = require("../modules/chatroom");
 
 
@@ -359,32 +361,52 @@ router.post('/category/:type/:id/review', isAuthenticated, async (req, res) => {
 });
 
 // Contact Page - GET
-
-router.get("/contact", function (req, res) {
-    res.render("contact", {
-    title: "Contact"
+router.get('/contact', (req, res) => {
+  res.render('contact', {
+    title: 'Contact',
+    successMessage: null,
+    errorMessage: null
   });
 });
 
-
 // Contact Page - POST
-
-router.post("/contact", function (req, res) {
+router.post('/contact', [
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('message').trim().notEmpty().withMessage('Message is required')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.render('contact', {
+      title: 'Contact',
+      errorMessage: errors.array().map(err => err.msg).join(', '),
+      successMessage: null
+    });
+  }
 
   const { name, email, message } = req.body;
 
-  console.log("Contact form submitted:");
-  console.log("Name:", name);
-  console.log("Email:", email);
-  console.log("Message:", message);
+  console.log('Contact form submitted:');
+  console.log('Name:', name);
+  console.log('Email:', email);
+  console.log('Message:', message);
 
-  res.render("contact", {
-    title: "Contact",
-    successMessage: `Thanks for contacting us, ${name}!`
+  const result = await sendContactEmail({ name, email, message });
 
-  });
+  if (result.success) {
+    res.render('contact', {
+      title: 'Contact',
+      successMessage: `Thanks for contacting us, ${name}!`,
+      errorMessage: null
+    });
+  } else {
+    res.render('contact', {
+      title: 'Contact',
+      errorMessage: 'Failed to send message. Please try again later.',
+      successMessage: null
+    });
+  }
 });
-
 
 router.post('/community', async function (req, res) {
   console.log('POST /community received:', req.body);
