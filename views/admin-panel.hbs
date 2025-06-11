@@ -4,7 +4,10 @@
 
 
 <div class="container bg-white p-5 rounded shadow border-start border-4" style="border-color: #8b1d2e; max-width: 1000px;">
-  <h3 class="text-center mb-4 text-danger fw-bold">Create New Content</h3>
+  <h3 class="text-center mb-4 text-danger fw-bold" style="text-shadow: 1px 1px 3px rgba(255, 0, 0, 0.5);">
+  Create New Content
+</h3>
+
 
 
   {{#if successMessage}}
@@ -61,63 +64,62 @@
 
 
 <!-- Pending Requests -->
-<h4 class="text-success mt-4 mb-3">Pending</h4>
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>Username</th>
-      <th>Type</th>
-      <th>Title</th>
-      <th>Description</th>
-      <th>Image</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each pendingRequests}}
-    <tr>
-      <td>{{Username}}</td>
-      <td>{{ContentType}}</td>
-      <td>{{Title}}</td>
-      <td>{{Description}}</td>
-      <td><img src="{{Image}}" alt="Image" width="60" /></td>
-      <td>
-        <a href="/admin-panel/{{RequestID}}" class="btn btn-primary">Edit</a>
-      </td>
-    </tr>
-    {{/each}}
-  </tbody>
-</table>
+<div class="admin-section">
+  <div class="pending-box">Pending</div>
+  <table class="table admin-table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Type</th>
+        <th>Title</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each pendingRequests}}
+      <tr>
+        <td>{{Username}}</td>
+        <td>{{ContentType}}</td>
+        <td>{{Title}}</td>
+        <td>
+          <a href="/admin-panel/{{RequestID}}" class="btn btn-warning">Edit</a>
+
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+
 
 <!-- Completed requests -->
-<h4 class="text-secondary mt-5 mb-3">Completed</h4>
-<table class="table table-bordered table-sm">
-  <thead class="table-light">
-    <tr>
-      <th>Username</th>
-      <th>Type</th>
-      <th>Title</th>
-      <th>Description</th>
-      <th>Image</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each completedRequests}}
-    <tr>
-      <td>{{Username}}</td>
-      <td>{{ContentType}}</td>
-      <td>{{Title}}</td>
-      <td>{{Description}}</td>
-      <td><img src="{{Image}}" alt="Image" width="60" /></td>
-      <td>
-        {{#ifEquals Status "Approved"}}<span class="badge bg-success">Approved</span>{{/ifEquals}}
-        {{#ifEquals Status "Declined"}}<span class="badge bg-danger">Declined</span>{{/ifEquals}}
-      </td>
-    </tr>
-    {{/each}}
-  </tbody>
-</table>
+<div class="admin-section">
+  <div class="completed-box">Completed</div>
+  <table class="table admin-table table-sm">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Type</th>
+        <th>Title</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each completedRequests}}
+      <tr>
+        <td>{{Username}}</td>
+        <td>{{ContentType}}</td>
+        <td>{{Title}}</td>
+        <td>
+          {{#ifEquals Status "Approved"}}<span class="badge bg-success">Approved</span>{{/ifEquals}}
+          {{#ifEquals Status "Declined"}}<span class="badge bg-danger">Declined</span>{{/ifEquals}}
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+
 
 <!-- Error -->
 {{#if errorMessage}}
