@@ -504,7 +504,7 @@ router.get("/faq", function (req, res, next) {
       },
       {
         question: "Can I create an account?",
-        answer: "Currently, you can browse without an account. Account features are coming soon."
+        answer: "You can browse without an account but to get to use all features you would need to make an account."
       },
       {
         question: "How do you choose which media to feature?",
@@ -512,7 +512,7 @@ router.get("/faq", function (req, res, next) {
       },
       {
         question: "Can I suggest content to be added?",
-        answer: "Yes! Reach out via our contact form to suggest games, books, or movies."
+        answer: "Logged users get can request games, books, and movies."
       },
       {
         question: "Is MediaMate available on mobile?",
