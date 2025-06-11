@@ -29,4 +29,4 @@ const poolPromise = new sql.ConnectionPool(dbConfig)
     process.exit(1);
   });
 
-module.exports = { sql, poolPromise };
+module.exports = { sql, dbConfig, poolPromise };

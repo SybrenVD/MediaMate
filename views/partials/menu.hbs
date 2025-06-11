@@ -5,11 +5,11 @@
       MediaMate
     </a>
 
-  <!-- Mobile menu toggle -->
-<button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu"
-  aria-controls="mobileMenu" aria-label="Toggle navigation">
-  <span class="navbar-toggler-icon"></span>
-</button>
+    <!-- Mobile menu toggle -->
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu"
+      aria-controls="mobileMenu" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
   <!-- Desktop nav links -->
   <ul class="navbar-nav d-none d-lg-flex flex-row gap-4 ms-3">
@@ -27,33 +27,29 @@
 
   </ul>
 
-
-<!-- Desktop buttons right (hidden on mobile) -->
-<div class="d-none d-lg-flex ms-auto">
-  {{#if @root.session.user.Username}}
-    <div class="dropdown">
-      <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 px-3 py-1 rounded text-white"
-         href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-         {{!-- <i class="bi bi-person-circle fs-5"></i>  --}}
-         <img src="{{@root.session.user.Image}}" width="28px" height="28px">
-         {{@root.session.user.Username}}
-      </a>
-     
-     <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 220px;">
-  <li class="mb-2 ps-1 text-muted">Welkom, {{@root.session.user.Username}}</li>
-  <li><a class="dropdown-item py-2" href="/user">My Profile</a></li>
-  <li><a class="dropdown-item py-2" href="/add">Request</a></li>
-  <li><a class="dropdown-item py-2" href="/favorites">Favorites</a></li>
-  <li><hr class="dropdown-divider"></li>
-  <li><a class="btn btn-outline-danger w-100" href="/logout">Logout</a></li>
-    </ul>
-
+    <!-- Desktop buttons right -->
+    <div class="d-none d-lg-flex ms-auto">
+      {{#if user}}
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 px-3 py琪-1 rounded text-white"
+             href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{{user.Image}}" width="28px" height="28px">
+            {{user.Username}}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 220px;">
+            <li class="mb-2 ps-1 text-muted">Welcome, {{user.Username}}</li>
+            <li><a class="dropdown-item py-2" href="/user">My Profile</a></li>
+            <li><a class="dropdown-item py-2" href="/add">Request</a></li>
+            <li><a class="dropdown-item py-2" href="/favorites">Favorites</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="btn btn-outline-danger w-100" href="/logout">Logout</a></li>
+          </ul>
+        </div>
+      {{else}}
+        <a href="/login" class="btn btn-login btn-sm me-2">Log in</a>
+        <a href="/register" class="btn btn-register btn-sm">Register</a>
+      {{/if}}
     </div>
-  {{else}}
-    <a href="/login" class="btn btn-login btn-sm me-2">Log in</a>
-    <a href="/register" class="btn btn-register btn-sm">Register</a>
-  {{/if}}
-</div>
 
 <!-- Fullscreen Mobile Menu -->
 <div class="offcanvas offcanvas-end text-white bg-blur d-lg-none" tabindex="-1" id="mobileMenu">
@@ -115,7 +111,3 @@
 
   </div>
 </nav>
-
-
-
-
