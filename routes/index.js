@@ -546,7 +546,6 @@ router.post("/login", async function (req, res) {
   const { username, password } = req.body;
   console.log("Session user after login:", req.session.user);
 
-
   const validationResult = validateLoginInput(username, password);
 
   if (!validationResult.isValid) {
@@ -560,28 +559,28 @@ router.post("/login", async function (req, res) {
   try {
     const result = await loginUser(validationResult.trimmedUsername, password);
 
-      if (result.success) {
-  req.session.user = {
-    UserID: result.user.UserID,
-    Username: result.user.Username,
-    UserType: result.user.UserType
-  };
-  console.log("Session user set:", req.session.user);
+    if (result.success) {
+      req.session.user = {
+        UserID: result.user.UserID,
+        Username: result.user.Username,
+        UserType: result.user.UserType
+      };
 
-  req.session.save(err => {
-    if (err) {
-      console.error("Session save error:", err);
-      return res.render("login", {
-        title: "Login",
-        errorMessage: "Session could not be saved.",
-        successMessage: null
+      console.log("Session user set:", req.session.user);
+
+      req.session.save(err => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.render("login", {
+            title: "Login",
+            errorMessage: "Session could not be saved.",
+            successMessage: null
+          });
+        }
+
+        return res.redirect("/");
       });
-    }
-    return res.redirect("/");
-  });
-}
 
-      
     } else {
       return res.render("login", {
         title: "Login",
@@ -599,6 +598,7 @@ router.post("/login", async function (req, res) {
     });
   }
 });
+
 
 // Logout
 router.get("/logout", function (req, res) {
