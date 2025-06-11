@@ -34,6 +34,22 @@ function isAuthenticated(req, res, next) {
   res.redirect("/login");
 }
 
+//isAdmin: AdminPage is for just Admin
+function isAdmin(req, res, next) {
+  if (
+    req.session.user &&
+    req.session.user.UserType &&
+    req.session.user.UserType.toLowerCase() === 'admin'
+  ) {
+    return next();
+  }
+
+  return res.status(403).render('error', {
+    title: "Access Denied",
+    error: "Unauthorized access"
+  });
+}
+
 router.get('/', async function (req, res) {
   try {
     const bestRatedContent = await getBestRated();
@@ -864,7 +880,9 @@ router.post("/add", isAuthenticated, upload.single('image'), async function (req
 router.get("/admin-panel", isAuthenticated, isAdmin, async function (req, res) {
   try {
     const pool = await poolPromise;
-    const result = await pool.request()
+
+    // Pending requests
+    const pendingResult = await pool.request()
       .query(`
         SELECT 
           r.RequestID,
@@ -879,36 +897,103 @@ router.get("/admin-panel", isAuthenticated, isAdmin, async function (req, res) {
         WHERE r.Status = 'Pending'
       `);
 
-    res.render("admin-panel", {
-      title: "Admin Panel",
-      requests: result.recordset
-    });
+    // Completed requests
+    const completedResult = await pool.request()
+      .query(`
+        SELECT 
+          r.RequestID,
+          r.Title,
+          r.Description,
+          r.Status,
+          r.ContentType,
+          r.Image,
+          u.Username
+        FROM Requests r
+        JOIN Users u ON r.UserID = u.UserID
+        WHERE r.Status IN ('Approved', 'Declined')
+      `);
+
+
+res.render("admin-panel", {
+  title: "Admin Panel",
+  user: req.session.user,
+  pendingRequests: pendingResult.recordset,
+  completedRequests: completedResult.recordset, 
+  errorMessage: null
+});
+
+
 
   } catch (error) {
     console.error("Failed to load requests:", error);
     res.render("admin-panel", {
       title: "Admin Panel",
-      requests: [],
+      pendingRequests: [],
+      completedRequests: [],
       errorMessage: "Failed to load requests"
     });
   }
 });
 
-//isAdmin: AdminPage is for just Admin
-function isAdmin(req, res, next) {
-  if (
-    req.session.user &&
-    req.session.user.UserType &&
-    req.session.user.UserType.toLowerCase() === 'admin'
-  ) {
-    return next();
+//POST
+router.post("/admin-panel", isAuthenticated, isAdmin, upload.single("image"), async (req, res) => {
+  const { type, title, description } = req.body;
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+  const userId = req.session.user.UserID;
+  const username = req.session.user.Username;
+
+  if (!type || !title || !description || !imagePath) {
+    return res.redirect("/admin-panel?error=All+fields+are+required");
   }
 
-  return res.status(403).render('error', {
-    title: "Access Denied",
-    error: "Unauthorized access"
-  });
+  try {
+    const pool = await poolPromise;
+
+    // Insert into Requests with status 'Approved'
+// 1. First insert into Requests
+await pool.request()
+  .input("ContentType", sql.VarChar, type)
+  .input("Title", sql.NVarChar, title)
+  .input("Description", sql.NVarChar, description)
+  .input("Image", sql.NVarChar, imagePath)
+  .input("Status", sql.NVarChar, 'Approved')
+  .input("UserID", sql.Int, userId)
+  .query(`
+    INSERT INTO Requests (ContentType, Title, Description, Image, Status, UserID)
+    VALUES (@ContentType, @Title, @Description, @Image, @Status, @UserID)
+  `);
+
+// 2. Then insert into real content table
+let insertContentQuery = "";
+if (type === "Book") {
+  insertContentQuery = `INSERT INTO Books (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
+} else if (type === "Movie") {
+  insertContentQuery = `INSERT INTO Movies (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
+} else if (type === "Game") {
+  insertContentQuery = `INSERT INTO Games (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
 }
+
+await pool.request()
+  .input("Title", sql.NVarChar, title)
+  .input("Description", sql.NVarChar, description)
+  .input("Image", sql.NVarChar, imagePath)
+  .input("UserID", sql.Int, userId)
+  .query(insertContentQuery);
+
+
+
+    return res.redirect("/admin-panel?success=Content+successfully+created");
+  } catch (err) {
+    console.error("Create content error:", err);
+    return res.redirect("/admin-panel?error=Something+went+wrong");
+  }
+});
+
+
+
+
+
+
 
 
 
@@ -947,6 +1032,7 @@ router.get('/admin-panel/:requestID', isAuthenticated,  isAdmin, async (req, res
     res.status(500).render("error", { message: "Failed to load request detail" });
   }
 });
+
 
 
 router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res) => {
@@ -1014,7 +1100,7 @@ router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res)
       // 3. Request
       await pool.request()
         .input("RequestID", sql.Int, requestId)
-        .query(`UPDATE Requests SET Status = 'Approved' WHERE RequestID = @RequestID`);
+        .query(`UPDATE Requests SET Status = 'Declined' WHERE RequestID = @RequestID`);
 
       return res.render('status', {
         message: 'Request accepted and added to content. Redirecting...',
