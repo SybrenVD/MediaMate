@@ -69,7 +69,6 @@ async function getBestRated() {
       rating: row.Rating || 0
     }));
 
-    console.log('getBestRated items:', items);
     return items;
   } catch (error) {
     console.error('Error in getBestRated:', error);
@@ -110,7 +109,6 @@ async function getRandomBooks() {
       Genres: row.Genres || ''
     }));
 
-    console.log('getRandomBooks items:', items);
     return items;
   } catch (error) {
     console.error('Error in getRandomBooks:', error);
@@ -151,7 +149,6 @@ async function getRandomMovies() {
       Genres: row.Genres || ''
     }));
 
-    console.log('getRandomMovies items:', items);
     return items;
   } catch (error) {
     console.error('Error in getRandomMovies:', error);
@@ -192,7 +189,6 @@ async function getRandomGames() {
       Genres: row.Genres || ''
     }));
 
-    console.log('getRandomGames items:', items);
     return items;
   } catch (error) {
     console.error('Error in getRandomGames:', error);

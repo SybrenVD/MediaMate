@@ -34,13 +34,13 @@ function isAuthenticated(req, res, next) {
   res.redirect("/login");
 }
 
-// Homepage GET route
 router.get('/', async function (req, res) {
   try {
     const bestRatedContent = await getBestRated();
     const randomBooksContent = await getRandomBooks();
     const randomMoviesContent = await getRandomMovies();
     const randomGamesContent = await getRandomGames();
+
     res.render('index', {
       title: 'Home',
       banner: '/images/BannerHome.jpg',
@@ -52,7 +52,8 @@ router.get('/', async function (req, res) {
       bestRatedContent,
       randomBooksContent,
       randomMoviesContent,
-      randomGamesContent
+      randomGamesContent,
+      user: req.session.user || null // Pass user explicitly
     });
   } catch (error) {
     console.error('Error loading homepage content:', error);
@@ -68,11 +69,10 @@ router.get('/', async function (req, res) {
       randomBooksContent: [],
       randomMoviesContent: [],
       randomGamesContent: [],
-      error: 'Failed to load content'
+      error: 'Failed to load content',
     });
   }
 });
-
 
 router.post('/search', async function (req, res) {
   console.log('POST /search received:', req.body);
@@ -179,7 +179,6 @@ router.get('/search', async function (req, res) {
       join: (arr, sep) => arr.join(sep),
       rangeHelper: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start)
     };
-    console.log('Render Data:', renderData);
 
     res.render('search', renderData);
   } catch (error) {
@@ -245,7 +244,6 @@ router.get("/category/:type", async (req, res) => {
 
   try {
     const result = await getCategoryContent(type, page, pageSize);
-    console.log(`Result from getCategoryContent:`, result);
 
     let items = [];
     let currentPage = page;
@@ -283,8 +281,8 @@ router.get("/category/:type", async (req, res) => {
     res.status(500).send("Error fetching category content");
   }
 });
-  
- // Detail page route
+
+// Detail page route
 // GET content detail page
 router.get('/category/:type/:id', async (req, res) => {
   const { type, id } = req.params;
@@ -311,9 +309,9 @@ router.get('/category/:type/:id', async (req, res) => {
         ORDER BY R.ReviewDate DESC
       `);
 
-const averageResult = await pool.request()
-  .input('ContentID', sql.Int, id)
-  .query(`SELECT AVG(CAST(Rating AS FLOAT)) AS AverageRating FROM Reviews WHERE ContentID = @ContentID`);
+    const averageResult = await pool.request()
+      .input('ContentID', sql.Int, id)
+      .query(`SELECT AVG(CAST(Rating AS FLOAT)) AS AverageRating FROM Reviews WHERE ContentID = @ContentID`);
 
 
     const userReviewResult = req.session.user ? await pool.request()
@@ -363,7 +361,7 @@ router.post('/category/:type/:id/review', isAuthenticated, async (req, res) => {
 // Contact Page - GET
 
 router.get("/contact", function (req, res) {
-  res.render("contact", {
+    res.render("contact", {
     title: "Contact"
   });
 });
@@ -371,9 +369,8 @@ router.get("/contact", function (req, res) {
 
 // Contact Page - POST
 
-router.post("/contact", function (req, res) 
-{
-  
+router.post("/contact", function (req, res) {
+
   const { name, email, message } = req.body;
 
   console.log("Contact form submitted:");
@@ -384,15 +381,15 @@ router.post("/contact", function (req, res)
   res.render("contact", {
     title: "Contact",
     successMessage: `Thanks for contacting us, ${name}!`
-  
-});
+
+  });
 });
 
 
 router.post('/community', async function (req, res) {
   console.log('POST /community received:', req.body);
   const query = req.body.query?.trim() || '';
-  
+
   const queryParams = new URLSearchParams({ query });
   console.log(`Redirecting to /community?${queryParams.toString()}`);
   res.redirect(`/community?${queryParams.toString()}`);
@@ -401,7 +398,7 @@ router.post('/community', async function (req, res) {
 router.get('/community', async function (req, res) {
   console.log('GET /community received:', req.query);
   const query = req.query.query?.trim() || '';
-  
+
   try {
     let communities = [];
     if (query) {
@@ -548,7 +545,6 @@ router.get("/login", function (req, res) {
 router.post("/login", async function (req, res) {
   const { username, password } = req.body;
 
-  // Validate inputs
   const validationResult = validateLoginInput(username, password);
 
   if (!validationResult.isValid) {
@@ -563,9 +559,22 @@ router.post("/login", async function (req, res) {
     const result = await loginUser(validationResult.trimmedUsername, password);
 
     if (result.success) {
-      // Set session
-      req.session.user = result.user; // Store user object in session
-      return res.redirect("/");
+      req.session.user = result.user;
+      console.log("Session user set:", req.session.user);
+      // ✅ Make sure session is saved before redirect
+      req.session.save(err => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.render("login", {
+            title: "Login",
+            errorMessage: "Session could not be saved.",
+            successMessage: null
+          });
+        }
+
+        return res.redirect("/");
+      });
+
     } else {
       return res.render("login", {
         title: "Login",
@@ -573,6 +582,7 @@ router.post("/login", async function (req, res) {
         successMessage: null
       });
     }
+
   } catch (error) {
     console.error("Login error:", error);
     return res.render("login", {
@@ -782,11 +792,10 @@ router.post("/user", isAuthenticated, upload.single('image'), async (req, res) =
   });
 });
 
-    
+
 //GET FavList Page
-router.get("/favorites", isAuthenticated, function(req, res)
-{
-  res.render("fav-list",{
+router.get("/favorites", isAuthenticated, function (req, res) {
+  res.render("fav-list", {
     title: "Favourite"
   });
 });
@@ -964,7 +973,7 @@ router.post('/admin/edit/:id', async (req, res) => {
 // routes/index.js
 
 
-router.get("/chatroom", async function(req, res) {
+router.get("/chatroom", async function (req, res) {
   // 1. 必须登录
   if (!req.session.user) {
     return res.redirect("/login");
@@ -1046,8 +1055,8 @@ router.get("/chatroom", async function(req, res) {
   }
 });
 /*Get test chatroom*/
-router.get("/testroom", function(req,res){
-  res.render("testroom", {  });
+router.get("/testroom", function (req, res) {
+  res.render("testroom", {});
 });
 
 

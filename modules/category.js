@@ -3,7 +3,6 @@ const { truncateDescription } = require('./truncate');
 const { truncateTitle } = require('./truncateTitle');
 
 async function getCategoryContent(type, page = 1, pageSize = 20) {
-  console.log(`getCategoryContent: type=${type}, page=${page}, pageSize=${pageSize}`);
   const validTables = {
     games: { table: 'Games', idColumn: 'GameID' },
     books: { table: 'Books', idColumn: 'BookID' },
@@ -39,7 +38,6 @@ async function getCategoryContent(type, page = 1, pageSize = 20) {
       OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY
     `;
     const result = await pool.request().query(query);
-    console.log(`Category items: ${JSON.stringify(result.recordset.slice(0, 2))}`);
 
     const searchResults = result.recordset.map(item => ({
       id: item.id,
@@ -58,7 +56,6 @@ async function getCategoryContent(type, page = 1, pageSize = 20) {
     const totalPages = Math.ceil(totalCount / pageSize);
 
     const returnValue = { searchResults, currentPage: page, totalPages, totalCount };
-    console.log(`Returning from getCategoryContent:`, returnValue);
     return returnValue;
   } catch (err) {
     console.error(`Error fetching category content: ${err.message}`);
