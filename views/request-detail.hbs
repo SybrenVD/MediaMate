@@ -9,7 +9,7 @@
     <div class="alert alert-danger text-center">{{errorMessage}}</div>
   {{/if}}
 
-  <form action="/admin/edit/{{request.RequestID}}" method="POST" class="col-md-8 offset-md-2">
+  <form action="/admin/edit/{{request.RequestID}}" method="POST" enctype="multipart/form-data" class="col-md-8 offset-md-2">
     <div class="mb-3">
       <label for="type" class="form-label">Category</label>
       <select id="type" name="type" class="form-select" required>
@@ -36,6 +36,11 @@
         <img src="{{request.Image}}" alt="Image" class="img-fluid" style="max-height: 200px;" />
       </div>
     </div>
+
+      <div class="mb-3">
+    <label for="image" class="form-label">Change Image (optional)</label>
+    <input type="file" class="form-control" id="image" name="image" accept="image/*">
+  </div>
 
     <div class="text-center d-flex justify-content-center gap-3">
       <button type="submit" class="btn btn-success" name="action" value="accept">Accept Request</button>

@@ -544,6 +544,8 @@ router.get("/login", function (req, res) {
 // Login Page - POST
 router.post("/login", async function (req, res) {
   const { username, password } = req.body;
+  console.log("Session user after login:", req.session.user);
+
 
   const validationResult = validateLoginInput(username, password);
 
@@ -558,23 +560,28 @@ router.post("/login", async function (req, res) {
   try {
     const result = await loginUser(validationResult.trimmedUsername, password);
 
-    if (result.success) {
-      req.session.user = result.user;
-      console.log("Session user set:", req.session.user);
-      // ✅ Make sure session is saved before redirect
-      req.session.save(err => {
-        if (err) {
-          console.error("Session save error:", err);
-          return res.render("login", {
-            title: "Login",
-            errorMessage: "Session could not be saved.",
-            successMessage: null
-          });
-        }
+      if (result.success) {
+  req.session.user = {
+    UserID: result.user.UserID,
+    Username: result.user.Username,
+    UserType: result.user.UserType
+  };
+  console.log("Session user set:", req.session.user);
 
-        return res.redirect("/");
+  req.session.save(err => {
+    if (err) {
+      console.error("Session save error:", err);
+      return res.render("login", {
+        title: "Login",
+        errorMessage: "Session could not be saved.",
+        successMessage: null
       });
+    }
+    return res.redirect("/");
+  });
+}
 
+      
     } else {
       return res.render("login", {
         title: "Login",
@@ -889,13 +896,19 @@ router.get("/admin-panel", isAuthenticated, isAdmin, async function (req, res) {
 
 //isAdmin: AdminPage is for just Admin
 function isAdmin(req, res, next) {
-  if (req.session.user && req.session.user.UserType === 'Admin') {
+  if (
+    req.session.user &&
+    req.session.user.UserType &&
+    req.session.user.UserType.toLowerCase() === 'admin'
+  ) {
     return next();
   }
-  return res.status(403).render('error', { title: "Access Denied", error: "You do not have permission to access this page." });
+
+  return res.status(403).render('error', {
+    title: "Access Denied",
+    error: "Unauthorized access"
+  });
 }
-
-
 
 
 
@@ -936,7 +949,7 @@ router.get('/admin-panel/:requestID', isAuthenticated,  isAdmin, async (req, res
 });
 
 
-router.post('/admin/edit/:id', isAdmin, async (req, res) => {
+router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res) => {
   const action = req.body.action;
   const requestId = parseInt(req.params.id);
   const { type, title, description } = req.body;
@@ -944,71 +957,70 @@ router.post('/admin/edit/:id', isAdmin, async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    //accept
-if (action === 'accept') {
-  const pool = await poolPromise;
+    if (action === 'accept') {
+      // 1. Request
+      const result = await pool.request()
+        .input("RequestID", sql.Int, requestId)
+        .query(`SELECT * FROM Requests r JOIN Users u ON r.UserID = u.UserID WHERE r.RequestID = @RequestID`);
 
-  // 1. get request
-  const result = await pool.request()
-    .input("RequestID", sql.Int, requestId)
-    .query(`
-      SELECT * FROM Requests WHERE RequestID = @RequestID
-    `);
+      if (result.recordset.length === 0) {
+        return res.status(404).render("error", { message: "Request not found" });
+      }
 
-  if (result.recordset.length === 0) {
-    return res.status(404).render("error", { message: "Request not found" });
-  }
+      const request = result.recordset[0];
+      const uploadedImage = req.file ? `/uploads/${req.file.filename}` : null;
+      const imageToUse = uploadedImage || request.Image;
 
-  const request = result.recordset[0];
-  const image = request.Image; // image URL
-  const username = request.Username || req.session.user.Username;
+      // 2. UserID
+      const userId = parseInt(request.UserID);
+      if (isNaN(userId)) {
+      console.error("UserID is not a number:", request.UserID);
+     return res.status(500).render("error", { message: "Invalid user ID in request." });
+     }
 
-  // 2. add the correct table by category
-  if (type === "Game") {
-    await pool.request()
-      .input("Title", sql.NVarChar, title)
-      .input("Description", sql.NVarChar, description)
-      .input("Image", sql.NVarChar, image)
-      .input("AddedBy", sql.NVarChar, username)
-      .query(`
-        INSERT INTO Games (Title, Description, Image, AddedBy)
-        VALUES (@Title, @Description, @Image, @AddedBy)
-      `);
-  } else if (type === "Book") {
-    await pool.request()
-      .input("Title", sql.NVarChar, title)
-      .input("Description", sql.NVarChar, description)
-      .input("Image", sql.NVarChar, image)
-      .input("AddedBy", sql.NVarChar, username)
-      .query(`
-        INSERT INTO Books (Title, Description, Image, AddedBy)
-        VALUES (@Title, @Description, @Image, @AddedBy)
-      `);
-  } else if (type === "Movie") {
-    await pool.request()
-      .input("Title", sql.NVarChar, title)
-      .input("Description", sql.NVarChar, description)
-      .input("Image", sql.NVarChar, image)
-      .input("AddedBy", sql.NVarChar, username)
-      .query(`
-        INSERT INTO Movies (Title, Description, Image, AddedBy)
-        VALUES (@Title, @Description, @Image, @AddedBy)
-      `);
-  }
 
-  // 3. status
-  await pool.request()
-    .input("RequestID", sql.Int, requestId)
-    .query(`
-      UPDATE Requests SET Status = 'Accepted' WHERE RequestID = @RequestID
-    `);
+      if (type === "Game") {
+        await pool.request()
+          .input("Title", sql.NVarChar, title)
+          .input("Description", sql.NVarChar, description)
+          .input("Image", sql.NVarChar, imageToUse)
+          .input("AddedByUserID", sql.Int, userId)
+          .query(`
+            INSERT INTO Games (Title, Description, Image, AddedByUserID)
+            VALUES (@Title, @Description, @Image, @AddedByUserID)
+          `);
+      } else if (type === "Book") {
+        await pool.request()
+          .input("Title", sql.NVarChar, title)
+          .input("Description", sql.NVarChar, description)
+          .input("Image", sql.NVarChar, imageToUse)
+          .input("AddedByUserID", sql.Int, userId)
+          .query(`
+            INSERT INTO Books (Title, Description, Image, AddedByUserID)
+            VALUES (@Title, @Description, @Image, @AddedByUserID)
+          `);
+      } else if (type === "Movie") {
+        await pool.request()
+          .input("Title", sql.NVarChar, title)
+          .input("Description", sql.NVarChar, description)
+          .input("Image", sql.NVarChar, imageToUse)
+          .input("AddedByUserID", sql.Int, userId)
+          .query(`
+            INSERT INTO Movies (Title, Description, Image, AddedByUserID)
+            VALUES (@Title, @Description, @Image, @AddedByUserID)
+          `);
+      }
 
-  return res.render('status', {
-    message: 'Request accepted and added to content. Redirecting...',
-    redirect: '/admin-panel'
-  });
-}
+      // 3. Request
+      await pool.request()
+        .input("RequestID", sql.Int, requestId)
+        .query(`UPDATE Requests SET Status = 'Approved' WHERE RequestID = @RequestID`);
 
+      return res.render('status', {
+        message: 'Request accepted and added to content. Redirecting...',
+        redirect: '/admin-panel'
+      });
+    }
 
     if (action === 'decline') {
       await pool.request()
@@ -1025,6 +1037,8 @@ if (action === 'accept') {
     res.status(500).render("error", { message: "Failed to process request" });
   }
 });
+
+
 
 
 
