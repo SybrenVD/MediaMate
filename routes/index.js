@@ -17,7 +17,7 @@ const { submitOrUpdateReviewByContentId } = require('../modules/review');
 // const { io } = require("../modules/chatroom");
 
 
-const e = require("express");
+// const e = require("express");
 const { sql, poolPromise } = require("../config/db");
 
 //toevoegen pagina
@@ -845,7 +845,7 @@ router.post("/add", isAuthenticated, upload.single('image'), async function (req
 });
 
 //admin-panel get
-router.get("/admin-panel", isAuthenticated, async function (req, res) {
+router.get("/admin-panel", isAuthenticated, isAdmin, async function (req, res) {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
@@ -878,10 +878,19 @@ router.get("/admin-panel", isAuthenticated, async function (req, res) {
   }
 });
 
+//isAdmin: AdminPage is for just Admin
+function isAdmin(req, res, next) {
+  if (req.session.user && req.session.user.UserType === 'Admin') {
+    return next();
+  }
+  return res.status(403).render('error', { title: "Access Denied", error: "You do not have permission to access this page." });
+}
 
 
 
-router.get('/admin-panel/:requestID', async (req, res) => {
+
+
+router.get('/admin-panel/:requestID', isAuthenticated,  isAdmin, async (req, res) => {
   const requestID = req.params.requestID;
 
   try {
@@ -918,7 +927,7 @@ router.get('/admin-panel/:requestID', async (req, res) => {
 });
 
 
-router.post('/admin/edit/:id', async (req, res) => {
+router.post('/admin/edit/:id', isAdmin, async (req, res) => {
   const action = req.body.action;
   const requestId = parseInt(req.params.id);
   const { type, title, description } = req.body;
@@ -926,23 +935,71 @@ router.post('/admin/edit/:id', async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    if (action === 'accept') {
-      await pool.request()
-        .input("RequestID", sql.Int, requestId)
-        .input("Type", sql.NVarChar, type)
-        .input("Title", sql.NVarChar, title)
-        .input("Description", sql.NVarChar, description)
-        .query(`
-          UPDATE Requests
-          SET ContentType = @Type, Title = @Title, Description = @Description, Status = 'Accepted'
-          WHERE RequestID = @RequestID
-        `);
+    //accept
+if (action === 'accept') {
+  const pool = await poolPromise;
 
-      return res.render('status', {
-        message: 'Request Accepted. Redirecting to admin panel...',
-        redirect: '/admin-panel'
-      });
-    }
+  // 1. get request
+  const result = await pool.request()
+    .input("RequestID", sql.Int, requestId)
+    .query(`
+      SELECT * FROM Requests WHERE RequestID = @RequestID
+    `);
+
+  if (result.recordset.length === 0) {
+    return res.status(404).render("error", { message: "Request not found" });
+  }
+
+  const request = result.recordset[0];
+  const image = request.Image; // image URL
+  const username = request.Username || req.session.user.Username;
+
+  // 2. add the correct table by category
+  if (type === "Game") {
+    await pool.request()
+      .input("Title", sql.NVarChar, title)
+      .input("Description", sql.NVarChar, description)
+      .input("Image", sql.NVarChar, image)
+      .input("AddedBy", sql.NVarChar, username)
+      .query(`
+        INSERT INTO Games (Title, Description, Image, AddedBy)
+        VALUES (@Title, @Description, @Image, @AddedBy)
+      `);
+  } else if (type === "Book") {
+    await pool.request()
+      .input("Title", sql.NVarChar, title)
+      .input("Description", sql.NVarChar, description)
+      .input("Image", sql.NVarChar, image)
+      .input("AddedBy", sql.NVarChar, username)
+      .query(`
+        INSERT INTO Books (Title, Description, Image, AddedBy)
+        VALUES (@Title, @Description, @Image, @AddedBy)
+      `);
+  } else if (type === "Movie") {
+    await pool.request()
+      .input("Title", sql.NVarChar, title)
+      .input("Description", sql.NVarChar, description)
+      .input("Image", sql.NVarChar, image)
+      .input("AddedBy", sql.NVarChar, username)
+      .query(`
+        INSERT INTO Movies (Title, Description, Image, AddedBy)
+        VALUES (@Title, @Description, @Image, @AddedBy)
+      `);
+  }
+
+  // 3. status
+  await pool.request()
+    .input("RequestID", sql.Int, requestId)
+    .query(`
+      UPDATE Requests SET Status = 'Accepted' WHERE RequestID = @RequestID
+    `);
+
+  return res.render('status', {
+    message: 'Request accepted and added to content. Redirecting...',
+    redirect: '/admin-panel'
+  });
+}
+
 
     if (action === 'decline') {
       await pool.request()
@@ -959,6 +1016,9 @@ router.post('/admin/edit/:id', async (req, res) => {
     res.status(500).render("error", { message: "Failed to process request" });
   }
 });
+
+
+
 
 /*get chatroom */
 // routes/index.js

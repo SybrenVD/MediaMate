@@ -1,221 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Admin Panel</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #801B29;
-      color: #000;
-    }
+<h2>Admin Panel</h2>
 
-    .admin-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 30px 20px 10px;
-    }
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Username</th>
+      <th>Type</th>
+      <th>Title</th>
+      <th>Description</th>
+      <th>Image</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each requests}}
+    <tr>
+      <td>{{Username}}</td>
+      <td>{{ContentType}}</td>
+      <td>{{Title}}</td>
+      <td>{{Description}}</td>
+      <td><img src="{{Image}}" alt="Image" width="60" /></td>
+      <td>
+        <a href="/admin-panel/{{RequestID}}" class="btn btn-primary">Edit</a>
+      </td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
 
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
-      color: #000;
-    }
-
-    hr {
-      border: none;
-      height: 1px;
-      background-color: #ccc;
-      margin: 10px 0 30px;
-    }
-
-    h2 {
-      margin-bottom: 15px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: white;
-      margin-bottom: 20px;
-    }
-
-    th, td {
-      padding: 12px 15px;
-      border-bottom: 1px solid #ccc;
-      text-align: left;
-    }
-
-    .status {
-      background-color: #555;
-      color: white;
-      border-radius: 8px;
-      padding: 4px 10px;
-      font-size: 12px;
-      display: inline-block;
-    }
-
-    input#adminSearch {
-      width: 100%;
-      padding: 10px;
-      border-radius: 5px;
-      border: none;
-      margin-bottom: 4px; /* Reduced margin */
-      box-sizing: border-box;
-    }
-
-    ul.list-group {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      max-height: 300px; /* Limit height */
-      overflow-y: auto;  /* Scroll if too tall */
-      transition: max-height 0.3s ease;
-    }
-
-    ul.list-group li {
-      background: white;
-      margin-bottom: 8px;
-      padding: 12px 15px;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      text-decoration: none;
-      color: black;
-      border: 1px solid #ccc;
-      transition: background-color 0.2s ease;
-    }
-
-    ul.list-group li:hover {
-      background-color: #f0f0f0;
-    }
-
-    .list-item-name {
-      flex: 4;
-    }
-
-    .list-item-category {
-      flex: 3;
-    }
-
-    .list-item-status {
-      flex: 1;
-      text-align: right;
-    }
-
-    .bottom-section {
-      margin-top: 20px;
-    }
-
-    #noResults {
-      font-style: italic;
-      color: #222;
-      margin-top: 8px;
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <div class="admin-container">
-    <h1>Admin Panel</h1>
-    <hr>
-
-    <h2>Pending Requests</h2>
-    {{#if requests.length}}
-    <table>
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Title</th>
-          <th>Type</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each requests}}
-        <tr onclick="window.location='/admin-panel/{{this.RequestID}}'" style="cursor:pointer;">
-          <td>{{this.Username}}</td>
-          <td>{{this.Title}}</td>
-          <td>{{this.ContentType}}</td>
-          <td><span class="status">{{this.Status}}</span></td>
-
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>
-    {{else}}
-    <p>All requests have been handled.</p>
-    {{/if}}
-
-    <div class="bottom-section">
-      <h2>Manage Users, Content & Communities</h2>
-      <input
-        type="text"
-        id="adminSearch"
-        placeholder="Search by name, title, or type..."
-        autocomplete="off"
-      />
-
-      <ul class="list-group" id="adminList">
-        {{#each managementItems}}
-        <li onclick="window.location='/admin-panel/edit/{{this.id}}'">
-          <div class="list-item-name">{{this.name}}</div>
-          <div class="list-item-category">{{this.category}}</div>
-          <div class="list-item-status"><span class="status">{{this.status}}</span></div>
-        </li>
-        {{/each}}
-      </ul>
-
-      <p id="noResults">No results found.</p>
-    </div>
-  </div>
-
-  <script>
-    const searchInput = document.getElementById('adminSearch');
-    const adminList = document.getElementById('adminList');
-    const noResults = document.getElementById('noResults');
-
-    searchInput.addEventListener('input', function () {
-      const filter = this.value.toLowerCase();
-      const items = adminList.querySelectorAll('li');
-      let visibleCount = 0;
-
-      items.forEach(item => {
-        const text = item.innerText.toLowerCase();
-        if (text.includes(filter)) {
-          item.style.display = '';
-          visibleCount++;
-        } else {
-          item.style.display = 'none';
-        }
-      });
-
-      // Show no results message if nothing visible
-      if (visibleCount === 0) {
-        noResults.style.display = 'block';
-      } else {
-        noResults.style.display = 'none';
-      }
-    });
-  </script>
-</body>
-</html>
-
-
-
-
-
-
-
-
- {{!-- requests.push({
-    username: req.session.user,
-    type,
-    title,
-    description,
-    image,
-    status: "Pending"
-  }); --}}
+{{#if errorMessage}}
+<p class="text-danger">{{errorMessage}}</p>
+{{/if}}
