@@ -17,7 +17,7 @@ const { submitOrUpdateReview } = require('../modules/review');
 // const { io } = require("../modules/chatroom");
 
 
-const e = require("express");
+// const e = require("express");
 const { sql, poolPromise } = require("../config/db");
 
 //toevoegen pagina

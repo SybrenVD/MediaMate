@@ -163,6 +163,8 @@ io.on("connection", (socket) => {
 });
 
 server.listen(port, () => {
+  //innerconnect met server-pc：http://<ip4adress>:${port}
+  //dan ga je naar http://<ip4adress>:3000
   console.log(`Server running on http://localhost:${port}`);
 });
 
