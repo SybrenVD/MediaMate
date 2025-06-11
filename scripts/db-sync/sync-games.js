@@ -1,9 +1,9 @@
 require('dotenv').config();
 const axios = require('axios');
 const striptags = require('striptags');
-const { sql, poolPromise } = require('../../config/db'); // Adjust path if needed
+const { sql, poolPromise } = require('../../config/db');
 
-async function fetchWithRetry(url, params, retries = 3, delay = 20) {
+async function fetchWithRetry(url, params, retries = 3, delay = 100) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await axios.get(url, { params });
@@ -32,7 +32,6 @@ async function main() {
     process.exit(1);
   }
 
-  // Ensure a default user exists
   const userResult = await pool.request()
     .input('Username', sql.NVarChar, 'Admin')
     .input('Email', sql.NVarChar, null)
@@ -46,7 +45,6 @@ async function main() {
     `);
   const addedByUserID = userResult.recordset && userResult.recordset.length > 0 ? userResult.recordset[0].UserID : 1;
 
-  // Game genres to insert
   const gameGenres = [
     'Action', 'Adventure', 'RPG', 'Shooter', 'Strategy', 'Simulation',
     'Puzzle', 'Arcade', 'Platformer', 'Sports', 'Fighting', 'Racing',
@@ -55,76 +53,72 @@ async function main() {
     'Board Game', 'Trivia', 'Music', 'Educational'
   ];
 
-  // RAWG genre name to slug mapping
   const rawgGenreMap = {
-    'Action': 'action',
-    'Adventure': 'adventure',
-    'RPG': 'role-playing-games-rpg',
-    'Shooter': 'shooter',
-    'Strategy': 'strategy',
-    'Simulation': 'simulation',
-    'Puzzle': 'puzzle',
-    'Arcade': 'arcade',
-    'Platformer': 'platformer',
-    'Sports': 'sports',
-    'Fighting': 'fighting',
-    'Racing': 'racing',
-    'Multiplayer': 'massively-multiplayer',
-    'Battle Royale': 'battle-royale',
-    'MOBA': 'moba',
-    'Survival': 'survival',
-    'Open World': 'open-world',
-    'Sandbox': 'sandbox',
-    'Horror': 'horror',
-    'Stealth': 'stealth',
-    'Visual Novel': 'visual-novel',
-    'Idle': 'indie',
-    'Card Game': 'card',
-    'Board Game': 'board-games',
-    'Trivia': 'educational',
-    'Music': 'music',
-    'Educational': 'educational'
+    'action': 'Action',
+    'adventure': 'Adventure',
+    'role-playing-games-rpg': 'RPG',
+    'shooter': 'Shooter',
+    'strategy': 'Strategy',
+    'simulation': 'Simulation',
+    'puzzle': 'Puzzle',
+    'arcade': 'Arcade',
+    'platformer': 'Platformer',
+    'sports': 'Sports',
+    'fighting': 'Fighting',
+    'racing': 'Racing',
+    'massively-multiplayer': 'Multiplayer',
+    'battle-royale': 'Battle Royale',
+    'moba': 'MOBA',
+    'survival': 'Survival',
+    'open-world': 'Open World',
+    'sandbox': 'Sandbox',
+    'horror': 'Horror',
+    'stealth': 'Stealth',
+    'visual-novel': 'Visual Novel',
+    'indie': 'Idle',
+    'card': 'Card Game',
+    'board-games': 'Board Game',
+    'educational': 'Educational',
+    'music': 'Music'
   };
 
-  // Insert genres, respecting existing ones
-  for (const genre of gameGenres) {
-    await pool.request()
-      .input('Name', sql.NVarChar, genre)
-      .query(`
-        IF NOT EXISTS (SELECT 1 FROM Genres WHERE Name = @Name)
-        INSERT INTO Genres (Name) VALUES (@Name)
-      `);
-  }
-
-  // Track inserted games and shortfalls
-  const gamesPerGenre = {};
-  let totalGamesInserted = 0;
-  const targetGamesPerGenre = 200; // 5 pages * 40 games
-  const targetTotalGames = gameGenres.length * targetGamesPerGenre; // 27 * 200 = 5400
-
-  // Process games for each genre (initial pass)
+  // Cache GenreIDs
+  const genreIdCache = {};
   for (const genre of gameGenres) {
     const genreIdResult = await pool.request()
       .input('Name', sql.NVarChar, genre)
-      .query('SELECT GenreID FROM Genres WHERE Name = @Name');
-    const genreId = genreIdResult.recordset[0].GenreID;
+      .query(`
+        IF NOT EXISTS (SELECT 1 FROM Genres WHERE Name = @Name)
+        INSERT INTO Genres (Name) VALUES (@Name);
+        SELECT GenreID FROM Genres WHERE Name = @Name
+      `);
+    genreIdCache[genre] = genreIdResult.recordset[0].GenreID;
+  }
 
+  const processedGames = new Set();
+  const gamesPerGenre = {};
+  let totalGamesInserted = 0;
+  const targetGamesPerGenre = 200;
+  const targetTotalGames = gameGenres.length * targetGamesPerGenre;
+
+  for (const genre of gameGenres) {
     let gamesInsertedForGenre = 0;
 
     for (let page = 1; page <= 5; page++) {
       try {
-        // Add delay to avoid rate limits
-        await new Promise(resolve => setTimeout(resolve, 20));
+        // Reduced delay to align with RAWG rate limits (~60 req/min)
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         const params = {
           key: 'f161c5ceeac2444a950ccf2fe1cdebb4',
           page: page,
           page_size: 40
         };
-        if (['battle-royale', 'moba', 'open-world', 'horror', 'visual-novel', 'music', 'survival', 'sandbox', 'stealth'].includes(rawgGenreMap[genre])) {
-          params.tags = rawgGenreMap[genre];
+        const rawgGenreSlug = Object.keys(rawgGenreMap).find(key => rawgGenreMap[key] === genre);
+        if (['battle-royale', 'moba', 'open-world', 'horror', 'visual-novel', 'music', 'survival', 'sandbox', 'stealth'].includes(rawgGenreSlug)) {
+          params.tags = rawgGenreSlug;
         } else {
-          params.genres = rawgGenreMap[genre];
+          params.genres = rawgGenreSlug;
         }
 
         const response = await fetchWithRetry('https://api.rawg.io/api/games', params);
@@ -138,43 +132,29 @@ async function main() {
         for (const game of games) {
           const title = game.name || 'No title';
 
-          // Check if game already exists
+          if (processedGames.has(title)) {
+            console.log(`Game "${title}" already processed, skipping.`);
+            continue;
+          }
+
           const existingGame = await pool.request()
             .input('Title', sql.NVarChar, title)
             .query('SELECT GameID FROM Games WHERE Title = @Title');
           if (existingGame.recordset.length > 0) {
-            console.log(`Game "${title}" already exists, skipping.`);
+            console.log(`Game "${title}" already exists in database, skipping.`);
+            processedGames.add(title);
             continue;
           }
 
-          // Fetch detailed game data for description
-          let description = 'No description';
-          try {
-            const slug = title.toLowerCase()
-              .replace(/[^a-z0-9\s-]/g, '')
-              .trim()
-              .replace(/\s+/g, '-');
-            const detailUrl = `https://api.rawg.io/api/games/${slug}`;
-            await new Promise(resolve => setTimeout(resolve, 20)); // Rate limit delay
-            const detailResponse = await fetchWithRetry(detailUrl, { key: 'f161c5ceeac2444a950ccf2fe1cdebb4' });
-            const gameData = detailResponse.data;
-
-            description = gameData.description_raw || gameData.description || 'No description';
-            description = typeof description === 'string' ? description : String(description);
-            description = striptags(description);
-            if (description.length > 2000) {
-              console.log(`Truncating description for game "${title}": Original length = ${description.length}`);
-              description = description.substring(0, 2000);
-            }
-          } catch (error) {
-            if (error.response && error.response.status === 404) {
-              console.log(`Detailed data not found for game "${title}". Using default description.`);
-            } else {
-              console.error(`Error fetching detailed data for game "${title}":`, error.message);
-            }
+          // Use short description from list endpoint to avoid detail call
+          let description = game.short_description || game.description || 'No description';
+          description = typeof description === 'string' ? description : String(description);
+          description = striptags(description);
+          if (description.length > 2000) {
+            console.log(`Truncating description for game "${title}": Original length = ${description.length}`);
+            description = description.substring(0, 2000);
           }
 
-          // Validate and format releaseDate
           let releaseDate = game.released || null;
           if (releaseDate) {
             if (/^\d{4}$/.test(releaseDate)) {
@@ -182,22 +162,20 @@ async function main() {
             } else if (/^\d{4}-\d{2}$/.test(releaseDate)) {
               releaseDate = `${releaseDate}-01`;
             } else if (!/^\d{4}-\d{2}-\d{2}$/.test(releaseDate)) {
-              console.log(`Invalid date format for game "${title}" : ${releaseDate}, setting to NULL`);
+              console.log(`Invalid date format for game "${title}": ${releaseDate}, setting to NULL`);
               releaseDate = null;
             }
             if (releaseDate) {
               const dateObj = new Date(releaseDate);
               if (isNaN(dateObj.getTime()) || dateObj.getFullYear() < 1000 || dateObj.getFullYear() > 9999) {
-                console.log(`Invalid date for game "${title}" : ${releaseDate}, setting to NULL`);
+                console.log(`Invalid date for game "${title}": ${releaseDate}, setting to NULL`);
                 releaseDate = null;
               }
             }
           }
 
-          // Get full image URL from background_image
           const imageUrl = game.background_image || null;
 
-          // Insert into Games table with Image and Description
           const gameResult = await pool.request()
             .input('Title', sql.NVarChar, title)
             .input('Description', sql.NVarChar, description)
@@ -212,7 +190,6 @@ async function main() {
 
           const gameId = gameResult.recordset[0].GameID;
 
-          // Insert into Content table
           const contentResult = await pool.request()
             .input('GameID', sql.Int, gameId)
             .query(`
@@ -223,17 +200,20 @@ async function main() {
 
           const contentId = contentResult.recordset[0].ContentID;
 
-          // Link to genre in Content_Genre table
-          await pool.request()
-            .input('GenreID', sql.Int, genreId)
-            .input('ContentID', sql.Int, contentId)
-            .query(`
-              INSERT INTO Content_Genre (GenreID, ContentID)
-              VALUES (@GenreID, @ContentID)
-            `);
+          // Batch insert Content_Genre records
+          const gameGenresFromApi = game.genres.map(g => rawgGenreMap[g.slug] || g.name).filter(g => gameGenres.includes(g));
+          if (gameGenresFromApi.length > 0) {
+            let values = gameGenresFromApi.map(g => `(${genreIdCache[g]}, ${contentId})`).join(', ');
+            await pool.request()
+              .query(`
+                INSERT INTO Content_Genre (GenreID, ContentID)
+                VALUES ${values}
+              `);
+          }
 
           gamesInsertedForGenre++;
           totalGamesInserted++;
+          processedGames.add(title);
         }
       } catch (error) {
         console.error(`Error fetching games for genre "${genre}" on page ${page}:`, error.message);
@@ -247,7 +227,7 @@ async function main() {
     }
   }
 
-  // Compensate for shortfalls
+  // Optimized shortfall compensation
   const shortfall = targetTotalGames - totalGamesInserted;
   if (shortfall > 0) {
     console.log(`Total games inserted: ${totalGamesInserted}, shortfall: ${shortfall}. Fetching additional games.`);
@@ -258,25 +238,22 @@ async function main() {
     for (const genre of highYieldGenres) {
       if (remainingShortfall <= 0) break;
 
-      const genreIdResult = await pool.request()
-        .input('Name', sql.NVarChar, genre)
-        .query('SELECT GenreID FROM Genres WHERE Name = @Name');
-      const genreId = genreIdResult.recordset[0].GenreID;
-
       let page = 6;
-      while (remainingShortfall > 0) {
+      const maxShortfallPages = Math.ceil(remainingShortfall / 40); // Limit pages
+      for (let i = 0; i < maxShortfallPages && remainingShortfall > 0; i++) {
         try {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 100));
 
           const params = {
             key: 'f161c5ceeac2444a950ccf2fe1cdebb4',
             page: page,
             page_size: 40
           };
-          if (['battle-royale', 'moba', 'open-world', 'horror', 'visual-novel', 'music', 'survival', 'sandbox', 'stealth'].includes(rawgGenreMap[genre])) {
-            params.tags = rawgGenreMap[genre];
+          const rawgGenreSlug = Object.keys(rawgGenreMap).find(key => rawgGenreMap[key] === genre);
+          if (['battle-royale', 'moba', 'open-world', 'horror', 'visual-novel', 'music', 'survival', 'sandbox', 'stealth'].includes(rawgGenreSlug)) {
+            params.tags = rawgGenreSlug;
           } else {
-            params.genres = rawgGenreMap[genre];
+            params.genres = rawgGenreSlug;
           }
 
           const response = await fetchWithRetry('https://api.rawg.io/api/games', params);
@@ -290,43 +267,28 @@ async function main() {
           for (const game of games) {
             const title = game.name || 'No title';
 
-            // Check if game already exists
+            if (processedGames.has(title)) {
+              console.log(`Game "${title}" already processed, skipping.`);
+              continue;
+            }
+
             const existingGame = await pool.request()
               .input('Title', sql.NVarChar, title)
               .query('SELECT GameID FROM Games WHERE Title = @Title');
             if (existingGame.recordset.length > 0) {
-              console.log(`Game "${title}" already exists, skipping.`);
+              console.log(`Game "${title}" already exists in database, skipping.`);
+              processedGames.add(title);
               continue;
             }
 
-            // Fetch detailed game data for description
-            let description = 'No description';
-            try {
-              const slug = title.toLowerCase()
-                .replace(/[^a-z0-9\s-]/g, '')
-                .trim()
-                .replace(/\s+/g, '-');
-              const detailUrl = `https://api.rawg.io/api/games/${slug}`;
-              await new Promise(resolve => setTimeout(resolve, 2000));
-              const detailResponse = await fetchWithRetry(detailUrl, { key: 'f161c5ceeac2444a950ccf2fe1cdebb4' });
-              const gameData = detailResponse.data;
-
-              description = gameData.description_raw || gameData.description || 'No description';
-              description = typeof description === 'string' ? description : String(description);
-              description = striptags(description);
-              if (description.length > 2000) {
-                console.log(`Truncating description for game "${title}": Original length = ${description.length}`);
-                description = description.substring(0, 2000);
-              }
-            } catch (error) {
-              if (error.response && error.response.status === 404) {
-                console.log(`Detailed data not found for game "${title}". Using default description.`);
-              } else {
-                console.error(`Error fetching detailed data for game "${title}":`, error.message);
-              }
+            let description = game.short_description || game.description || 'No description';
+            description = typeof description === 'string' ? description : String(description);
+            description = striptags(description);
+            if (description.length > 2000) {
+              console.log(`Truncating description for game "${title}": Original length = ${description.length}`);
+              description = description.substring(0, 2000);
             }
 
-            // Validate and format releaseDate
             let releaseDate = game.released || null;
             if (releaseDate) {
               if (/^\d{4}$/.test(releaseDate)) {
@@ -346,10 +308,8 @@ async function main() {
               }
             }
 
-            // Get full image URL from background_image
             const imageUrl = game.background_image || null;
 
-            // Insert into Games table with Image and Description
             const gameResult = await pool.request()
               .input('Title', sql.NVarChar, title)
               .input('Description', sql.NVarChar, description)
@@ -364,7 +324,6 @@ async function main() {
 
             const gameId = gameResult.recordset[0].GameID;
 
-            // Insert into Content table
             const contentResult = await pool.request()
               .input('GameID', sql.Int, gameId)
               .query(`
@@ -375,18 +334,20 @@ async function main() {
 
             const contentId = contentResult.recordset[0].ContentID;
 
-            // Link to genre in Content_Genre table
-            await pool.request()
-              .input('GenreID', sql.Int, genreId)
-              .input('ContentID', sql.Int, contentId)
-              .query(`
-                INSERT INTO Content_Genre (GenreID, ContentID)
-                VALUES (@GenreID, @ContentID)
-              `);
+            const gameGenresFromApi = game.genres.map(g => rawgGenreMap[g.slug] || g.name).filter(g => gameGenres.includes(g));
+            if (gameGenresFromApi.length > 0) {
+              let values = gameGenresFromApi.map(g => `(${genreIdCache[g]}, ${contentId})`).join(', ');
+              await pool.request()
+                .query(`
+                  INSERT INTO Content_Genre (GenreID, ContentID)
+                  VALUES ${values}
+                `);
+            }
 
             totalGamesInserted++;
             remainingShortfall--;
             gamesPerGenre[genre] = (gamesPerGenre[genre] || 0) + 1;
+            processedGames.add(title);
 
             if (remainingShortfall <= 0) break;
           }
@@ -401,7 +362,6 @@ async function main() {
     console.log(`After compensation, total games inserted: ${totalGamesInserted}, remaining shortfall: ${remainingShortfall}.`);
   }
 
-  // Log final counts
   console.log('Games inserted per genre:', gamesPerGenre);
   console.log(`Total games inserted: ${totalGamesInserted}`);
 

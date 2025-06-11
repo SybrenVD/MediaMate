@@ -41,7 +41,7 @@ ALTER TABLE AdminPanelLogs
     ON UPDATE NO ACTION
 GO
 
--- Create Communities table (formerly ChatRooms)
+-- Create Communities table
 CREATE TABLE Communities 
 (
     RoomID INTEGER NOT NULL IDENTITY(1,1),
@@ -147,7 +147,7 @@ ALTER TABLE Games
     ON UPDATE NO ACTION
 GO
 
--- Create Content table (junction table)
+-- Create Content table
 CREATE TABLE Content 
 (
     ContentID INTEGER NOT NULL IDENTITY(1,1),
@@ -186,7 +186,7 @@ GO
 CREATE TABLE Genres 
 (
     GenreID INTEGER NOT NULL IDENTITY(1,1),
-    Name NVARCHAR(20)
+    Name NVARCHAR(50) NOT NULL
 )
 GO
 
@@ -251,14 +251,16 @@ ALTER TABLE Favorites
     ON UPDATE NO ACTION
 GO
 
--- Create Requests table (formerly Moderation)
+-- Create Requests table
 CREATE TABLE Requests 
 (
     RequestID INTEGER NOT NULL IDENTITY(1,1),
     UserID INTEGER NOT NULL,
-    Status NVARCHAR(50),
+    Title NVARCHAR(255),
     Description NVARCHAR(500),
-    ContentType NVARCHAR(5)
+    Image NVARCHAR(500),
+    Status NVARCHAR(50),
+    ContentType NVARCHAR(50)
 )
 GO
 
@@ -266,7 +268,7 @@ ALTER TABLE Requests ADD CONSTRAINT Requests_PK PRIMARY KEY CLUSTERED (RequestID
     WITH (ALLOW_PAGE_LOCKS = ON, ALLOW_ROW_LOCKS = ON)
 GO
 
-ALTER TABLE Requests ADD CONSTRAINT Requests_CK_1 CHECK (Status IN ('Pending', 'Approved', 'Rejected'))
+ALTER TABLE Requests ADD CONSTRAINT Requests_CK CHECK (Status IN ('Pending', 'Approved', 'Rejected'))
 GO
 
 ALTER TABLE Requests 
@@ -292,14 +294,7 @@ ALTER TABLE Reviews ADD CONSTRAINT Reviews_PK PRIMARY KEY CLUSTERED (ReviewID)
     WITH (ALLOW_PAGE_LOCKS = ON, ALLOW_ROW_LOCKS = ON)
 GO
 
-ALTER TABLE Reviews ADD CONSTRAINT Reviews_CK_1 CHECK (Rating BETWEEN 0 AND 10)
-GO
-
-ALTER TABLE Reviews 
-    ADD CONSTRAINT Reviews_Content_FK FOREIGN KEY (ContentID) 
-    REFERENCES Content (ContentID) 
-    ON DELETE NO ACTION 
-    ON UPDATE NO ACTION
+ALTER TABLE Reviews ADD CONSTRAINT Reviews_CK CHECK (Rating BETWEEN 0 AND 10)
 GO
 
 ALTER TABLE Reviews 
@@ -309,12 +304,23 @@ ALTER TABLE Reviews
     ON UPDATE NO ACTION
 GO
 
+ALTER TABLE Reviews 
+    ADD CONSTRAINT Reviews_Content_FK FOREIGN KEY (ContentID) 
+    REFERENCES Content (ContentID) 
+    ON DELETE NO ACTION 
+    ON UPDATE NO ACTION
+GO
+
+ALTER TABLE Reviews
+    ADD CONSTRAINT UQ_User_Content UNIQUE (UserID, ContentID)
+GO
+
 -- Create Messages table
 CREATE TABLE Messages 
 (
     MessageID INTEGER NOT NULL IDENTITY(1,1),
-    FromUser INTEGER NOT NULL,
-    RoomID INTEGER NOT NULL,
+    FromUserID INTEGER NOT NULL,
+    RoomID INTEGER,
     Content NVARCHAR(750),
     Time DATETIME
 )
@@ -325,7 +331,7 @@ ALTER TABLE Messages ADD CONSTRAINT Messages_PK PRIMARY KEY CLUSTERED (MessageID
 GO
 
 ALTER TABLE Messages 
-    ADD CONSTRAINT Messages_Users_FK FOREIGN KEY (FromUser) 
+    ADD CONSTRAINT Messages_Users_FK FOREIGN KEY (FromUserID) 
     REFERENCES Users (UserID) 
     ON DELETE NO ACTION 
     ON UPDATE NO ACTION
@@ -336,4 +342,17 @@ ALTER TABLE Messages
     REFERENCES Communities (RoomID) 
     ON DELETE NO ACTION 
     ON UPDATE NO ACTION
+GO
+
+-- Create Sessions table
+CREATE TABLE sessions 
+(
+    sid NVARCHAR(255) NOT NULL,
+    expires DATETIME NOT NULL,
+    session NVARCHAR(MAX)
+)
+GO
+
+ALTER TABLE sessions ADD CONSTRAINT sessions_PK PRIMARY KEY CLUSTERED (sid)
+    WITH (ALLOW_PAGE_LOCKS = ON, ALLOW_ROW_LOCKS = ON)
 GO
