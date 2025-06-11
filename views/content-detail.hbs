@@ -4,6 +4,11 @@
   </div>
 
   <div class="detail-card">
+    <!-- Heart Partial in Top Right -->
+    <div class="d-flex justify-content-end mb-2">
+      {{> iheart}}
+    </div>
+
     <h2 class="detail-title">{{item.name}}</h2>
 
     {{#if item.releaseDate}}
@@ -20,36 +25,41 @@
       <p class="detail-description mt-3 text-muted fst-italic">No description available.</p>
     {{/if}}
 
-    {{#if isAuthenticated}}
-      {{#if userReview}}
-        <p class="mt-3 text-success">You have already submitted a review.</p>
+    <div class="d-flex align-items-center gap-3 mt-3">
+      {{#if isAuthenticated}}
+        {{#if userReview}}
+          <p class="mb-0 text-danger fw-bold">You have already submitted a review.</p>
+        {{else}}
+          <button id="openReviewBtn" class="btn btn-danger text-white">Leave a Review</button>
+        {{/if}}
       {{else}}
-        <button id="openReviewBtn" class="btn btn-warning mt-3 text-white">Leave a Review</button>
+        <button id="loginRedirectBtn" class="btn btn-danger text-white">Leave a Review</button>
       {{/if}}
-    {{else}}
-      <button id="loginRedirectBtn" class="btn btn-warning mt-3 text-white">Leave a Review</button>
-    {{/if}}
 
-    <a href="javascript:history.back()" class="btn btn-secondary mt-4">
-      <i class="bi bi-arrow-left-circle"></i> Back
-    </a>
+      <a href="javascript:history.back()" class="btn btn-secondary">
+        <i class="bi bi-arrow-left-circle"></i> Back
+      </a>
+    </div>
   </div>
 
   <div class="reviews-section mt-5">
-    <h4>User Reviews</h4>
-    {{#if reviews.length}}
-      {{#each reviews}}
-        <div class="card mb-3">
-          <div class="card-body">
-            <h5 class="card-title">{{this.Username}} - {{this.Rating}} / 5</h5>
-            <p class="card-text">{{this.Comment}}</p>
-            <p class="card-text"><small class="text-muted">{{this.ReviewDate}}</small></p>
+    <h4 class="mb-3 border-bottom pb-2" style="color: #8b1d2e; border-color: #8b1d2e;">User Reviews</h4>
+
+    <div class="reviews-container p-4 rounded d-flex flex-wrap gap-3" style="background-color: #8b1d2e;">
+      {{#if reviews.length}}
+        {{#each reviews}}
+          <div class="card shadow-sm" style="background-color: #600606; border: none; flex: 1 1 300px; min-width: 280px; max-width: 350px;">
+            <div class="card-body text-white p-3">
+              <h5 class="card-title text-white">{{this.Username}} - {{this.Rating}} / 5</h5>
+              <p class="card-text">{{this.Comment}}</p>
+              <p class="card-text"><small>{{this.ReviewDate}}</small></p>
+            </div>
           </div>
-        </div>
-      {{/each}}
-    {{else}}
-      <p class="text-muted">No reviews yet.</p>
-    {{/if}}
+        {{/each}}
+      {{else}}
+        <p class="text-white fw-semibold fs-5 text-center m-0 w-100">No reviews yet.</p>
+      {{/if}}
+    </div>
   </div>
 </div>
 
@@ -76,7 +86,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-warning text-white">Submit Review</button>
+          <button type="submit" class="btn btn-danger text-white">Submit Review</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
@@ -125,6 +135,8 @@
     }
   });
 </script>
+
+
 
 
 
