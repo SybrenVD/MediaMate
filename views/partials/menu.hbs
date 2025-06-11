@@ -17,11 +17,6 @@
     <li class="nav-item"><a class="nav-link text-white" href="/category/books">Books</a></li>
     <li class="nav-item"><a class="nav-link text-white" href="/community">Community</a></li>
     <li class="nav-item"><a class="nav-link text-white" href="/contact">Contact</a></li>
-{{#if user}}
-  {{#ifEquals (toLowerCase user.UserType) "admin"}}
-    <li class="nav-item"><a class="nav-link text-white" href="/admin-panel">Admin Panel</a></li>
-  {{/ifEquals}}
-{{/if}}
 
 
 
@@ -36,14 +31,21 @@
                <img src="{{user.Image}}" width="28px" height="28px" class="rounded-circle">
             {{user.Username}}
           </a>
-          <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 220px;">
-            <li class="mb-2 ps-1 text-muted">Welcome, {{user.Username}}</li>
-            <li><a class="dropdown-item py-2" href="/user">My Profile</a></li>
-            <li><a class="dropdown-item py-2" href="/add">Request</a></li>
-            <li><a class="dropdown-item py-2" href="/favorites">Favorites</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="btn btn-outline-danger w-100" href="/logout">Logout</a></li>
-          </ul>
+          
+         <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 220px;">
+  <li class="mb-2 ps-1 text-muted">Welcome, {{user.Username}}</li>
+  <li><a class="dropdown-item py-2" href="/user">My Profile</a></li>
+  <li><a class="dropdown-item py-2" href="/add">Request</a></li>
+  <li><a class="dropdown-item py-2" href="/favorites">Favorites</a></li>
+
+  {{#ifEquals (toLowerCase user.UserType) "admin"}}
+    <li><a class="dropdown-item py-2 text-danger fw-semibold" href="/admin-panel">Admin Panel</a></li>
+  {{/ifEquals}}
+
+  <li><hr class="dropdown-divider"></li>
+  <li><a class="btn btn-outline-danger w-100" href="/logout">Logout</a></li>
+</ul>
+
         </div>
       {{else}}
         <a href="/login" class="btn btn-login btn-sm me-2">Log in</a>
@@ -68,11 +70,7 @@
       <a href="/category/books" class="nav-link text-white">Books</a>
       <a href="/community" class="nav-link text-white">Community</a>
       <a href="/contact" class="nav-link text-white">Contact</a>
-{{#if user}}
-  {{#ifEquals (toLowerCase user.UserType) "admin"}}
-    <a href="/admin-panel" class="nav-link text-white">Admin Panel</a>
-  {{/ifEquals}}
-{{/if}}
+
 
 
 
@@ -90,6 +88,13 @@
       <a href="/user" class="nav-link text-white">My Profile</a>
       <a href="/add" class="nav-link text-white">Request</a>
       <a href="/favorites" class="nav-link text-white">Favorites</a>
+
+{{#if user}}
+  {{#ifEquals (toLowerCase user.UserType) "admin"}}
+    <a href="/admin-panel" class="nav-link text-white">Admin Panel</a>
+  {{/ifEquals}}
+{{/if}}
+
     </div>
 
     <div class="mt-4 px-3">

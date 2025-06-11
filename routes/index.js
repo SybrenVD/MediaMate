@@ -715,6 +715,9 @@ router.get("/user", isAuthenticated, async (req, res) => {
     return res.status(500).render('error', { message: requestsResult.message });
   }
 
+  //sort for new requests
+  requestsResult.requests.sort((a, b) => b.RequestID - a.RequestID);
+
   res.render("user", {
     title: "Your Profile",
     user: userResult.user,
