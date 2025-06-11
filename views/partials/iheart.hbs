@@ -1,4 +1,5 @@
-        <button type="button" class="btn btn-card" data-bs-toggle="button" active.activearia-pressed="true">
-          <i class="bi bi-heart"></i>
-        {{!-- <i class="bi bi-heart-fill"></i> --}}
-        </button>
+<button type="button" class="btn btn-card favorite-btn" 
+        data-type="{{contentType}}" 
+        data-id="{{contentID}}">
+  <i class="bi {{#if isFavorite}}bi-heart-fill{{else}}bi-heart{{/if}}"></i>
+</button>

@@ -322,6 +322,17 @@ router.get('/category/:type/:id', async (req, res) => {
         FROM Reviews
         WHERE ContentID = @ContentID AND UserID = @UserID
       `) : { recordset: [] };
+        // 检查是否已收藏
+  let isFavorite = false;
+  if (req.session.user) {
+    const pool = await poolPromise;
+    const favResult = await pool.request()
+      .input('UserID', sql.Int, req.session.user.UserID)
+      .input('ContentID', sql.Int, id)
+      .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND ContentID = @ContentID');
+    
+    isFavorite = favResult.recordset.length > 0;
+  }
 
     res.render('content-detail', {
       item: {
@@ -336,7 +347,8 @@ router.get('/category/:type/:id', async (req, res) => {
       reviews: reviewsResult.recordset,
       averageRating: averageResult.recordset[0].AverageRating?.toFixed(1) || null,
       userReview: userReviewResult.recordset[0],
-      isAuthenticated: !!req.session.user
+      isAuthenticated: !!req.session.user,
+      isFavorite
     });
   } catch (error) {
     console.error('Detail page error:', error);
@@ -408,7 +420,16 @@ router.get('/community', async function (req, res) {
       communities = await getCommunities();
       console.log(`Random load returned ${communities.length} communities`);
     }
-
+  if (req.session.user) {
+    for (let community of communities) {
+      const favResult = await pool.request()
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('RoomID', sql.Int, community.RoomID)
+        .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND RoomID = @RoomID');
+      
+      community.isFavorite = favResult.recordset.length > 0;
+    }
+  }
     res.render('community', {
       title: 'Community',
       communities,
@@ -799,15 +820,103 @@ router.post("/user", isAuthenticated, upload.single('image'), async (req, res) =
   });
 });
 
-
-//GET FavList Page
-router.get("/favorites", isAuthenticated, function (req, res) {
-  res.render("fav-list", {
-    title: "Favourite"
-  });
+// 添加收藏路由
+router.post('/favorites', isAuthenticated, async (req, res) => {
+    const { contentType, contentId, roomId } = req.body;
+    const userID = req.session.user.UserID;
+    
+    try {
+        const pool = await poolPromise;
+        
+        // 检查是否已收藏
+        const checkQuery = `
+            SELECT * FROM Favorites 
+            WHERE UserID = @UserID 
+            AND (ContentID = @ContentID OR RoomID = @RoomID)
+        `;
+        
+        const checkResult = await pool.request()
+            .input('UserID', sql.Int, userID)
+            .input('ContentID', sql.Int, contentId || null)
+            .input('RoomID', sql.Int, roomId || null)
+            .query(checkQuery);
+        
+        if (checkResult.recordset.length > 0) {
+            return res.json({ success: false, message: 'Already in favorites' });
+        }
+        
+        // 添加收藏
+        const insertQuery = `
+            INSERT INTO Favorites (UserID, ContentID, RoomID) 
+            VALUES (@UserID, @ContentID, @RoomID)
+        `;
+        
+        await pool.request()
+            .input('UserID', sql.Int, userID)
+            .input('ContentID', sql.Int, contentId || null)
+            .input('RoomID', sql.Int, roomId || null)
+            .query(insertQuery);
+        
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error adding favorite:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 });
 
-
+// 获取收藏列表路由
+router.get("/favorites", isAuthenticated, async (req, res) => {
+    const userID = req.session.user.UserID;
+    
+    try {
+        const pool = await poolPromise;
+        
+        // 查询所有收藏内容
+        const result = await pool.request()
+            .input('UserID', sql.Int, userID)
+            .query(`
+                SELECT 
+                    f.FavoriteID,
+                    f.ContentID,
+                    f.RoomID,
+                    COALESCE(g.Title, m.Title, b.Title, c.ChatName) AS Title,
+                    COALESCE(g.Image, m.Image, b.Image, c.Image) AS Image,
+                    CASE 
+                        WHEN g.GameID IS NOT NULL THEN 'Game'
+                        WHEN m.MovieID IS NOT NULL THEN 'Movie'
+                        WHEN b.BookID IS NOT NULL THEN 'Book'
+                        WHEN c.RoomID IS NOT NULL THEN 'Community'
+                    END AS ContentType
+                FROM Favorites f
+                LEFT JOIN Games g ON f.ContentID = g.GameID
+                LEFT JOIN Movies m ON f.ContentID = m.MovieID
+                LEFT JOIN Books b ON f.ContentID = b.BookID
+                LEFT JOIN Communities c ON f.RoomID = c.RoomID
+                WHERE f.UserID = @UserID
+            `);
+        
+        // 按类型分类
+        const favorites = {
+            games: result.recordset.filter(item => item.ContentType === 'Game'),
+            movies: result.recordset.filter(item => item.ContentType === 'Movie'),
+            books: result.recordset.filter(item => item.ContentType === 'Book'),
+            communities: result.recordset.filter(item => item.ContentType === 'Community')
+        };
+        
+        res.render('fav-list', { 
+            title: 'Favorites',
+            favorites,
+            user: req.session.user
+        });
+    } catch (err) {
+        console.error('Error fetching favorites:', err);
+        res.render('fav-list', {
+            title: 'Favorites',
+            favorites: { games: [], movies: [], books: [], communities: [] },
+            error: 'Failed to load favorites'
+        });
+    }
+});
 
 //get add route
 router.get("/add", isAuthenticated, function (req, res) {

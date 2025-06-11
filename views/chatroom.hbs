@@ -1,33 +1,32 @@
 <div class="container-fluid">
   <div class="row">
-
-    {{!-- 左侧：渲染当前用户已收藏（Favorites）的那些社区 --}}
-    <div class="col-4 border-end" style="height: 100vh; overflow-y: auto; padding-top:1rem;">
-      <h5 class="mb-3">My Communities</h5>
-      <div class="list-group" id="list-tab" role="tablist">
-        {{!-- 如果有收藏，则循环 rooms --}}
-        {{#each rooms}}
-          <a
-            class="list-group-item list-group-item-action {{#ifEquals ../currentRoom.room.RoomID this.RoomID}}active{{/ifEquals}}"
-            id="list-{{this.RoomID}}-list"
-            data-bs-toggle="list"
-            href="#list-{{this.RoomID}}"
-            role="tab"
-            aria-controls="list-{{this.RoomID}}"
-            data-room-id="{{this.RoomID}}"
-            data-room-name="{{this.ChatName}}"
-          >
-            {{this.ChatName}}
-          </a>
-        {{/each}}
-
-        {{!-- 如果 rooms 为空，给个提示 --}}
-        {{#unless rooms.length}}
-          <div class="text-muted p-2">You have not favorited any communities yet.</div>
-        {{/unless}}
+{{!-- 左侧社区列表 --}}
+<div class="col-4 border-end" style="height: 100vh; overflow-y: auto; padding-top:1rem;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5>My Communities</h5>
+    <a href="/community" class="btn btn-sm btn-outline-primary">Discover</a>
+  </div>
+  
+  <div class="list-group" id="list-tab" role="tablist">
+    {{#each rooms}}
+      <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+         href="/chatroom?RoomID={{this.RoomID}}">
+        <div>
+          <img src="{{this.Image}}" 
+               alt="{{this.ChatName}}"
+               style="width: 30px; height: 30px; object-fit: cover; border-radius: 50%; margin-right: 10px;">
+          {{this.ChatName}}
+        </div>
+        <span class="badge bg-primary rounded-pill">{{this.memberCount}}</span>
+      </a>
+    {{else}}
+      <div class="alert alert-info">
+        You haven't joined any communities yet.
+        <a href="/community">Explore communities</a>
       </div>
-    </div>
-
+    {{/each}}
+  </div>
+</div>
     {{!-- 右侧：只渲染 currentRoom --}}
     <div class="col-8 d-flex flex-column" style="height: 100vh; padding-top:1rem;">
       <div class="tab-content flex-grow-1" id="nav-tabContent">
