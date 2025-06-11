@@ -1,5 +1,67 @@
-<h2>Admin Panel</h2>
+<h2 class="text-center my-4 text-white display-5 fw-bold" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.6); letter-spacing: 1px;">
+  Admin Panel
+</h2>
 
+
+<div class="container bg-white p-5 rounded shadow border-start border-4" style="border-color: #8b1d2e; max-width: 1000px;">
+  <h3 class="text-center mb-4 text-danger fw-bold">Create New Content</h3>
+
+
+  {{#if successMessage}}
+    <div class="alert alert-success text-center">{{successMessage}}</div>
+  {{/if}}
+
+  {{#if errorMessage}}
+    <div class="alert alert-danger text-center">{{errorMessage}}</div>
+  {{/if}}
+
+  <form action="/admin-panel" method="POST" enctype="multipart/form-data" class="row g-3">
+
+    <div class="col-md-4">
+      <label for="type" class="form-label">Category</label>
+      <select id="type" name="type" class="form-control shadow-sm border-1 border-dark-subtle rounded-3" required>
+        <option value="">-- Select --</option>
+        <option value="Book">Book</option>
+        <option value="Movie">Movie</option>
+        <option value="Game">Game</option>
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" id="title" name="title" class="form-control shadow-sm border-1 border-dark-subtle rounded-3" required>
+    </div>
+
+    <div class="col-md-4">
+      <label for="image" class="form-label">Image</label>
+      <input type="file" id="image" name="image" class="form-control shadow-sm border-1 border-dark-subtle rounded-3" accept="image/*" required>
+    </div>
+
+    <div class="col-12">
+      <label for="description" class="form-label">Description</label>
+      <textarea id="description" name="description" class="form-control shadow-sm border-1 border-dark-subtle rounded-3" rows="3" required></textarea>
+    </div>
+
+    <div class="col-12 text-center">
+      <button type="submit" class="btn btn-success px-4">Submit</button>
+    </div>
+  </form>
+</div>
+
+
+{{#if user}}
+  {{#ifEquals user.UserType "admin"}}
+    <div class="mb-4 text-end">
+      <a href="/admin/create" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Create New Content
+      </a>
+    </div>
+  {{/ifEquals}}
+{{/if}}
+
+
+<!-- Pending Requests -->
+<h4 class="text-success mt-4 mb-3">Pending</h4>
 <table class="table table-striped">
   <thead>
     <tr>
@@ -12,7 +74,7 @@
     </tr>
   </thead>
   <tbody>
-    {{#each requests}}
+    {{#each pendingRequests}}
     <tr>
       <td>{{Username}}</td>
       <td>{{ContentType}}</td>
@@ -27,6 +89,37 @@
   </tbody>
 </table>
 
+<!-- Completed requests -->
+<h4 class="text-secondary mt-5 mb-3">Completed</h4>
+<table class="table table-bordered table-sm">
+  <thead class="table-light">
+    <tr>
+      <th>Username</th>
+      <th>Type</th>
+      <th>Title</th>
+      <th>Description</th>
+      <th>Image</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each completedRequests}}
+    <tr>
+      <td>{{Username}}</td>
+      <td>{{ContentType}}</td>
+      <td>{{Title}}</td>
+      <td>{{Description}}</td>
+      <td><img src="{{Image}}" alt="Image" width="60" /></td>
+      <td>
+        {{#ifEquals Status "Approved"}}<span class="badge bg-success">Approved</span>{{/ifEquals}}
+        {{#ifEquals Status "Declined"}}<span class="badge bg-danger">Declined</span>{{/ifEquals}}
+      </td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<!-- Error -->
 {{#if errorMessage}}
-<p class="text-danger">{{errorMessage}}</p>
+  <p class="text-danger text-center">{{errorMessage}}</p>
 {{/if}}
