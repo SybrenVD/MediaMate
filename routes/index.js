@@ -14,6 +14,8 @@ const { getCommunities, createCommunity } = require('../modules/community');
 const { getCategoryContent } = require("../modules/category");
 const { searchCommunities } = require("../modules/searchCommunity")
 const { submitOrUpdateReviewByContentId } = require('../modules/review');
+const { sendContactEmail } = require('../utils/email');
+const { body, validationResult } = require('express-validator');
 // const { io } = require("../modules/chatroom");
 
 
@@ -34,13 +36,13 @@ function isAuthenticated(req, res, next) {
   res.redirect("/login");
 }
 
-// Homepage GET route
 router.get('/', async function (req, res) {
   try {
     const bestRatedContent = await getBestRated();
     const randomBooksContent = await getRandomBooks();
     const randomMoviesContent = await getRandomMovies();
     const randomGamesContent = await getRandomGames();
+
     res.render('index', {
       title: 'Home',
       banner: '/images/BannerHome.jpg',
@@ -52,7 +54,8 @@ router.get('/', async function (req, res) {
       bestRatedContent,
       randomBooksContent,
       randomMoviesContent,
-      randomGamesContent
+      randomGamesContent,
+      user: req.session.user || null // Pass user explicitly
     });
   } catch (error) {
     console.error('Error loading homepage content:', error);
@@ -68,11 +71,10 @@ router.get('/', async function (req, res) {
       randomBooksContent: [],
       randomMoviesContent: [],
       randomGamesContent: [],
-      error: 'Failed to load content'
+      error: 'Failed to load content',
     });
   }
 });
-
 
 router.post('/search', async function (req, res) {
   console.log('POST /search received:', req.body);
@@ -179,7 +181,6 @@ router.get('/search', async function (req, res) {
       join: (arr, sep) => arr.join(sep),
       rangeHelper: (start, end) => Array.from({ length: end - start + 1 }, (_, i) => i + start)
     };
-    console.log('Render Data:', renderData);
 
     res.render('search', renderData);
   } catch (error) {
@@ -245,7 +246,6 @@ router.get("/category/:type", async (req, res) => {
 
   try {
     const result = await getCategoryContent(type, page, pageSize);
-    console.log(`Result from getCategoryContent:`, result);
 
     let items = [];
     let currentPage = page;
@@ -283,8 +283,8 @@ router.get("/category/:type", async (req, res) => {
     res.status(500).send("Error fetching category content");
   }
 });
-  
- // Detail page route
+
+// Detail page route
 // GET content detail page
 router.get('/category/:type/:id', async (req, res) => {
   const { type, id } = req.params;
@@ -311,9 +311,9 @@ router.get('/category/:type/:id', async (req, res) => {
         ORDER BY R.ReviewDate DESC
       `);
 
-const averageResult = await pool.request()
-  .input('ContentID', sql.Int, id)
-  .query(`SELECT AVG(CAST(Rating AS FLOAT)) AS AverageRating FROM Reviews WHERE ContentID = @ContentID`);
+    const averageResult = await pool.request()
+      .input('ContentID', sql.Int, id)
+      .query(`SELECT AVG(CAST(Rating AS FLOAT)) AS AverageRating FROM Reviews WHERE ContentID = @ContentID`);
 
 
     const userReviewResult = req.session.user ? await pool.request()
@@ -361,38 +361,57 @@ router.post('/category/:type/:id/review', isAuthenticated, async (req, res) => {
 });
 
 // Contact Page - GET
-
-router.get("/contact", function (req, res) {
-  res.render("contact", {
-    title: "Contact"
+router.get('/contact', (req, res) => {
+  res.render('contact', {
+    title: 'Contact',
+    successMessage: null,
+    errorMessage: null
   });
 });
 
-
 // Contact Page - POST
+router.post('/contact', [
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('message').trim().notEmpty().withMessage('Message is required')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.render('contact', {
+      title: 'Contact',
+      errorMessage: errors.array().map(err => err.msg).join(', '),
+      successMessage: null
+    });
+  }
 
-router.post("/contact", function (req, res) 
-{
-  
   const { name, email, message } = req.body;
 
-  console.log("Contact form submitted:");
-  console.log("Name:", name);
-  console.log("Email:", email);
-  console.log("Message:", message);
+  console.log('Contact form submitted:');
+  console.log('Name:', name);
+  console.log('Email:', email);
+  console.log('Message:', message);
 
-  res.render("contact", {
-    title: "Contact",
-    successMessage: `Thanks for contacting us, ${name}!`
-  
-});
-});
+  const result = await sendContactEmail({ name, email, message });
 
+  if (result.success) {
+    res.render('contact', {
+      title: 'Contact',
+      successMessage: `Thanks for contacting us, ${name}!`,
+      errorMessage: null
+    });
+  } else {
+    res.render('contact', {
+      title: 'Contact',
+      errorMessage: 'Failed to send message. Please try again later.',
+      successMessage: null
+    });
+  }
+});
 
 router.post('/community', async function (req, res) {
   console.log('POST /community received:', req.body);
   const query = req.body.query?.trim() || '';
-  
+
   const queryParams = new URLSearchParams({ query });
   console.log(`Redirecting to /community?${queryParams.toString()}`);
   res.redirect(`/community?${queryParams.toString()}`);
@@ -401,7 +420,7 @@ router.post('/community', async function (req, res) {
 router.get('/community', async function (req, res) {
   console.log('GET /community received:', req.query);
   const query = req.query.query?.trim() || '';
-  
+
   try {
     let communities = [];
     if (query) {
@@ -547,8 +566,8 @@ router.get("/login", function (req, res) {
 // Login Page - POST
 router.post("/login", async function (req, res) {
   const { username, password } = req.body;
+  console.log("Session user after login:", req.session.user);
 
-  // Validate inputs
   const validationResult = validateLoginInput(username, password);
 
   if (!validationResult.isValid) {
@@ -563,9 +582,27 @@ router.post("/login", async function (req, res) {
     const result = await loginUser(validationResult.trimmedUsername, password);
 
     if (result.success) {
-      // Set session
-      req.session.user = result.user; // Store user object in session
-      return res.redirect("/");
+      req.session.user = {
+        UserID: result.user.UserID,
+        Username: result.user.Username,
+        UserType: result.user.UserType
+      };
+
+      console.log("Session user set:", req.session.user);
+
+      req.session.save(err => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.render("login", {
+            title: "Login",
+            errorMessage: "Session could not be saved.",
+            successMessage: null
+          });
+        }
+
+        return res.redirect("/");
+      });
+
     } else {
       return res.render("login", {
         title: "Login",
@@ -573,6 +610,7 @@ router.post("/login", async function (req, res) {
         successMessage: null
       });
     }
+
   } catch (error) {
     console.error("Login error:", error);
     return res.render("login", {
@@ -582,6 +620,7 @@ router.post("/login", async function (req, res) {
     });
   }
 });
+
 
 // Logout
 router.get("/logout", function (req, res) {
@@ -782,11 +821,10 @@ router.post("/user", isAuthenticated, upload.single('image'), async (req, res) =
   });
 });
 
-    
+
 //GET FavList Page
-router.get("/favorites", isAuthenticated, function(req, res)
-{
-  res.render("fav-list",{
+router.get("/favorites", isAuthenticated, function (req, res) {
+  res.render("fav-list", {
     title: "Favourite"
   });
 });
@@ -880,13 +918,19 @@ router.get("/admin-panel", isAuthenticated, isAdmin, async function (req, res) {
 
 //isAdmin: AdminPage is for just Admin
 function isAdmin(req, res, next) {
-  if (req.session.user && req.session.user.UserType === 'Admin') {
+  if (
+    req.session.user &&
+    req.session.user.UserType &&
+    req.session.user.UserType.toLowerCase() === 'admin'
+  ) {
     return next();
   }
-  return res.status(403).render('error', { title: "Access Denied", error: "You do not have permission to access this page." });
+
+  return res.status(403).render('error', {
+    title: "Access Denied",
+    error: "Unauthorized access"
+  });
 }
-
-
 
 
 
@@ -927,7 +971,7 @@ router.get('/admin-panel/:requestID', isAuthenticated,  isAdmin, async (req, res
 });
 
 
-router.post('/admin/edit/:id', isAdmin, async (req, res) => {
+router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res) => {
   const action = req.body.action;
   const requestId = parseInt(req.params.id);
   const { type, title, description } = req.body;
@@ -935,71 +979,70 @@ router.post('/admin/edit/:id', isAdmin, async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    //accept
-if (action === 'accept') {
-  const pool = await poolPromise;
+    if (action === 'accept') {
+      // 1. Request
+      const result = await pool.request()
+        .input("RequestID", sql.Int, requestId)
+        .query(`SELECT * FROM Requests r JOIN Users u ON r.UserID = u.UserID WHERE r.RequestID = @RequestID`);
 
-  // 1. get request
-  const result = await pool.request()
-    .input("RequestID", sql.Int, requestId)
-    .query(`
-      SELECT * FROM Requests WHERE RequestID = @RequestID
-    `);
+      if (result.recordset.length === 0) {
+        return res.status(404).render("error", { message: "Request not found" });
+      }
 
-  if (result.recordset.length === 0) {
-    return res.status(404).render("error", { message: "Request not found" });
-  }
+      const request = result.recordset[0];
+      const uploadedImage = req.file ? `/uploads/${req.file.filename}` : null;
+      const imageToUse = uploadedImage || request.Image;
 
-  const request = result.recordset[0];
-  const image = request.Image; // image URL
-  const username = request.Username || req.session.user.Username;
+      // 2. UserID
+      const userId = parseInt(request.UserID);
+      if (isNaN(userId)) {
+      console.error("UserID is not a number:", request.UserID);
+     return res.status(500).render("error", { message: "Invalid user ID in request." });
+     }
 
-  // 2. add the correct table by category
-  if (type === "Game") {
-    await pool.request()
-      .input("Title", sql.NVarChar, title)
-      .input("Description", sql.NVarChar, description)
-      .input("Image", sql.NVarChar, image)
-      .input("AddedBy", sql.NVarChar, username)
-      .query(`
-        INSERT INTO Games (Title, Description, Image, AddedBy)
-        VALUES (@Title, @Description, @Image, @AddedBy)
-      `);
-  } else if (type === "Book") {
-    await pool.request()
-      .input("Title", sql.NVarChar, title)
-      .input("Description", sql.NVarChar, description)
-      .input("Image", sql.NVarChar, image)
-      .input("AddedBy", sql.NVarChar, username)
-      .query(`
-        INSERT INTO Books (Title, Description, Image, AddedBy)
-        VALUES (@Title, @Description, @Image, @AddedBy)
-      `);
-  } else if (type === "Movie") {
-    await pool.request()
-      .input("Title", sql.NVarChar, title)
-      .input("Description", sql.NVarChar, description)
-      .input("Image", sql.NVarChar, image)
-      .input("AddedBy", sql.NVarChar, username)
-      .query(`
-        INSERT INTO Movies (Title, Description, Image, AddedBy)
-        VALUES (@Title, @Description, @Image, @AddedBy)
-      `);
-  }
 
-  // 3. status
-  await pool.request()
-    .input("RequestID", sql.Int, requestId)
-    .query(`
-      UPDATE Requests SET Status = 'Accepted' WHERE RequestID = @RequestID
-    `);
+      if (type === "Game") {
+        await pool.request()
+          .input("Title", sql.NVarChar, title)
+          .input("Description", sql.NVarChar, description)
+          .input("Image", sql.NVarChar, imageToUse)
+          .input("AddedByUserID", sql.Int, userId)
+          .query(`
+            INSERT INTO Games (Title, Description, Image, AddedByUserID)
+            VALUES (@Title, @Description, @Image, @AddedByUserID)
+          `);
+      } else if (type === "Book") {
+        await pool.request()
+          .input("Title", sql.NVarChar, title)
+          .input("Description", sql.NVarChar, description)
+          .input("Image", sql.NVarChar, imageToUse)
+          .input("AddedByUserID", sql.Int, userId)
+          .query(`
+            INSERT INTO Books (Title, Description, Image, AddedByUserID)
+            VALUES (@Title, @Description, @Image, @AddedByUserID)
+          `);
+      } else if (type === "Movie") {
+        await pool.request()
+          .input("Title", sql.NVarChar, title)
+          .input("Description", sql.NVarChar, description)
+          .input("Image", sql.NVarChar, imageToUse)
+          .input("AddedByUserID", sql.Int, userId)
+          .query(`
+            INSERT INTO Movies (Title, Description, Image, AddedByUserID)
+            VALUES (@Title, @Description, @Image, @AddedByUserID)
+          `);
+      }
 
-  return res.render('status', {
-    message: 'Request accepted and added to content. Redirecting...',
-    redirect: '/admin-panel'
-  });
-}
+      // 3. Request
+      await pool.request()
+        .input("RequestID", sql.Int, requestId)
+        .query(`UPDATE Requests SET Status = 'Approved' WHERE RequestID = @RequestID`);
 
+      return res.render('status', {
+        message: 'Request accepted and added to content. Redirecting...',
+        redirect: '/admin-panel'
+      });
+    }
 
     if (action === 'decline') {
       await pool.request()
@@ -1020,11 +1063,13 @@ if (action === 'accept') {
 
 
 
+
+
 /*get chatroom */
 // routes/index.js
 
 
-router.get("/chatroom", async function(req, res) {
+router.get("/chatroom", async function (req, res) {
   // 1. 必须登录
   if (!req.session.user) {
     return res.redirect("/login");
@@ -1106,8 +1151,8 @@ router.get("/chatroom", async function(req, res) {
   }
 });
 /*Get test chatroom*/
-router.get("/testroom", function(req,res){
-  res.render("testroom", {  });
+router.get("/testroom", function (req, res) {
+  res.render("testroom", {});
 });
 
 
