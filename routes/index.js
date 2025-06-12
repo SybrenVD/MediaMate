@@ -17,10 +17,7 @@ const { submitOrUpdateReviewByContentId } = require('../modules/review');
 const { sendContactEmail } = require('../utils/email');
 const { body, validationResult } = require('express-validator');
 const { getTopRatedBooks, getTopRatedMovies, getTopRatedGames } = require('../modules/bestRated');
-// const { io } = require("../modules/chatroom");
 
-
-// const e = require("express");
 const { sql, poolPromise } = require("../config/db");
 
 //toevoegen pagina
@@ -851,7 +848,7 @@ router.post("/user", isAuthenticated, upload.single('image'), async (req, res) =
 
 // 添加收藏路由
 router.post('/favorites', isAuthenticated, async (req, res) => {
-    const { contentType, contentId, roomId } = req.body;
+    const { contentId, roomId } = req.body;
     const userID = req.session.user.UserID;
     
     try {
@@ -871,7 +868,18 @@ router.post('/favorites', isAuthenticated, async (req, res) => {
             .query(checkQuery);
         
         if (checkResult.recordset.length > 0) {
-            return res.json({ success: false, message: 'Already in favorites' });
+            // 已收藏 -> 执行取消操作
+            await pool.request()
+                .input('UserID', sql.Int, userID)
+                .input('ContentID', sql.Int, contentId || null)
+                .input('RoomID', sql.Int, roomId || null)
+                .query(`
+                    DELETE FROM Favorites 
+                    WHERE UserID = @UserID 
+                    AND (ContentID = @ContentID OR RoomID = @RoomID)
+                `);
+
+            return res.json({ success: true, action: 'removed' });
         }
         
         // 添加收藏
@@ -886,7 +894,7 @@ router.post('/favorites', isAuthenticated, async (req, res) => {
             .input('RoomID', sql.Int, roomId || null)
             .query(insertQuery);
         
-        res.json({ success: true });
+        res.json({ success: true, action: 'added' });
     } catch (err) {
         console.error('Error adding favorite:', err);
         res.status(500).json({ success: false, message: 'Server error' });
