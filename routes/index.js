@@ -56,7 +56,7 @@ router.get('/', async function (req, res) {
     const randomBooksContent = await getRandomBooks();
     const randomMoviesContent = await getRandomMovies();
     const randomGamesContent = await getRandomGames();
-  
+
     res.render('index', {
       title: 'Home',
       banner: '/images/BannerHome.jpg',
@@ -311,6 +311,10 @@ router.get('/category/:type/:id', async (req, res) => {
         WHERE R.ContentID = @ContentID
         ORDER BY R.ReviewDate DESC
       `);
+    const reviews = reviewsResult.recordset.map(review => ({
+      ...review,
+      ReviewDate: review.ReviewDate.toISOString().split('T')[0]
+    }));
 
     const averageResult = await pool.request()
       .input('ContentID', sql.Int, id)
@@ -332,7 +336,7 @@ router.get('/category/:type/:id', async (req, res) => {
         .input('UserID', sql.Int, req.session.user.UserID)
         .input('ContentID', sql.Int, id)
         .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND ContentID = @ContentID');
-      
+
       isFavorite = favResult.recordset.length > 0;
     }
 
@@ -349,7 +353,7 @@ router.get('/category/:type/:id', async (req, res) => {
       },
       title: itemData.Title,
       type: normalizedType,
-      reviews: reviewsResult.recordset,
+      reviews: reviews,
       averageRating: averageResult.recordset[0].AverageRating?.toFixed(1) || null,
       userReview: userReviewResult.recordset[0],
       isAuthenticated: !!req.session.user,
@@ -445,17 +449,17 @@ router.get('/community', async function (req, res) {
       communities = await getCommunities();
       console.log(`Random load returned ${communities.length} communities`);
     }
-  if (req.session.user) {
-    for (let community of communities) {
-      const pool = await poolPromise;
-      const favResult = await pool.request()
-        .input('UserID', sql.Int, req.session.user.UserID)
-        .input('RoomID', sql.Int, community.RoomID)
-        .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND RoomID = @RoomID');
-      
-      community.isFavorite = favResult.recordset.length > 0;
+    if (req.session.user) {
+      for (let community of communities) {
+        const pool = await poolPromise;
+        const favResult = await pool.request()
+          .input('UserID', sql.Int, req.session.user.UserID)
+          .input('RoomID', sql.Int, community.RoomID)
+          .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND RoomID = @RoomID');
+
+        community.isFavorite = favResult.recordset.length > 0;
+      }
     }
-  }
     res.render('community', {
       title: 'Community',
       communities,
@@ -851,70 +855,70 @@ router.post("/user", isAuthenticated, upload.single('image'), async (req, res) =
 
 // 添加收藏路由
 router.post('/favorites', isAuthenticated, async (req, res) => {
-    const { contentId, roomId } = req.body;
-    const userID = req.session.user.UserID;
-    
-    try {
-        const pool = await poolPromise;
-        
-        // 检查是否已收藏
-        const checkQuery = `
+  const { contentId, roomId } = req.body;
+  const userID = req.session.user.UserID;
+
+  try {
+    const pool = await poolPromise;
+
+    // 检查是否已收藏
+    const checkQuery = `
             SELECT * FROM Favorites 
             WHERE UserID = @UserID 
             AND (ContentID = @ContentID OR RoomID = @RoomID)
         `;
-        
-        const checkResult = await pool.request()
-            .input('UserID', sql.Int, userID)
-            .input('ContentID', sql.Int, contentId || null)
-            .input('RoomID', sql.Int, roomId || null)
-            .query(checkQuery);
-        
-        if (checkResult.recordset.length > 0) {
-            // 已收藏 -> 执行取消操作
-            await pool.request()
-                .input('UserID', sql.Int, userID)
-                .input('ContentID', sql.Int, contentId || null)
-                .input('RoomID', sql.Int, roomId || null)
-                .query(`
+
+    const checkResult = await pool.request()
+      .input('UserID', sql.Int, userID)
+      .input('ContentID', sql.Int, contentId || null)
+      .input('RoomID', sql.Int, roomId || null)
+      .query(checkQuery);
+
+    if (checkResult.recordset.length > 0) {
+      // 已收藏 -> 执行取消操作
+      await pool.request()
+        .input('UserID', sql.Int, userID)
+        .input('ContentID', sql.Int, contentId || null)
+        .input('RoomID', sql.Int, roomId || null)
+        .query(`
                     DELETE FROM Favorites 
                     WHERE UserID = @UserID 
                     AND (ContentID = @ContentID OR RoomID = @RoomID)
                 `);
 
-            return res.json({ success: true, action: 'removed' });
-        }
-        
-        // 添加收藏
-        const insertQuery = `
+      return res.json({ success: true, action: 'removed' });
+    }
+
+    // 添加收藏
+    const insertQuery = `
             INSERT INTO Favorites (UserID, ContentID, RoomID) 
             VALUES (@UserID, @ContentID, @RoomID)
         `;
-        
-        await pool.request()
-            .input('UserID', sql.Int, userID)
-            .input('ContentID', sql.Int, contentId || null)
-            .input('RoomID', sql.Int, roomId || null)
-            .query(insertQuery);
-        
-        res.json({ success: true, action: 'added' });
-    } catch (err) {
-        console.error('Error adding favorite:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
+
+    await pool.request()
+      .input('UserID', sql.Int, userID)
+      .input('ContentID', sql.Int, contentId || null)
+      .input('RoomID', sql.Int, roomId || null)
+      .query(insertQuery);
+
+    res.json({ success: true, action: 'added' });
+  } catch (err) {
+    console.error('Error adding favorite:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 // 获取收藏列表路由
 router.get("/favorites", isAuthenticated, async (req, res) => {
-    const userID = req.session.user.UserID;
-    
-    try {
-        const pool = await poolPromise;
-        
-        // 查询所有收藏内容
-        const result = await pool.request()
-            .input('UserID', sql.Int, userID)
-            .query(`
+  const userID = req.session.user.UserID;
+
+  try {
+    const pool = await poolPromise;
+
+    // 查询所有收藏内容
+    const result = await pool.request()
+      .input('UserID', sql.Int, userID)
+      .query(`
                 SELECT 
                     f.FavoriteID,
                     f.ContentID,
@@ -934,28 +938,28 @@ router.get("/favorites", isAuthenticated, async (req, res) => {
                 LEFT JOIN Communities c ON f.RoomID = c.RoomID
                 WHERE f.UserID = @UserID
             `);
-        
-        // 按类型分类
-        const favorites = {
-            games: result.recordset.filter(item => item.ContentType === 'Game'),
-            movies: result.recordset.filter(item => item.ContentType === 'Movie'),
-            books: result.recordset.filter(item => item.ContentType === 'Book'),
-            communities: result.recordset.filter(item => item.ContentType === 'Community')
-        };
-        
-        res.render('fav-list', { 
-            title: 'Favorites',
-            favorites,
-            user: req.session.user
-        });
-    } catch (err) {
-        console.error('Error fetching favorites:', err);
-        res.render('fav-list', {
-            title: 'Favorites',
-            favorites: { games: [], movies: [], books: [], communities: [] },
-            error: 'Failed to load favorites'
-        });
-    }
+
+    // 按类型分类
+    const favorites = {
+      games: result.recordset.filter(item => item.ContentType === 'Game'),
+      movies: result.recordset.filter(item => item.ContentType === 'Movie'),
+      books: result.recordset.filter(item => item.ContentType === 'Book'),
+      communities: result.recordset.filter(item => item.ContentType === 'Community')
+    };
+
+    res.render('fav-list', {
+      title: 'Favorites',
+      favorites,
+      user: req.session.user
+    });
+  } catch (err) {
+    console.error('Error fetching favorites:', err);
+    res.render('fav-list', {
+      title: 'Favorites',
+      favorites: { games: [], movies: [], books: [], communities: [] },
+      error: 'Failed to load favorites'
+    });
+  }
 });
 
 //get add route
@@ -1047,13 +1051,13 @@ router.get("/admin-panel", isAuthenticated, isAdmin, async function (req, res) {
       `);
 
 
-res.render("admin-panel", {
-  title: "Admin Panel",
-  user: req.session.user,
-  pendingRequests: pendingResult.recordset,
-  completedRequests: completedResult.recordset, 
-  errorMessage: null
-});
+    res.render("admin-panel", {
+      title: "Admin Panel",
+      user: req.session.user,
+      pendingRequests: pendingResult.recordset,
+      completedRequests: completedResult.recordset,
+      errorMessage: null
+    });
 
 
 
@@ -1083,20 +1087,21 @@ router.post("/admin-panel", isAuthenticated, isAdmin, upload.single("image"), as
     const pool = await poolPromise;
 
     // Insert into Requests with status 'Approved'
-// 1. First insert into Requests
-await pool.request()
-  .input("ContentType", sql.VarChar, type)
-  .input("Title", sql.NVarChar, title)
-  .input("Description", sql.NVarChar, description)
-  .input("Image", sql.NVarChar, imagePath)
-  .input("Status", sql.NVarChar, 'Approved')
-  .input("UserID", sql.Int, userId)
-  .query(`
+    // 1. First insert into Requests
+    await pool.request()
+      .input("ContentType", sql.VarChar, type)
+      .input("Title", sql.NVarChar, title)
+      .input("Description", sql.NVarChar, description)
+      .input("Image", sql.NVarChar, imagePath)
+      .input("Status", sql.NVarChar, 'Approved')
+      .input("UserID", sql.Int, userId)
+      .query(`
     INSERT INTO Requests (ContentType, Title, Description, Image, Status, UserID)
     VALUES (@ContentType, @Title, @Description, @Image, @Status, @UserID)
   `);
 
-// 2. Then insert into real content table
+    
+    // 2. Then insert into real content table
 let insertContentQuery = "";
 if (type === "Book") {
   insertContentQuery = `INSERT INTO Books (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
@@ -1109,12 +1114,12 @@ if (type === "Book") {
   return res.status(400).render("error", { message: "Invalid content type." });
 }
 
-await pool.request()
-  .input("Title", sql.NVarChar, title)
-  .input("Description", sql.NVarChar, description)
-  .input("Image", sql.NVarChar, imagePath)
-  .input("UserID", sql.Int, userId)
-  .query(insertContentQuery);
+    await pool.request()
+      .input("Title", sql.NVarChar, title)
+      .input("Description", sql.NVarChar, description)
+      .input("Image", sql.NVarChar, imagePath)
+      .input("UserID", sql.Int, userId)
+      .query(insertContentQuery);
 
 
 
@@ -1125,7 +1130,7 @@ await pool.request()
   }
 });
 
-router.get('/admin-panel/:requestID', isAuthenticated,  isAdmin, async (req, res) => {
+router.get('/admin-panel/:requestID', isAuthenticated, isAdmin, async (req, res) => {
   const requestID = req.params.requestID;
 
   try {
@@ -1188,9 +1193,9 @@ router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res)
       // 2. UserID
       const userId = parseInt(request.UserID);
       if (isNaN(userId)) {
-      console.error("UserID is not a number:", request.UserID);
-     return res.status(500).render("error", { message: "Invalid user ID in request." });
-     }
+        console.error("UserID is not a number:", request.UserID);
+        return res.status(500).render("error", { message: "Invalid user ID in request." });
+      }
 
 
       if (type === "Game") {
