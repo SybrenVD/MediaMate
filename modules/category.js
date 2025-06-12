@@ -34,7 +34,7 @@ async function getCategoryContent(type, page = 1, pageSize = 20) {
       LEFT JOIN Content_Genre CG ON C.ContentID = CG.ContentID
       LEFT JOIN Genres G ON CG.GenreID = G.GenreID
       GROUP BY C.ContentID, T.Title, T.Description, T.Image, T.ReleaseDate, T.Rating
-      ORDER BY T.ReleaseDate DESC
+      ORDER BY NEWID()
       OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY
     `;
     const result = await pool.request().query(query);
