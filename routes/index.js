@@ -1043,7 +1043,7 @@ router.get("/admin-panel", isAuthenticated, isAdmin, async function (req, res) {
           u.Username
         FROM Requests r
         JOIN Users u ON r.UserID = u.UserID
-        WHERE r.Status IN ('Approved', 'Declined')
+        WHERE r.Status IN ('Approved', 'Rejected')
       `);
 
 
@@ -1104,6 +1104,9 @@ if (type === "Book") {
   insertContentQuery = `INSERT INTO Movies (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
 } else if (type === "Game") {
   insertContentQuery = `INSERT INTO Games (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
+} else {
+  console.error("Invalid type value received:", type);
+  return res.status(400).render("error", { message: "Invalid content type." });
 }
 
 await pool.request()
@@ -1225,7 +1228,8 @@ router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res)
       // 3. Request
       await pool.request()
         .input("RequestID", sql.Int, requestId)
-        .query(`UPDATE Requests SET Status = 'Declined' WHERE RequestID = @RequestID`);
+        .query(`UPDATE Requests SET Status = 'Approved' WHERE RequestID = @RequestID`);
+
 
       return res.render('status', {
         message: 'Request accepted and added to content. Redirecting...',
@@ -1233,16 +1237,18 @@ router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res)
       });
     }
 
-    if (action === 'decline') {
-      await pool.request()
-        .input("RequestID", sql.Int, requestId)
-        .query(`DELETE FROM Requests WHERE RequestID = @RequestID`);
+if (action === 'decline') {
+    await pool.request()
+    .input("RequestID", sql.Int, requestId)
+    .query(`UPDATE Requests SET Status = 'Rejected' WHERE RequestID = @RequestID`);
 
-      return res.render('status', {
-        message: 'Request Declined. Redirecting to admin panel...',
-        redirect: '/admin-panel'
-      });
-    }
+
+  return res.render('status', {
+    message: 'Request Declined and marked as Declined. Redirecting to admin panel...',
+    redirect: '/admin-panel'
+  });
+}
+
   } catch (err) {
     console.error("Admin edit error:", err);
     res.status(500).render("error", { message: "Failed to process request" });
