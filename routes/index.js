@@ -56,7 +56,7 @@ router.get('/', async function (req, res) {
     const randomBooksContent = await getRandomBooks();
     const randomMoviesContent = await getRandomMovies();
     const randomGamesContent = await getRandomGames();
-  
+
     res.render('index', {
       title: 'Home',
       banner: '/images/BannerHome.jpg',
@@ -311,6 +311,10 @@ router.get('/category/:type/:id', async (req, res) => {
         WHERE R.ContentID = @ContentID
         ORDER BY R.ReviewDate DESC
       `);
+    const reviews = reviewsResult.recordset.map(review => ({
+      ...review,
+      ReviewDate: review.ReviewDate.toISOString().split('T')[0]
+    }));
 
     const averageResult = await pool.request()
       .input('ContentID', sql.Int, id)
@@ -332,7 +336,7 @@ router.get('/category/:type/:id', async (req, res) => {
         .input('UserID', sql.Int, req.session.user.UserID)
         .input('ContentID', sql.Int, id)
         .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND ContentID = @ContentID');
-      
+
       isFavorite = favResult.recordset.length > 0;
     }
 
@@ -349,7 +353,7 @@ router.get('/category/:type/:id', async (req, res) => {
       },
       title: itemData.Title,
       type: normalizedType,
-      reviews: reviewsResult.recordset,
+      reviews: reviews,
       averageRating: averageResult.recordset[0].AverageRating?.toFixed(1) || null,
       userReview: userReviewResult.recordset[0],
       isAuthenticated: !!req.session.user,
@@ -445,17 +449,17 @@ router.get('/community', async function (req, res) {
       communities = await getCommunities();
       console.log(`Random load returned ${communities.length} communities`);
     }
-  if (req.session.user) {
-    for (let community of communities) {
-      const pool = await poolPromise;
-      const favResult = await pool.request()
-        .input('UserID', sql.Int, req.session.user.UserID)
-        .input('RoomID', sql.Int, community.RoomID)
-        .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND RoomID = @RoomID');
-      
-      community.isFavorite = favResult.recordset.length > 0;
+    if (req.session.user) {
+      for (let community of communities) {
+        const pool = await poolPromise;
+        const favResult = await pool.request()
+          .input('UserID', sql.Int, req.session.user.UserID)
+          .input('RoomID', sql.Int, community.RoomID)
+          .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND RoomID = @RoomID');
+
+        community.isFavorite = favResult.recordset.length > 0;
+      }
     }
-  }
     res.render('community', {
       title: 'Community',
       communities,
@@ -863,58 +867,58 @@ router.post('/favorites', isAuthenticated, async (req, res) => {
             WHERE UserID = @UserID 
             AND (ContentID = @ContentID OR RoomID = @RoomID)
         `;
-        
-        const checkResult = await pool.request()
-            .input('UserID', sql.Int, userID)
-            .input('ContentID', sql.Int, contentId || null)
-            .input('RoomID', sql.Int, roomId || null)
-            .query(checkQuery);
-        
-        if (checkResult.recordset.length > 0) {
-            // 已收藏 -> 执行取消操作
-            await pool.request()
-                .input('UserID', sql.Int, userID)
-                .input('ContentID', sql.Int, contentId || null)
-                .input('RoomID', sql.Int, roomId || null)
-                .query(`
+
+    const checkResult = await pool.request()
+      .input('UserID', sql.Int, userID)
+      .input('ContentID', sql.Int, contentId || null)
+      .input('RoomID', sql.Int, roomId || null)
+      .query(checkQuery);
+
+    if (checkResult.recordset.length > 0) {
+      // 已收藏 -> 执行取消操作
+      await pool.request()
+        .input('UserID', sql.Int, userID)
+        .input('ContentID', sql.Int, contentId || null)
+        .input('RoomID', sql.Int, roomId || null)
+        .query(`
                     DELETE FROM Favorites 
                     WHERE UserID = @UserID 
                     AND (ContentID = @ContentID OR RoomID = @RoomID)
                 `);
 
-            return res.json({ success: true, action: 'removed' });
-        }
-        
-        // 添加收藏
-        const insertQuery = `
+      return res.json({ success: true, action: 'removed' });
+    }
+
+    // 添加收藏
+    const insertQuery = `
             INSERT INTO Favorites (UserID, ContentID, RoomID) 
             VALUES (@UserID, @ContentID, @RoomID)
         `;
-        
-        await pool.request()
-            .input('UserID', sql.Int, userID)
-            .input('ContentID', sql.Int, contentId || null)
-            .input('RoomID', sql.Int, roomId || null)
-            .query(insertQuery);
-        
-        res.json({ success: true, action: 'added' });
-    } catch (err) {
-        console.error('Error adding favorite:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
+
+    await pool.request()
+      .input('UserID', sql.Int, userID)
+      .input('ContentID', sql.Int, contentId || null)
+      .input('RoomID', sql.Int, roomId || null)
+      .query(insertQuery);
+
+    res.json({ success: true, action: 'added' });
+  } catch (err) {
+    console.error('Error adding favorite:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 // 获取收藏列表路由
 router.get("/favorites", isAuthenticated, async (req, res) => {
-    const userID = req.session.user.UserID;
-    
-    try {
-        const pool = await poolPromise;
-        
-        // 查询所有收藏内容
-        const result = await pool.request()
-            .input('UserID', sql.Int, userID)
-            .query(`
+  const userID = req.session.user.UserID;
+
+  try {
+    const pool = await poolPromise;
+
+    // 查询所有收藏内容
+    const result = await pool.request()
+      .input('UserID', sql.Int, userID)
+      .query(`
                 SELECT 
     f.FavoriteID,
     f.ContentID,
@@ -1060,17 +1064,17 @@ router.get("/admin-panel", isAuthenticated, isAdmin, async function (req, res) {
           u.Username
         FROM Requests r
         JOIN Users u ON r.UserID = u.UserID
-        WHERE r.Status IN ('Approved', 'Declined')
+        WHERE r.Status IN ('Approved', 'Rejected')
       `);
 
 
-res.render("admin-panel", {
-  title: "Admin Panel",
-  user: req.session.user,
-  pendingRequests: pendingResult.recordset,
-  completedRequests: completedResult.recordset, 
-  errorMessage: null
-});
+    res.render("admin-panel", {
+      title: "Admin Panel",
+      user: req.session.user,
+      pendingRequests: pendingResult.recordset,
+      completedRequests: completedResult.recordset,
+      errorMessage: null
+    });
 
 
 
@@ -1100,20 +1104,21 @@ router.post("/admin-panel", isAuthenticated, isAdmin, upload.single("image"), as
     const pool = await poolPromise;
 
     // Insert into Requests with status 'Approved'
-// 1. First insert into Requests
-await pool.request()
-  .input("ContentType", sql.VarChar, type)
-  .input("Title", sql.NVarChar, title)
-  .input("Description", sql.NVarChar, description)
-  .input("Image", sql.NVarChar, imagePath)
-  .input("Status", sql.NVarChar, 'Approved')
-  .input("UserID", sql.Int, userId)
-  .query(`
+    // 1. First insert into Requests
+    await pool.request()
+      .input("ContentType", sql.VarChar, type)
+      .input("Title", sql.NVarChar, title)
+      .input("Description", sql.NVarChar, description)
+      .input("Image", sql.NVarChar, imagePath)
+      .input("Status", sql.NVarChar, 'Approved')
+      .input("UserID", sql.Int, userId)
+      .query(`
     INSERT INTO Requests (ContentType, Title, Description, Image, Status, UserID)
     VALUES (@ContentType, @Title, @Description, @Image, @Status, @UserID)
   `);
 
-// 2. Then insert into real content table
+    
+    // 2. Then insert into real content table
 let insertContentQuery = "";
 if (type === "Book") {
   insertContentQuery = `INSERT INTO Books (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
@@ -1121,14 +1126,17 @@ if (type === "Book") {
   insertContentQuery = `INSERT INTO Movies (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
 } else if (type === "Game") {
   insertContentQuery = `INSERT INTO Games (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
+} else {
+  console.error("Invalid type value received:", type);
+  return res.status(400).render("error", { message: "Invalid content type." });
 }
 
-await pool.request()
-  .input("Title", sql.NVarChar, title)
-  .input("Description", sql.NVarChar, description)
-  .input("Image", sql.NVarChar, imagePath)
-  .input("UserID", sql.Int, userId)
-  .query(insertContentQuery);
+    await pool.request()
+      .input("Title", sql.NVarChar, title)
+      .input("Description", sql.NVarChar, description)
+      .input("Image", sql.NVarChar, imagePath)
+      .input("UserID", sql.Int, userId)
+      .query(insertContentQuery);
 
 
 
@@ -1139,7 +1147,7 @@ await pool.request()
   }
 });
 
-router.get('/admin-panel/:requestID', isAuthenticated,  isAdmin, async (req, res) => {
+router.get('/admin-panel/:requestID', isAuthenticated, isAdmin, async (req, res) => {
   const requestID = req.params.requestID;
 
   try {
@@ -1202,9 +1210,9 @@ router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res)
       // 2. UserID
       const userId = parseInt(request.UserID);
       if (isNaN(userId)) {
-      console.error("UserID is not a number:", request.UserID);
-     return res.status(500).render("error", { message: "Invalid user ID in request." });
-     }
+        console.error("UserID is not a number:", request.UserID);
+        return res.status(500).render("error", { message: "Invalid user ID in request." });
+      }
 
 
       if (type === "Game") {
@@ -1242,7 +1250,8 @@ router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res)
       // 3. Request
       await pool.request()
         .input("RequestID", sql.Int, requestId)
-        .query(`UPDATE Requests SET Status = 'Declined' WHERE RequestID = @RequestID`);
+        .query(`UPDATE Requests SET Status = 'Approved' WHERE RequestID = @RequestID`);
+
 
       return res.render('status', {
         message: 'Request accepted and added to content. Redirecting...',
@@ -1250,16 +1259,18 @@ router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res)
       });
     }
 
-    if (action === 'decline') {
-      await pool.request()
-        .input("RequestID", sql.Int, requestId)
-        .query(`DELETE FROM Requests WHERE RequestID = @RequestID`);
+if (action === 'decline') {
+    await pool.request()
+    .input("RequestID", sql.Int, requestId)
+    .query(`UPDATE Requests SET Status = 'Rejected' WHERE RequestID = @RequestID`);
 
-      return res.render('status', {
-        message: 'Request Declined. Redirecting to admin panel...',
-        redirect: '/admin-panel'
-      });
-    }
+
+  return res.render('status', {
+    message: 'Request Declined and marked as Declined. Redirecting to admin panel...',
+    redirect: '/admin-panel'
+  });
+}
+
   } catch (err) {
     console.error("Admin edit error:", err);
     res.status(500).render("error", { message: "Failed to process request" });
