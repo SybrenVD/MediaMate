@@ -851,7 +851,7 @@ router.post("/user", isAuthenticated, upload.single('image'), async (req, res) =
 
 // 添加收藏路由
 router.post('/favorites', isAuthenticated, async (req, res) => {
-    const { contentId, roomId } = req.body;
+    const { contentType, contentId, roomId } = req.body;
     const userID = req.session.user.UserID;
     
     try {
@@ -916,32 +916,49 @@ router.get("/favorites", isAuthenticated, async (req, res) => {
             .input('UserID', sql.Int, userID)
             .query(`
                 SELECT 
-                    f.FavoriteID,
-                    f.ContentID,
-                    f.RoomID,
-                    COALESCE(g.Title, m.Title, b.Title, c.ChatName) AS Title,
-                    COALESCE(g.Image, m.Image, b.Image, c.Image) AS Image,
-                    CASE 
-                        WHEN g.GameID IS NOT NULL THEN 'Game'
-                        WHEN m.MovieID IS NOT NULL THEN 'Movie'
-                        WHEN b.BookID IS NOT NULL THEN 'Book'
-                        WHEN c.RoomID IS NOT NULL THEN 'Community'
-                    END AS ContentType
-                FROM Favorites f
-                LEFT JOIN Games g ON f.ContentID = g.GameID
-                LEFT JOIN Movies m ON f.ContentID = m.MovieID
-                LEFT JOIN Books b ON f.ContentID = b.BookID
-                LEFT JOIN Communities c ON f.RoomID = c.RoomID
-                WHERE f.UserID = @UserID
+    f.FavoriteID,
+    f.ContentID,
+    f.RoomID,
+    COALESCE(g.Title, m.Title, b.Title, c.ChatName) AS Title,
+    COALESCE(g.Image, m.Image, b.Image, c.Image) AS Image,
+    CASE 
+        WHEN f.RoomID IS NOT NULL THEN 'Community'
+        WHEN g.GameID IS NOT NULL THEN 'Game'
+        WHEN m.MovieID IS NOT NULL THEN 'Movie'
+        WHEN b.BookID IS NOT NULL THEN 'Book'
+    END AS ContentType
+FROM Favorites f
+LEFT JOIN Games g ON f.ContentID = g.GameID
+LEFT JOIN Movies m ON f.ContentID = m.MovieID
+LEFT JOIN Books b ON f.ContentID = b.BookID
+LEFT JOIN Communities c ON f.RoomID = c.RoomID
+WHERE f.UserID = @UserID
             `);
         
-        // 按类型分类
-        const favorites = {
-            games: result.recordset.filter(item => item.ContentType === 'Game'),
-            movies: result.recordset.filter(item => item.ContentType === 'Movie'),
-            books: result.recordset.filter(item => item.ContentType === 'Book'),
-            communities: result.recordset.filter(item => item.ContentType === 'Community')
-        };
+        const deduplicateByRoomID = (arr) => {
+  const seen = new Set();
+  return arr.filter(item => {
+    if (seen.has(item.RoomID)) return false;
+    seen.add(item.RoomID);
+    return true;
+  });
+};
+
+const favorites = {
+  games: result.recordset.filter(item => item.ContentType === 'Game'),
+  movies: result.recordset.filter(item => item.ContentType === 'Movie'),
+  books: result.recordset.filter(item => item.ContentType === 'Book'),
+  communities: deduplicateByRoomID(
+    result.recordset.filter(item => item.ContentType === 'Community')
+      .map(item => ({
+        ...item,
+        ChatName: item.Title,
+        Description: "",
+        isFavorite: true
+      }))
+  )
+};
+
         
         res.render('fav-list', { 
             title: 'Favorites',
