@@ -24,17 +24,16 @@ document.addEventListener('click', async function(event) {
         
         if (result.success) {
             // 切换心形图标状态
-            if (icon.classList.contains('bi-heart')) {
-                icon.classList.replace('bi-heart', 'bi-heart-fill');
-            } else {
-                icon.classList.replace('bi-heart-fill', 'bi-heart');
-            }
-            
-            // 显示成功消息
-            showToast('Added to favorites!');
-        } else {
-            showToast(result.message || 'Action failed', 'error');
-        }
+            if (result.action === 'added') {
+        icon.classList.replace('bi-heart', 'bi-heart-fill');
+        showToast('Added to favorites!');
+    } else if (result.action === 'removed') {
+        icon.classList.replace('bi-heart-fill', 'bi-heart');
+        showToast('Removed from favorites!');
+    }
+} else {
+    showToast(result.message || 'Action failed', 'error');
+}
     } catch (error) {
         console.error('Error:', error);
         showToast('Server error', 'error');
