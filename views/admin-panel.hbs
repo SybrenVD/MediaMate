@@ -99,10 +99,17 @@
         <td>{{Username}}</td>
         <td>{{ContentType}}</td>
         <td>{{Title}}</td>
-        <td>
-          {{#ifEquals Status "Approved"}}<span class="badge bg-success">Approved</span>{{/ifEquals}}
-          {{#ifEquals Status "Declined"}}<span class="badge bg-danger">Declined</span>{{/ifEquals}}
-        </td>
+<td>
+  {{#ifEquals Status "Approved"}}
+    <span class="badge bg-success">Approved</span>
+  {{else ifEquals Status "Rejected"}}
+    <span class="badge bg-danger">Declined</span>
+  {{else}}
+    <span class="badge bg-warning text-dark">{{Status}}</span>
+  {{/ifEquals}}
+</td>
+
+
       </tr>
       {{/each}}
     </tbody>
