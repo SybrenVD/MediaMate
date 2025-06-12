@@ -66,7 +66,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = [], con
             T.Title,
             T.Image,
             T.Description,
-            CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
+            CAST(STRING_AGG(Genres.Name, ',') AS NVARCHAR(MAX)) AS Genres,
             CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
           FROM ${config.table} T
           JOIN Content c ON c.${config.idColumn} = T.${config.idColumn}
@@ -85,7 +85,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = [], con
             T.Title,
             T.Image,
             T.Description,
-            CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
+            CAST(STRING_AGG(Genres.Name, ',') AS NVARCHAR(MAX)) AS Genres,
             2 AS Rank
           FROM ${config.table} T
           JOIN Content c ON c.${config.idColumn} = T.${config.idColumn}
@@ -132,7 +132,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = [], con
             b.Title,
             b.Image,
             b.Description,
-            CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
+            CAST(STRING_AGG(Genres.Name, ',') AS NVARCHAR(MAX)) AS Genres,
             CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
           FROM Books b
           JOIN Content c ON c.BookID = b.BookID
@@ -151,7 +151,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = [], con
             b.Title,
             b.Image,
             b.Description,
-            CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
+            CAST(STRING_AGG(Genres.Name, ',') AS NVARCHAR(MAX)) AS Genres,
             2 AS Rank
           FROM Books b
           JOIN Content c ON c.BookID = b.BookID
@@ -170,7 +170,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = [], con
             m.Title,
             m.Image,
             m.Description,
-            CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
+            CAST(STRING_AGG(Genres.Name, ',') AS NVARCHAR(MAX)) AS Genres,
             CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
           FROM Movies m
           JOIN Content c ON c.MovieID = m.MovieID
@@ -189,7 +189,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = [], con
             m.Title,
             m.Image,
             m.Description,
-            CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
+            CAST(STRING_AGG(Genres.Name, ',') AS NVARCHAR(MAX)) AS Genres,
             2 AS Rank
           FROM Movies m
           JOIN Content c ON c.MovieID = m.MovieID
@@ -208,7 +208,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = [], con
             g.Title,
             g.Image,
             g.Description,
-            CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
+            CAST(STRING_AGG(Genres.Name, ',') AS NVARCHAR(MAX)) AS Genres,
             CASE WHEN @query = '' THEN 1 ELSE 1 END AS Rank
           FROM Games g
           JOIN Content c ON c.GameID = g.GameID
@@ -227,7 +227,7 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = [], con
             g.Title,
             g.Image,
             g.Description,
-            CAST(STRING_AGG(Genres.Name, ', ') AS NVARCHAR(MAX)) AS Genres,
+            CAST(STRING_AGG(Genres.Name, ',') AS NVARCHAR(MAX)) AS Genres,
             2 AS Rank
           FROM Games g
           JOIN Content c ON c.GameID = g.GameID
@@ -271,14 +271,13 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = [], con
       throw new Error('SQL query failed');
     });
 
-
     const searchResults = result.recordset.map(row => ({
       ItemID: row.ItemID,
       ContentID: row.ContentID,
       ContentType: row.ContentType,
       Title: row.Title,
       Image: row.Image,
-      Genres: row.Genres || '',
+      Genres: row.Genres ? row.Genres.split(',').map(genre => genre.trim()) : [],
       Description: row.Description
     }));
     const totalCount = result.recordset.length > 0 ? result.recordset[0].TotalCount : 0;
