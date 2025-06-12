@@ -14,42 +14,42 @@
     <!-- Genre and ContentType Badges -->
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
       {{#if item.Genres.length}}
-        {{#each item.Genres}}
-          <span class="badge bg-danger genre-badge">{{this}}</span>
-        {{/each}}
+      {{#each item.Genres}}
+      <span class="badge bg-danger genre-badge">{{this}}</span>
+      {{/each}}
       {{else}}
-        <span class="badge bg-danger genre-badge">No Genres</span>
+      <span class="badge bg-danger genre-badge">No Genres</span>
       {{/if}}
       <span class="badge bg-secondary content-type-badge">{{item.ContentType}}</span>
     </div>
 
     {{#if item.releaseDate}}
-      <p class="detail-date"><strong>Release Date:</strong> {{item.releaseDate}}</p>
+    <p class="detail-date"><strong>Release Date:</strong> {{item.releaseDate}}</p>
     {{/if}}
 
     {{#if averageRating}}
-      <p class="detail-rating"><strong>Average Rating:</strong> {{averageRating}} / 5</p>
+    <p class="detail-rating"><strong>Average Rating:</strong> {{averageRating}} / 5</p>
     {{/if}}
 
     {{#if item.description}}
-      <p class="detail-description mt-3">{{item.description}}</p>
+    <p class="detail-description mt-3">{{item.description}}</p>
     {{else}}
-      <p class="detail-description mt-3 text-muted fst-italic">No description available.</p>
+    <p class="detail-description mt-3 text-muted fst-italic">No description available.</p>
     {{/if}}
 
     <div class="d-flex align-items-center gap-3 mt-3">
       {{#if isAuthenticated}}
-        {{#if userReview}}
-          <p class="mb-0 text-danger fw-bold">You have already submitted a review.</p>
-        {{else}}
-          <button id="openReviewBtn" class="btn btn-danger text-white">Leave a Review</button>
-        {{/if}}
+      {{#if userReview}}
+      <p class="mb-0 text-danger fw-bold">You have already submitted a review.</p>
       {{else}}
-        <button id="loginRedirectBtn" class="btn btn-danger text-white">Leave a Review</button>
+      <button id="openReviewBtn" class="btn btn-danger text-white">Leave a Review</button>
+      {{/if}}
+      {{else}}
+      <button id="loginRedirectBtn" class="btn btn-danger text-white">Leave a Review</button>
       {{/if}}
 
       <!-- Back Button -->
-      <a href="#" onclick="handleBack()" class="btn btn-secondary">
+      <a href="#" onclick="handleBack(event)" class="btn btn-secondary">
         <i class="bi bi-arrow-left-circle"></i> Back
       </a>
     </div>
@@ -60,17 +60,18 @@
 
     <div class="reviews-container p-4 rounded d-flex flex-wrap gap-3" style="background-color: #8b1d2e;">
       {{#if reviews.length}}
-        {{#each reviews}}
-          <div class="card shadow-sm" style="background-color: #600606; border: none; flex: 1 1 300px; min-width: 280px; max-width: 350px;">
-            <div class="card-body text-white p-3">
-              <h5 class="card-title text-white">{{this.Username}} - {{this.Rating}} / 5</h5>
-              <p class="card-text">{{this.Comment}}</p>
-              <p class="card-text"><small>{{this.ReviewDate}}</small></p>
-            </div>
-          </div>
-        {{/each}}
+      {{#each reviews}}
+      <div class="card shadow-sm"
+        style="background-color: #600606; border: none; flex: 1 1 300px; min-width: 280px; max-width: 350px;">
+        <div class="card-body text-white p-3">
+          <h5 class="card-title text-white">{{this.Username}} - {{this.Rating}} / 5</h5>
+          <p class="card-text">{{this.Comment}}</p>
+          <p class="card-text"><small>{{this.ReviewDate}}</small></p>
+        </div>
+      </div>
+      {{/each}}
       {{else}}
-        <p class="text-white fw-semibold fs-5 text-center m-0 w-100">No reviews yet.</p>
+      <p class="text-white fw-semibold fs-5 text-center m-0 w-100">No reviews yet.</p>
       {{/if}}
     </div>
   </div>
@@ -89,8 +90,8 @@
           <label class="form-label">Rating</label>
           <div class="star-rating mb-3">
             {{#each (range 5 1)}}
-              <input type="radio" id="star{{this}}" name="rating" value="{{this}}" required>
-              <label for="star{{this}}" title="{{this}} stars">★</label>
+            <input type="radio" id="star{{this}}" name="rating" value="{{this}}" required>
+            <label for="star{{this}}" title="{{this}} stars">★</label>
             {{/each}}
           </div>
           <div class="mb-3">
@@ -100,7 +101,8 @@
         </div>
         <div class="modal-footer">
           <!-- Set sessionStorage flag on submit -->
-          <button type="submit" class="btn btn-danger text-white" onclick="sessionStorage.setItem('justSubmittedReview', 'true')">Submit Review</button>
+          <button type="submit" class="btn btn-danger text-white"
+            onclick="sessionStorage.setItem('justSubmittedReview', 'true')">Submit Review</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
@@ -116,17 +118,20 @@
     unicode-bidi: bidi-override;
     display: inline-block;
   }
+
   .star-rating input[type="radio"] {
     display: none;
   }
+
   .star-rating label {
     color: #ccc;
     cursor: pointer;
     user-select: none;
   }
-  .star-rating input[type="radio"]:checked ~ label,
+
+  .star-rating input[type="radio"]:checked~label,
   .star-rating label:hover,
-  .star-rating label:hover ~ label {
+  .star-rating label:hover~label {
     color: #f5b301;
   }
 
@@ -154,30 +159,45 @@
 <!-- Modal and Navigation Scripts -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM fully loaded');
     const openReviewBtn = document.getElementById('openReviewBtn');
     const loginRedirectBtn = document.getElementById('loginRedirectBtn');
 
     if (openReviewBtn) {
+      console.log('openReviewBtn found');
       openReviewBtn.addEventListener('click', () => {
+        console.log('openReviewBtn clicked');
         const reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
         reviewModal.show();
       });
+    } else {
+      console.log('openReviewBtn not found');
     }
 
     if (loginRedirectBtn) {
+      console.log('loginRedirectBtn found');
       loginRedirectBtn.addEventListener('click', () => {
+        console.log('loginRedirectBtn clicked');
         window.location.href = '/login';
       });
+    } else {
+      console.log('loginRedirectBtn not found');
     }
   });
 
-  function handleBack() {
+  function handleBack(event) {
+    event.preventDefault();
+    console.log('handleBack called');
     const justSubmitted = sessionStorage.getItem('justSubmittedReview');
 
     if (justSubmitted === 'true') {
+      console.log('Navigating back 2 steps');
       sessionStorage.removeItem('justSubmittedReview');
-      history.go(-2); // Skip the review form submission step
+      history.go(-2);
     } else {
-      history.back(); // Normal behavior
+      console.log('Navigating back 1 step');
+      history.back();
     }
-  }
+  };
+</script>
+  
