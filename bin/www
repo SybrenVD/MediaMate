@@ -162,10 +162,11 @@ io.on("connection", (socket) => {
   });
 });
 
-//hier aanpassen naar je eigen ipv4 !!!
+
 server.listen(port, () => {
   //innerconnect met server-pc：http://<ip4adress>:${port}
   //dan ga je naar http://<ip4adress>:3000
+  // console.log(`Server running on http://10.195.217.55:${port}`);
   console.log(`Server running on http://localhost:${port}`);
 });
 

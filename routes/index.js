@@ -14,6 +14,9 @@ const { getCommunities, createCommunity } = require('../modules/community');
 const { getCategoryContent } = require("../modules/category");
 const { searchCommunities } = require("../modules/searchCommunity")
 const { submitOrUpdateReviewByContentId } = require('../modules/review');
+const { sendContactEmail } = require('../utils/email');
+const { body, validationResult } = require('express-validator');
+const { getTopRatedBooks, getTopRatedMovies, getTopRatedGames } = require('../modules/bestRated');
 // const { io } = require("../modules/chatroom");
 
 
@@ -32,6 +35,22 @@ function isAuthenticated(req, res, next) {
     return next(); // login
   }
   res.redirect("/login");
+}
+
+//isAdmin: AdminPage is for just Admin
+function isAdmin(req, res, next) {
+  if (
+    req.session.user &&
+    req.session.user.UserType &&
+    req.session.user.UserType.toLowerCase() === 'admin'
+  ) {
+    return next();
+  }
+
+  return res.status(403).render('error', {
+    title: "Access Denied",
+    error: "Unauthorized access"
+  });
 }
 
 router.get('/', async function (req, res) {
@@ -202,83 +221,69 @@ router.get('/search', async function (req, res) {
 });
 
 const dataMap = {
-  games: {
-    title: "Games",
-    type: "games",
-    hero: {
-      cta: "Discover Exciting Games",
-      banner: "/images/Banner games.webp",
-      shortDescription: "Explore a curated list of top games"
-    }
-  },
   books: {
-    title: "Books",
-    type: "books",
+    title: 'Books',
+    type: 'books',
     hero: {
-      cta: "Explore Great Reads",
-      banner: "/images/BookBanner.jpg",
-      shortDescription: "Browse a hand-picked list of top books"
+      cta: 'Explore Great Reads',
+      banner: '/images/BookBanner.jpg',
+      shortDescription: 'Browse a hand-picked list of top books'
     }
   },
   movies: {
-    title: "Movies",
-    type: "movies",
+    title: 'Movies',
+    type: 'movies',
     hero: {
-      cta: "Watch Blockbuster Films",
-      banner: "/images/MovieBanner2.jpg",
-      shortDescription: "Check out the most loved movies"
+      cta: 'Watch Blockbuster Films',
+      banner: '/images/MovieBanner2.jpg',
+      shortDescription: 'Check out the most loved movies'
+    }
+  },
+  games: {
+    title: 'Games',
+    type: 'games',
+    hero: {
+      cta: 'Discover Exciting Games',
+      banner: '/images/Banner games.webp',
+      shortDescription: 'Explore a curated list of top games'
     }
   }
 };
 
-router.get("/category/:type", async (req, res) => {
+router.get('/category/:type', async (req, res) => {
   const { type } = req.params;
   const page = parseInt(req.query.page) || 1;
   const pageSize = 20;
 
   const pageData = dataMap[type];
-  if (!pageData) {
-    console.error(`Category not found for type: ${type}`);
-    return res.status(404).send("Category not found");
-  }
+  if (!pageData) return res.status(404).send('Category not found');
 
   try {
-    const result = await getCategoryContent(type, page, pageSize);
+    const categoryResult = await getCategoryContent(type, page, pageSize);
+    const { searchResults: items, currentPage, totalPages, totalCount } = categoryResult;
+    let topRatedItems = [];
 
-    let items = [];
-    let currentPage = page;
-    let totalPages = 1;
-    let totalCount = 0;
-
-    if (Array.isArray(result)) {
-      items = result;
-      totalCount = items.length; // Approximate count without total query
-      totalPages = Math.ceil(totalCount / pageSize);
-    } else {
-      const { searchResults = [], currentPage: resultPage = page, totalPages: resultTotalPages = 1, totalCount: resultTotalCount = 0 } = result || {};
-      items = searchResults;
-      currentPage = resultPage;
-      totalPages = resultTotalPages;
-      totalCount = resultTotalCount;
+    if (type === 'books') {
+      topRatedItems = await getTopRatedBooks();
+    } else if (type === 'movies') {
+      topRatedItems = await getTopRatedMovies();
+    } else if (type === 'games') {
+      topRatedItems = await getTopRatedGames();
     }
 
-    if (!Array.isArray(items) || items.length === 0) {
-      console.warn(`No items found for category "${type}" on page ${page}`);
-      return res.status(404).send("No items found for this category.");
-    }
-
-    res.render("category", {
+    res.render('category', {
       title: pageData.title,
       type: pageData.type,
       hero: pageData.hero,
       items,
       currentPage,
       totalPages,
-      totalCount
+      totalCount,
+      topRatedItems
     });
-  } catch (err) {
-    console.error(`Error fetching category content for "${type}":`, err);
-    res.status(500).send("Error fetching category content");
+  } catch (error) {
+    console.error('Category route error:', error);
+    res.status(500).send('Server error');
   }
 });
 
@@ -371,32 +376,52 @@ router.post('/category/:type/:id/review', isAuthenticated, async (req, res) => {
 });
 
 // Contact Page - GET
-
-router.get("/contact", function (req, res) {
-    res.render("contact", {
-    title: "Contact"
+router.get('/contact', (req, res) => {
+  res.render('contact', {
+    title: 'Contact',
+    successMessage: null,
+    errorMessage: null
   });
 });
 
-
 // Contact Page - POST
-
-router.post("/contact", function (req, res) {
+router.post('/contact', [
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('message').trim().notEmpty().withMessage('Message is required')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.render('contact', {
+      title: 'Contact',
+      errorMessage: errors.array().map(err => err.msg).join(', '),
+      successMessage: null
+    });
+  }
 
   const { name, email, message } = req.body;
 
-  console.log("Contact form submitted:");
-  console.log("Name:", name);
-  console.log("Email:", email);
-  console.log("Message:", message);
+  console.log('Contact form submitted:');
+  console.log('Name:', name);
+  console.log('Email:', email);
+  console.log('Message:', message);
 
-  res.render("contact", {
-    title: "Contact",
-    successMessage: `Thanks for contacting us, ${name}!`
+  const result = await sendContactEmail({ name, email, message });
 
-  });
+  if (result.success) {
+    res.render('contact', {
+      title: 'Contact',
+      successMessage: `Thanks for contacting us, ${name}!`,
+      errorMessage: null
+    });
+  } else {
+    res.render('contact', {
+      title: 'Contact',
+      errorMessage: 'Failed to send message. Please try again later.',
+      successMessage: null
+    });
+  }
 });
-
 
 router.post('/community', async function (req, res) {
   console.log('POST /community received:', req.body);
@@ -523,7 +548,7 @@ router.get("/faq", function (req, res, next) {
       },
       {
         question: "Can I create an account?",
-        answer: "Currently, you can browse without an account. Account features are coming soon."
+        answer: "You can browse without an account but to get to use all features you would need to make an account."
       },
       {
         question: "How do you choose which media to feature?",
@@ -531,7 +556,7 @@ router.get("/faq", function (req, res, next) {
       },
       {
         question: "Can I suggest content to be added?",
-        answer: "Yes! Reach out via our contact form to suggest games, books, or movies."
+        answer: "Logged users get can request games, books, and movies."
       },
       {
         question: "Is MediaMate available on mobile?",
@@ -690,6 +715,9 @@ router.get("/user", isAuthenticated, async (req, res) => {
   if (!requestsResult.success) {
     return res.status(500).render('error', { message: requestsResult.message });
   }
+
+  //sort for new requests
+  requestsResult.requests.sort((a, b) => b.RequestID - a.RequestID);
 
   res.render("user", {
     title: "Your Profile",
@@ -974,7 +1002,9 @@ router.post("/add", isAuthenticated, upload.single('image'), async function (req
 router.get("/admin-panel", isAuthenticated, isAdmin, async function (req, res) {
   try {
     const pool = await poolPromise;
-    const result = await pool.request()
+
+    // Pending requests
+    const pendingResult = await pool.request()
       .query(`
         SELECT 
           r.RequestID,
@@ -989,36 +1019,103 @@ router.get("/admin-panel", isAuthenticated, isAdmin, async function (req, res) {
         WHERE r.Status = 'Pending'
       `);
 
-    res.render("admin-panel", {
-      title: "Admin Panel",
-      requests: result.recordset
-    });
+    // Completed requests
+    const completedResult = await pool.request()
+      .query(`
+        SELECT 
+          r.RequestID,
+          r.Title,
+          r.Description,
+          r.Status,
+          r.ContentType,
+          r.Image,
+          u.Username
+        FROM Requests r
+        JOIN Users u ON r.UserID = u.UserID
+        WHERE r.Status IN ('Approved', 'Declined')
+      `);
+
+
+res.render("admin-panel", {
+  title: "Admin Panel",
+  user: req.session.user,
+  pendingRequests: pendingResult.recordset,
+  completedRequests: completedResult.recordset, 
+  errorMessage: null
+});
+
+
 
   } catch (error) {
     console.error("Failed to load requests:", error);
     res.render("admin-panel", {
       title: "Admin Panel",
-      requests: [],
+      pendingRequests: [],
+      completedRequests: [],
       errorMessage: "Failed to load requests"
     });
   }
 });
 
-//isAdmin: AdminPage is for just Admin
-function isAdmin(req, res, next) {
-  if (
-    req.session.user &&
-    req.session.user.UserType &&
-    req.session.user.UserType.toLowerCase() === 'admin'
-  ) {
-    return next();
+//POST
+router.post("/admin-panel", isAuthenticated, isAdmin, upload.single("image"), async (req, res) => {
+  const { type, title, description } = req.body;
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+  const userId = req.session.user.UserID;
+  const username = req.session.user.Username;
+
+  if (!type || !title || !description || !imagePath) {
+    return res.redirect("/admin-panel?error=All+fields+are+required");
   }
 
-  return res.status(403).render('error', {
-    title: "Access Denied",
-    error: "Unauthorized access"
-  });
+  try {
+    const pool = await poolPromise;
+
+    // Insert into Requests with status 'Approved'
+// 1. First insert into Requests
+await pool.request()
+  .input("ContentType", sql.VarChar, type)
+  .input("Title", sql.NVarChar, title)
+  .input("Description", sql.NVarChar, description)
+  .input("Image", sql.NVarChar, imagePath)
+  .input("Status", sql.NVarChar, 'Approved')
+  .input("UserID", sql.Int, userId)
+  .query(`
+    INSERT INTO Requests (ContentType, Title, Description, Image, Status, UserID)
+    VALUES (@ContentType, @Title, @Description, @Image, @Status, @UserID)
+  `);
+
+// 2. Then insert into real content table
+let insertContentQuery = "";
+if (type === "Book") {
+  insertContentQuery = `INSERT INTO Books (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
+} else if (type === "Movie") {
+  insertContentQuery = `INSERT INTO Movies (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
+} else if (type === "Game") {
+  insertContentQuery = `INSERT INTO Games (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
 }
+
+await pool.request()
+  .input("Title", sql.NVarChar, title)
+  .input("Description", sql.NVarChar, description)
+  .input("Image", sql.NVarChar, imagePath)
+  .input("UserID", sql.Int, userId)
+  .query(insertContentQuery);
+
+
+
+    return res.redirect("/admin-panel?success=Content+successfully+created");
+  } catch (err) {
+    console.error("Create content error:", err);
+    return res.redirect("/admin-panel?error=Something+went+wrong");
+  }
+});
+
+
+
+
+
+
 
 
 
@@ -1057,6 +1154,7 @@ router.get('/admin-panel/:requestID', isAuthenticated,  isAdmin, async (req, res
     res.status(500).render("error", { message: "Failed to load request detail" });
   }
 });
+
 
 
 router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res) => {
@@ -1124,7 +1222,7 @@ router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res)
       // 3. Request
       await pool.request()
         .input("RequestID", sql.Int, requestId)
-        .query(`UPDATE Requests SET Status = 'Approved' WHERE RequestID = @RequestID`);
+        .query(`UPDATE Requests SET Status = 'Declined' WHERE RequestID = @RequestID`);
 
       return res.render('status', {
         message: 'Request accepted and added to content. Redirecting...',
