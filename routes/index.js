@@ -447,6 +447,7 @@ router.get('/community', async function (req, res) {
     }
   if (req.session.user) {
     for (let community of communities) {
+      const pool = await poolPromise;
       const favResult = await pool.request()
         .input('UserID', sql.Int, req.session.user.UserID)
         .input('RoomID', sql.Int, community.RoomID)
