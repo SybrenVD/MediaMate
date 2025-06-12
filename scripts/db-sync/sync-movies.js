@@ -1,7 +1,7 @@
 require('dotenv').config();
 const axios = require('axios');
 const striptags = require('striptags');
-const { sql, poolPromise } = require('../config/db');
+const { sql, poolPromise } = require('../../config/db');
 
 async function fetchWithRetry(url, params, retries = 3, delay = 100) {
     for (let attempt = 1; attempt <= retries; attempt++) {
@@ -106,7 +106,7 @@ async function main() {
                         await new Promise(resolve => setTimeout(resolve, 100));
 
                         const params = {
-                            api_key: process.env.TMDB_API_KEY || '0d3d04b0c0fc5c7e8f8b2c0c0f0d2c4b',
+                            api_key: 'c6fbfed994de21544500c97199ead40d', // Updated API key
                             language: 'en-US',
                             page,
                             with_genres: tmdbGenreId,
@@ -244,7 +244,7 @@ async function main() {
                         await new Promise(resolve => setTimeout(resolve, 100));
 
                         const params = {
-                            api_key: process.env.TMDB_API_KEY || '0d3d04b0c0fc5c7e8f8b2c0c0f0d2c4b',
+                            api_key: 'c6fbfed994de21544500c97199ead40d', // Updated API key
                             language: 'en-US',
                             page,
                             with_genres: tmdbGenreId,
