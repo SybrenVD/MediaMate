@@ -1,10 +1,16 @@
-<div class="card mb-3">
-    <div class="card-body">
+<div class="col-12 col-md-4">
+  <div class="d-flex align-items-center p-3 rounded shadow-sm" 
+       style="background-color: #8b1d2e; color: white; border: 2px solid #6e1624;">
+    <img src="{{this.Image}}" alt="Icon" class="me-3 rounded-circle" style="width: 40px; height: 40px;">
+    <div>
       <div class="d-flex justify-content-between">
-        <h5 class="card-title">{{this.ChatName}}</h5>
-{{> iheart}}
+        <!-- 修改链接传递社区ID -->
+        <a class="flex-grow-1" href="/chatroom?communityId={{this.CommunityID}}" style="text-decoration: none;">
+          <h5 class="mb-1" style="color: white;">{{this.ChatName}}</h5>
+        </a>
+        {{>iheart}}
       </div>
-      <p class="card-text">{{this.Description}}</p>
-      <a href="/chatroom?RoomID={{this.RoomID}}" class="btn btn-primary">Join Chat</a>
+      <p class="mb-0" style="color: #d1c7c7;">{{this.Description}}</p>
     </div>
   </div>
+</div>
