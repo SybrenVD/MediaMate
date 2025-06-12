@@ -11,6 +11,18 @@
 
     <h2 class="detail-title">{{item.name}}</h2>
 
+    <!-- Genre and ContentType Badges -->
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+      {{#if item.Genres.length}}
+        {{#each item.Genres}}
+          <span class="badge bg-danger genre-badge">{{this}}</span>
+        {{/each}}
+      {{else}}
+        <span class="badge bg-danger genre-badge">No Genres</span>
+      {{/if}}
+      <span class="badge bg-secondary content-type-badge">{{item.ContentType}}</span>
+    </div>
+
     {{#if item.releaseDate}}
       <p class="detail-date"><strong>Release Date:</strong> {{item.releaseDate}}</p>
     {{/if}}
@@ -36,7 +48,7 @@
         <button id="loginRedirectBtn" class="btn btn-danger text-white">Leave a Review</button>
       {{/if}}
 
-      <!-- Updated Back Button -->
+      <!-- Back Button -->
       <a href="#" onclick="handleBack()" class="btn btn-secondary">
         <i class="bi bi-arrow-left-circle"></i> Back
       </a>
@@ -96,7 +108,7 @@
   </div>
 </div>
 
-<!-- Rating Stars Styles -->
+<!-- Rating Stars and Badge Styles -->
 <style>
   .star-rating {
     direction: rtl;
@@ -116,6 +128,26 @@
   .star-rating label:hover,
   .star-rating label:hover ~ label {
     color: #f5b301;
+  }
+
+  .genre-badge {
+    min-width: 5.5rem;
+    text-align: center;
+    height: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .content-type-badge {
+    height: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.5rem;
+    font-size: 0.75rem;
   }
 </style>
 
@@ -149,6 +181,3 @@
       history.back(); // Normal behavior
     }
   }
-</script>
-
-<script src="/javascripts/favorites.js"></script>

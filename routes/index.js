@@ -17,10 +17,7 @@ const { submitOrUpdateReviewByContentId } = require('../modules/review');
 const { sendContactEmail } = require('../utils/email');
 const { body, validationResult } = require('express-validator');
 const { getTopRatedBooks, getTopRatedMovies, getTopRatedGames } = require('../modules/bestRated');
-// const { io } = require("../modules/chatroom");
 
-
-// const e = require("express");
 const { sql, poolPromise } = require("../config/db");
 
 //toevoegen pagina
@@ -59,7 +56,7 @@ router.get('/', async function (req, res) {
     const randomBooksContent = await getRandomBooks();
     const randomMoviesContent = await getRandomMovies();
     const randomGamesContent = await getRandomGames();
-
+  
     res.render('index', {
       title: 'Home',
       banner: '/images/BannerHome.jpg',
@@ -289,6 +286,7 @@ router.get('/category/:type', async (req, res) => {
 
 // Detail page route
 // GET content detail page
+// GET content detail page
 router.get('/category/:type/:id', async (req, res) => {
   const { type, id } = req.params;
   const normalizedType = type.toLowerCase();
@@ -318,7 +316,6 @@ router.get('/category/:type/:id', async (req, res) => {
       .input('ContentID', sql.Int, id)
       .query(`SELECT AVG(CAST(Rating AS FLOAT)) AS AverageRating FROM Reviews WHERE ContentID = @ContentID`);
 
-
     const userReviewResult = req.session.user ? await pool.request()
       .input('ContentID', sql.Int, id)
       .input('UserID', sql.Int, req.session.user.UserID)
@@ -327,25 +324,28 @@ router.get('/category/:type/:id', async (req, res) => {
         FROM Reviews
         WHERE ContentID = @ContentID AND UserID = @UserID
       `) : { recordset: [] };
-        // 检查是否已收藏
-  let isFavorite = false;
-  if (req.session.user) {
-    const pool = await poolPromise;
-    const favResult = await pool.request()
-      .input('UserID', sql.Int, req.session.user.UserID)
-      .input('ContentID', sql.Int, id)
-      .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND ContentID = @ContentID');
-    
-    isFavorite = favResult.recordset.length > 0;
-  }
+
+    // Check if item is favorited
+    let isFavorite = false;
+    if (req.session.user) {
+      const favResult = await pool.request()
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('ContentID', sql.Int, id)
+        .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND ContentID = @ContentID');
+      
+      isFavorite = favResult.recordset.length > 0;
+    }
 
     res.render('content-detail', {
       item: {
-        id: itemData.ID || id,
+        id: itemData.ContentID, // Use ContentID for reviews
+        specificId: itemData.SpecificID, // BookID, MovieID, or GameID
         name: itemData.Title,
         description: itemData.Description,
         image: itemData.Image || '/images/placeholder.jpg',
-        releaseDate: itemData.ReleaseDate
+        releaseDate: itemData.ReleaseDate,
+        Genres: itemData.Genres,
+        ContentType: itemData.ContentType
       },
       title: itemData.Title,
       type: normalizedType,
@@ -362,7 +362,7 @@ router.get('/category/:type/:id', async (req, res) => {
 });
 
 router.post('/category/:type/:id/review', isAuthenticated, async (req, res) => {
-  const { id } = req.params; // id is ContentID now
+  const { id } = req.params; // id is ContentID
   const { rating, comment } = req.body;
   const userID = req.session.user?.UserID;
 
@@ -851,7 +851,7 @@ router.post("/user", isAuthenticated, upload.single('image'), async (req, res) =
 
 // 添加收藏路由
 router.post('/favorites', isAuthenticated, async (req, res) => {
-    const { contentType, contentId, roomId } = req.body;
+    const { contentId, roomId } = req.body;
     const userID = req.session.user.UserID;
     
     try {
@@ -871,7 +871,18 @@ router.post('/favorites', isAuthenticated, async (req, res) => {
             .query(checkQuery);
         
         if (checkResult.recordset.length > 0) {
-            return res.json({ success: false, message: 'Already in favorites' });
+            // 已收藏 -> 执行取消操作
+            await pool.request()
+                .input('UserID', sql.Int, userID)
+                .input('ContentID', sql.Int, contentId || null)
+                .input('RoomID', sql.Int, roomId || null)
+                .query(`
+                    DELETE FROM Favorites 
+                    WHERE UserID = @UserID 
+                    AND (ContentID = @ContentID OR RoomID = @RoomID)
+                `);
+
+            return res.json({ success: true, action: 'removed' });
         }
         
         // 添加收藏
@@ -886,7 +897,7 @@ router.post('/favorites', isAuthenticated, async (req, res) => {
             .input('RoomID', sql.Int, roomId || null)
             .query(insertQuery);
         
-        res.json({ success: true });
+        res.json({ success: true, action: 'added' });
     } catch (err) {
         console.error('Error adding favorite:', err);
         res.status(500).json({ success: false, message: 'Server error' });

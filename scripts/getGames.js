@@ -4,7 +4,7 @@ async function getFirst20Games() {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .query('SELECT TOP 20 * FROM Games');
+      .query('SELECT * FROM Content WHERE ContentID = 6228');
     
     console.log(result.recordset);
     return result.recordset;

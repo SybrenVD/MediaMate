@@ -65,7 +65,7 @@ async function getBestRated() {
       description: truncateDescription(row.Description),
       fullDescription: row.Description || '',
       img: row.Image || '/images/placeholder.jpg',
-      Genres: row.Genres || '',
+      Genres: row.Genres ? row.Genres.split(', ').map(genre => genre.trim()) : [],
       rating: row.Rating || 0
     }));
 
@@ -75,7 +75,6 @@ async function getBestRated() {
     throw error;
   }
 }
-
 
 async function getRandomBooks() {
   try {
@@ -106,7 +105,7 @@ async function getRandomBooks() {
       title: row.Title,
       description: truncateDescription(row.Description),
       img: row.Image || '/images/placeholder.jpg',
-      Genres: row.Genres || ''
+      Genres: row.Genres ? row.Genres.split(', ').map(genre => genre.trim()) : []
     }));
 
     return items;
@@ -115,7 +114,6 @@ async function getRandomBooks() {
     throw error;
   }
 }
-
 
 async function getRandomMovies() {
   try {
@@ -146,7 +144,7 @@ async function getRandomMovies() {
       title: row.Title,
       description: truncateDescription(row.Description),
       img: row.Image || '/images/placeholder.jpg',
-      Genres: row.Genres || ''
+      Genres: row.Genres ? row.Genres.split(', ').map(genre => genre.trim()) : []
     }));
 
     return items;
@@ -155,7 +153,6 @@ async function getRandomMovies() {
     throw error;
   }
 }
-
 
 async function getRandomGames() {
   try {
@@ -186,7 +183,7 @@ async function getRandomGames() {
       title: row.Title,
       description: truncateDescription(row.Description),
       img: row.Image || '/images/placeholder.jpg',
-      Genres: row.Genres || ''
+      Genres: row.Genres ? row.Genres.split(', ').map(genre => genre.trim()) : []
     }));
 
     return items;
@@ -195,7 +192,6 @@ async function getRandomGames() {
     throw error;
   }
 }
-
 
 module.exports = {
   getBestRated,

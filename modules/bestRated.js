@@ -1,6 +1,6 @@
 const { poolPromise } = require('../config/db');
 const { truncateDescription } = require('./truncate');
-const { truncateTitle } = require('./truncateTitle'); // you may already have this utility
+const { truncateTitle } = require('./truncateTitle');
 
 async function getTopRatedBooks(limit = 10) {
   const pool = await poolPromise;
@@ -28,7 +28,7 @@ async function getTopRatedBooks(limit = 10) {
     image: row.Image || '/images/placeholder.jpg',
     rating: row.Rating,
     description: truncateDescription(row.Description),
-    Genres: row.Genres || '',
+    Genres: row.Genres ? row.Genres.split(', ').map(genre => genre.trim()) : [],
     ContentType: 'Book',
     type: 'books'
   }));
@@ -60,7 +60,7 @@ async function getTopRatedMovies(limit = 10) {
     image: row.Image || '/images/placeholder.jpg',
     rating: row.Rating,
     description: truncateDescription(row.Description),
-    Genres: row.Genres || '',
+    Genres: row.Genres ? row.Genres.split(', ').map(genre => genre.trim()) : [],
     ContentType: 'Movie',
     type: 'movies'
   }));
@@ -92,7 +92,7 @@ async function getTopRatedGames(limit = 10) {
     image: row.Image || '/images/placeholder.jpg',
     rating: row.Rating,
     description: truncateDescription(row.Description),
-    Genres: row.Genres || '',
+    Genres: row.Genres ? row.Genres.split(', ').map(genre => genre.trim()) : [],
     ContentType: 'Game',
     type: 'games'
   }));
@@ -103,4 +103,3 @@ module.exports = {
   getTopRatedMovies,
   getTopRatedGames
 };
-
