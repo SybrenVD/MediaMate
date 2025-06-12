@@ -1111,14 +1111,6 @@ await pool.request()
   }
 });
 
-
-
-
-
-
-
-
-
 router.get('/admin-panel/:requestID', isAuthenticated,  isAdmin, async (req, res) => {
   const requestID = req.params.requestID;
 
@@ -1246,15 +1238,7 @@ router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res)
   }
 });
 
-
-
-
-
-
 /*get chatroom */
-// routes/index.js
-
-
 router.get("/chatroom", async function (req, res) {
   // 1. 必须登录
   if (!req.session.user) {
@@ -1341,8 +1325,4 @@ router.get("/testroom", function (req, res) {
   res.render("testroom", {});
 });
 
-
-
-
 module.exports = router;
-// module.exports = {sql, poolPromise};
