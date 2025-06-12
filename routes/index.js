@@ -16,6 +16,7 @@ const { searchCommunities } = require("../modules/searchCommunity")
 const { submitOrUpdateReviewByContentId } = require('../modules/review');
 const { sendContactEmail } = require('../utils/email');
 const { body, validationResult } = require('express-validator');
+const { getTopRatedBooks, getTopRatedMovies, getTopRatedGames } = require('../modules/bestRated');
 // const { io } = require("../modules/chatroom");
 
 
@@ -220,83 +221,69 @@ router.get('/search', async function (req, res) {
 });
 
 const dataMap = {
-  games: {
-    title: "Games",
-    type: "games",
-    hero: {
-      cta: "Discover Exciting Games",
-      banner: "/images/Banner games.webp",
-      shortDescription: "Explore a curated list of top games"
-    }
-  },
   books: {
-    title: "Books",
-    type: "books",
+    title: 'Books',
+    type: 'books',
     hero: {
-      cta: "Explore Great Reads",
-      banner: "/images/BookBanner.jpg",
-      shortDescription: "Browse a hand-picked list of top books"
+      cta: 'Explore Great Reads',
+      banner: '/images/BookBanner.jpg',
+      shortDescription: 'Browse a hand-picked list of top books'
     }
   },
   movies: {
-    title: "Movies",
-    type: "movies",
+    title: 'Movies',
+    type: 'movies',
     hero: {
-      cta: "Watch Blockbuster Films",
-      banner: "/images/MovieBanner2.jpg",
-      shortDescription: "Check out the most loved movies"
+      cta: 'Watch Blockbuster Films',
+      banner: '/images/MovieBanner2.jpg',
+      shortDescription: 'Check out the most loved movies'
+    }
+  },
+  games: {
+    title: 'Games',
+    type: 'games',
+    hero: {
+      cta: 'Discover Exciting Games',
+      banner: '/images/Banner games.webp',
+      shortDescription: 'Explore a curated list of top games'
     }
   }
 };
 
-router.get("/category/:type", async (req, res) => {
+router.get('/category/:type', async (req, res) => {
   const { type } = req.params;
   const page = parseInt(req.query.page) || 1;
   const pageSize = 20;
 
   const pageData = dataMap[type];
-  if (!pageData) {
-    console.error(`Category not found for type: ${type}`);
-    return res.status(404).send("Category not found");
-  }
+  if (!pageData) return res.status(404).send('Category not found');
 
   try {
-    const result = await getCategoryContent(type, page, pageSize);
+    const categoryResult = await getCategoryContent(type, page, pageSize);
+    const { searchResults: items, currentPage, totalPages, totalCount } = categoryResult;
+    let topRatedItems = [];
 
-    let items = [];
-    let currentPage = page;
-    let totalPages = 1;
-    let totalCount = 0;
-
-    if (Array.isArray(result)) {
-      items = result;
-      totalCount = items.length; // Approximate count without total query
-      totalPages = Math.ceil(totalCount / pageSize);
-    } else {
-      const { searchResults = [], currentPage: resultPage = page, totalPages: resultTotalPages = 1, totalCount: resultTotalCount = 0 } = result || {};
-      items = searchResults;
-      currentPage = resultPage;
-      totalPages = resultTotalPages;
-      totalCount = resultTotalCount;
+    if (type === 'books') {
+      topRatedItems = await getTopRatedBooks();
+    } else if (type === 'movies') {
+      topRatedItems = await getTopRatedMovies();
+    } else if (type === 'games') {
+      topRatedItems = await getTopRatedGames();
     }
 
-    if (!Array.isArray(items) || items.length === 0) {
-      console.warn(`No items found for category "${type}" on page ${page}`);
-      return res.status(404).send("No items found for this category.");
-    }
-
-    res.render("category", {
+    res.render('category', {
       title: pageData.title,
       type: pageData.type,
       hero: pageData.hero,
       items,
       currentPage,
       totalPages,
-      totalCount
+      totalCount,
+      topRatedItems
     });
-  } catch (err) {
-    console.error(`Error fetching category content for "${type}":`, err);
-    res.status(500).send("Error fetching category content");
+  } catch (error) {
+    console.error('Category route error:', error);
+    res.status(500).send('Server error');
   }
 });
 
@@ -340,6 +327,17 @@ router.get('/category/:type/:id', async (req, res) => {
         FROM Reviews
         WHERE ContentID = @ContentID AND UserID = @UserID
       `) : { recordset: [] };
+        // 检查是否已收藏
+  let isFavorite = false;
+  if (req.session.user) {
+    const pool = await poolPromise;
+    const favResult = await pool.request()
+      .input('UserID', sql.Int, req.session.user.UserID)
+      .input('ContentID', sql.Int, id)
+      .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND ContentID = @ContentID');
+    
+    isFavorite = favResult.recordset.length > 0;
+  }
 
     res.render('content-detail', {
       item: {
@@ -354,7 +352,8 @@ router.get('/category/:type/:id', async (req, res) => {
       reviews: reviewsResult.recordset,
       averageRating: averageResult.recordset[0].AverageRating?.toFixed(1) || null,
       userReview: userReviewResult.recordset[0],
-      isAuthenticated: !!req.session.user
+      isAuthenticated: !!req.session.user,
+      isFavorite
     });
   } catch (error) {
     console.error('Detail page error:', error);
@@ -446,7 +445,17 @@ router.get('/community', async function (req, res) {
       communities = await getCommunities();
       console.log(`Random load returned ${communities.length} communities`);
     }
-
+  if (req.session.user) {
+    for (let community of communities) {
+      const pool = await poolPromise;
+      const favResult = await pool.request()
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('RoomID', sql.Int, community.RoomID)
+        .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND RoomID = @RoomID');
+      
+      community.isFavorite = favResult.recordset.length > 0;
+    }
+  }
     res.render('community', {
       title: 'Community',
       communities,
@@ -707,6 +716,9 @@ router.get("/user", isAuthenticated, async (req, res) => {
     return res.status(500).render('error', { message: requestsResult.message });
   }
 
+  //sort for new requests
+  requestsResult.requests.sort((a, b) => b.RequestID - a.RequestID);
+
   res.render("user", {
     title: "Your Profile",
     user: userResult.user,
@@ -837,15 +849,103 @@ router.post("/user", isAuthenticated, upload.single('image'), async (req, res) =
   });
 });
 
-
-//GET FavList Page
-router.get("/favorites", isAuthenticated, function (req, res) {
-  res.render("fav-list", {
-    title: "Favourite"
-  });
+// 添加收藏路由
+router.post('/favorites', isAuthenticated, async (req, res) => {
+    const { contentType, contentId, roomId } = req.body;
+    const userID = req.session.user.UserID;
+    
+    try {
+        const pool = await poolPromise;
+        
+        // 检查是否已收藏
+        const checkQuery = `
+            SELECT * FROM Favorites 
+            WHERE UserID = @UserID 
+            AND (ContentID = @ContentID OR RoomID = @RoomID)
+        `;
+        
+        const checkResult = await pool.request()
+            .input('UserID', sql.Int, userID)
+            .input('ContentID', sql.Int, contentId || null)
+            .input('RoomID', sql.Int, roomId || null)
+            .query(checkQuery);
+        
+        if (checkResult.recordset.length > 0) {
+            return res.json({ success: false, message: 'Already in favorites' });
+        }
+        
+        // 添加收藏
+        const insertQuery = `
+            INSERT INTO Favorites (UserID, ContentID, RoomID) 
+            VALUES (@UserID, @ContentID, @RoomID)
+        `;
+        
+        await pool.request()
+            .input('UserID', sql.Int, userID)
+            .input('ContentID', sql.Int, contentId || null)
+            .input('RoomID', sql.Int, roomId || null)
+            .query(insertQuery);
+        
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error adding favorite:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 });
 
-
+// 获取收藏列表路由
+router.get("/favorites", isAuthenticated, async (req, res) => {
+    const userID = req.session.user.UserID;
+    
+    try {
+        const pool = await poolPromise;
+        
+        // 查询所有收藏内容
+        const result = await pool.request()
+            .input('UserID', sql.Int, userID)
+            .query(`
+                SELECT 
+                    f.FavoriteID,
+                    f.ContentID,
+                    f.RoomID,
+                    COALESCE(g.Title, m.Title, b.Title, c.ChatName) AS Title,
+                    COALESCE(g.Image, m.Image, b.Image, c.Image) AS Image,
+                    CASE 
+                        WHEN g.GameID IS NOT NULL THEN 'Game'
+                        WHEN m.MovieID IS NOT NULL THEN 'Movie'
+                        WHEN b.BookID IS NOT NULL THEN 'Book'
+                        WHEN c.RoomID IS NOT NULL THEN 'Community'
+                    END AS ContentType
+                FROM Favorites f
+                LEFT JOIN Games g ON f.ContentID = g.GameID
+                LEFT JOIN Movies m ON f.ContentID = m.MovieID
+                LEFT JOIN Books b ON f.ContentID = b.BookID
+                LEFT JOIN Communities c ON f.RoomID = c.RoomID
+                WHERE f.UserID = @UserID
+            `);
+        
+        // 按类型分类
+        const favorites = {
+            games: result.recordset.filter(item => item.ContentType === 'Game'),
+            movies: result.recordset.filter(item => item.ContentType === 'Movie'),
+            books: result.recordset.filter(item => item.ContentType === 'Book'),
+            communities: result.recordset.filter(item => item.ContentType === 'Community')
+        };
+        
+        res.render('fav-list', { 
+            title: 'Favorites',
+            favorites,
+            user: req.session.user
+        });
+    } catch (err) {
+        console.error('Error fetching favorites:', err);
+        res.render('fav-list', {
+            title: 'Favorites',
+            favorites: { games: [], movies: [], books: [], communities: [] },
+            error: 'Failed to load favorites'
+        });
+    }
+});
 
 //get add route
 router.get("/add", isAuthenticated, function (req, res) {

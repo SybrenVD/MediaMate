@@ -3,24 +3,101 @@
     <button class="nav-link active" id="nav-games-tab" data-bs-toggle="tab" data-bs-target="#nav-games" type="button" role="tab" aria-controls="nav-games" aria-selected="true">Games</button>
     <button class="nav-link" id="nav-movies-tab" data-bs-toggle="tab" data-bs-target="#nav-movies" type="button" role="tab" aria-controls="nav-movies" aria-selected="false">Movies</button>
     <button class="nav-link" id="nav-books-tab" data-bs-toggle="tab" data-bs-target="#nav-books" type="button" role="tab" aria-controls="nav-books" aria-selected="false">Books</button>
-    <button class="nav-link" id="nav-fandoms-tab" data-bs-toggle="tab" data-bs-target="#nav-fandoms" type="button" role="tab" aria-controls="nav-fandoms" aria-selected="false" fandoms>Communities</button>
+    <button class="nav-link" id="nav-communities-tab" data-bs-toggle="tab" data-bs-target="#nav-communities" type="button" role="tab" aria-controls="nav-communities" aria-selected="false">Communities</button>
   </div>
 </nav>
-<div class="tab-content banner" id="nav-tabContent">
-  <div class="tab-pane fade show active" id="nav-games" role="tabpanel" aria-labelledby="nav-games-tab" tabindex="0">
-    <h2 class="text-center">Games</h2>
+<div class="tab-content" id="nav-tabContent">
+  <!-- Games Tab -->
+  <div class="tab-pane fade show active" id="nav-games" role="tabpanel" aria-labelledby="nav-games-tab">
+    <h2 class="text-center my-4">Favorite Games</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      {{#each favorites.games}}
+        <div class="col">
+          <div class="card h-100">
+            <img src="{{this.Image}}" class="card-img-top" alt="{{this.Title}}">
+            <div class="card-body">
+              <h5 class="card-title">{{this.Title}}</h5>
+              <a href="/category/games/{{this.ContentID}}" class="btn btn-primary">View Details</a>
+            </div>
+          </div>
+        </div>
+      {{else}}
+        <div class="col-12 text-center">
+          <p>No favorite games yet</p>
+        </div>
+      {{/each}}
+    </div>
   </div>
-  <div class="tab-pane fade" id="nav-movies" role="tabpanel" aria-labelledby="nav-movies-tab" tabindex="0">
-    <h2 class="text-center">Movies</h2>
+  
+  <!-- Movies Tab -->
+  <div class="tab-pane fade" id="nav-movies" role="tabpanel" aria-labelledby="nav-movies-tab">
+    <h2 class="text-center my-4">Favorite Movies</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      {{#each favorites.movies}}
+        <div class="col">
+          <div class="card h-100">
+            <img src="{{this.Image}}" class="card-img-top" alt="{{this.Title}}">
+            <div class="card-body">
+              <h5 class="card-title">{{this.Title}}</h5>
+              <a href="/category/movies/{{this.ContentID}}" class="btn btn-primary">View Details</a>
+            </div>
+          </div>
+        </div>
+      {{else}}
+        <div class="col-12 text-center">
+          <p>No favorite movies yet</p>
+        </div>
+      {{/each}}
+    </div>
   </div>
-  <div class="tab-pane fade" id="nav-books" role="tabpanel" aria-labelledby="nav-books-tab" tabindex="0">
-    <h2 class="text-center">Books</h2>
+  
+  <!-- Books Tab -->
+  <div class="tab-pane fade" id="nav-books" role="tabpanel" aria-labelledby="nav-books-tab">
+    <h2 class="text-center my-4">Favorite Books</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      {{#each favorites.books}}
+        <div class="col">
+          <div class="card h-100">
+            <img src="{{this.Image}}" class="card-img-top" alt="{{this.Title}}">
+            <div class="card-body">
+              <h5 class="card-title">{{this.Title}}</h5>
+              <a href="/category/books/{{this.ContentID}}" class="btn btn-primary">View Details</a>
+            </div>
+          </div>
+        </div>
+      {{else}}
+        <div class="col-12 text-center">
+          <p>No favorite books yet</p>
+        </div>
+      {{/each}}
+    </div>
   </div>
-  <div class="tab-pane fade" id="nav-fandoms" role="tabpanel" aria-labelledby="nav-fandoms-tab" tabindex="0">
-    <h2 class="text-center">Communities</h2>
+  
+  <!-- Communities Tab -->
+  <div class="tab-pane fade" id="nav-communities" role="tabpanel" aria-labelledby="nav-communities-tab">
+    <h2 class="text-center my-4">Favorite Communities</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      {{#each favorites.communities}}
+        <div class="col">
+          <div class="card h-100">
+            <a href="/chatroom?RoomID={{this.RoomID}}">
+              <img src="{{this.Image}}" class="card-img-top" alt="{{this.Title}}">
+            </a>
+            <div class="card-body">
+              <h5 class="card-title">
+                <a href="/chatroom?RoomID={{this.RoomID}}">{{this.Title}}</a>
+              </h5>
+            </div>
+          </div>
+        </div>
+      {{else}}
+        <div class="col-12 text-center">
+          <p>No favorite communities yet</p>
+        </div>
+      {{/each}}
+    </div>
   </div>
 </div>
-<style>
   /* Make text color #8b1d2e for all nav-tab buttons */
   .nav-tabs .nav-link {
     color: #8b1d2e;
@@ -35,5 +112,3 @@
     color: #8b1d2e;
   }
 </style>
-
-

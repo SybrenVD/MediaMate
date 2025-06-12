@@ -21,7 +21,7 @@ async function getCategoryContent(type, page = 1, pageSize = 20) {
     const query = `
       SELECT 
         C.ContentID AS id,
-        T.Title AS name,
+        T.Title,
         T.Description,
         ISNULL(T.Image, '/images/placeholder.jpg') AS Image,
         T.ReleaseDate,
@@ -41,22 +41,17 @@ async function getCategoryContent(type, page = 1, pageSize = 20) {
 
     const searchResults = result.recordset.map(item => ({
       id: item.id,
-      ItemID: item.id,
-      ContentType: item.ContentType,
       type: type.toLowerCase(),
-      name: truncateTitle(item.name),
-      description: truncateDescription(item.Description),
       image: item.Image,
-      releaseDate: item.ReleaseDate ? new Date(item.ReleaseDate).toDateString() : null,
-      rating: item.Rating || 0,
-      Genres: item.Genres || ''
+      name: truncateTitle(item.Title),
+      Genres: item.Genres || '',
+      ContentType: item.ContentType
     }));
 
     const totalCount = result.recordset.length > 0 ? result.recordset[0].TotalCount : 0;
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    const returnValue = { searchResults, currentPage: page, totalPages, totalCount };
-    return returnValue;
+    return { searchResults, currentPage: page, totalPages, totalCount };
   } catch (err) {
     console.error(`Error fetching category content: ${err.message}`);
     return { searchResults: [], currentPage: page, totalPages: 0, totalCount: 0 };
@@ -64,3 +59,4 @@ async function getCategoryContent(type, page = 1, pageSize = 20) {
 }
 
 module.exports = { getCategoryContent };
+

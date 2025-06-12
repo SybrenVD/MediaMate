@@ -42,15 +42,17 @@
     </section>
   </header>
 
-  {{>filtermodal}}
+  {{> filtermodal }}
 
   <!-- Top Rated Section with Slider -->
+  {{#if topRatedItems.length}}
   <div class="container overflow-hidden text-center my-5">
     <div class="row text-start ps-0 p-4">
-      <h3 class="text-primary-custom">Top Rated</h3>
+      <h3 class="text-primary-custom">Top Rated {{title}}</h3>
     </div>
-    {{> slider_alt content=items type=type }}
+    {{> slider_alt content=topRatedItems type=type }}
   </div>
+  {{/if}}
 
   <!-- Category Items Grid -->
   <div class="container my-5">
@@ -60,7 +62,7 @@
     <div class="row row-cols-1 row-cols-md-4 g-4">
       {{#each items}}
       <div class="col">
-        {{> card_alt type=../type }}
+        {{> card_alt this type=../type }}
       </div>
       {{/each}}
     </div>
