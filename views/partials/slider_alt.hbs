@@ -1,9 +1,11 @@
 <div class="card-slider">
   <button onclick="scrollSliderLeft(this)" class="arrow arrow-left"> < </button>
   <button onclick="scrollSliderRight(this)" class="arrow arrow-right"> > </button>
-  <div class="card-container overflow-hidden">
+  <div class="card-container overflow-hidden" style="display: flex; gap: 1rem; white-space: nowrap;">
     {{#each content}}
-      {{> card_alt type=../type }}
+      <div class="slider-item" style="display: inline-block; width: 250px; white-space: normal;">
+        {{> card_alt this type=../type }}
+      </div>
     {{/each}}
   </div>
 </div>

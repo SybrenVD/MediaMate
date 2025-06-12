@@ -59,7 +59,7 @@ router.get('/', async function (req, res) {
     const randomBooksContent = await getRandomBooks();
     const randomMoviesContent = await getRandomMovies();
     const randomGamesContent = await getRandomGames();
-
+  
     res.render('index', {
       title: 'Home',
       banner: '/images/BannerHome.jpg',
@@ -289,6 +289,7 @@ router.get('/category/:type', async (req, res) => {
 
 // Detail page route
 // GET content detail page
+// GET content detail page
 router.get('/category/:type/:id', async (req, res) => {
   const { type, id } = req.params;
   const normalizedType = type.toLowerCase();
@@ -318,7 +319,6 @@ router.get('/category/:type/:id', async (req, res) => {
       .input('ContentID', sql.Int, id)
       .query(`SELECT AVG(CAST(Rating AS FLOAT)) AS AverageRating FROM Reviews WHERE ContentID = @ContentID`);
 
-
     const userReviewResult = req.session.user ? await pool.request()
       .input('ContentID', sql.Int, id)
       .input('UserID', sql.Int, req.session.user.UserID)
@@ -327,25 +327,28 @@ router.get('/category/:type/:id', async (req, res) => {
         FROM Reviews
         WHERE ContentID = @ContentID AND UserID = @UserID
       `) : { recordset: [] };
-        // 检查是否已收藏
-  let isFavorite = false;
-  if (req.session.user) {
-    const pool = await poolPromise;
-    const favResult = await pool.request()
-      .input('UserID', sql.Int, req.session.user.UserID)
-      .input('ContentID', sql.Int, id)
-      .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND ContentID = @ContentID');
-    
-    isFavorite = favResult.recordset.length > 0;
-  }
+
+    // Check if item is favorited
+    let isFavorite = false;
+    if (req.session.user) {
+      const favResult = await pool.request()
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('ContentID', sql.Int, id)
+        .query('SELECT 1 FROM Favorites WHERE UserID = @UserID AND ContentID = @ContentID');
+      
+      isFavorite = favResult.recordset.length > 0;
+    }
 
     res.render('content-detail', {
       item: {
-        id: itemData.ID || id,
+        id: itemData.ContentID, // Use ContentID for reviews
+        specificId: itemData.SpecificID, // BookID, MovieID, or GameID
         name: itemData.Title,
         description: itemData.Description,
         image: itemData.Image || '/images/placeholder.jpg',
-        releaseDate: itemData.ReleaseDate
+        releaseDate: itemData.ReleaseDate,
+        Genres: itemData.Genres,
+        ContentType: itemData.ContentType
       },
       title: itemData.Title,
       type: normalizedType,
@@ -362,7 +365,7 @@ router.get('/category/:type/:id', async (req, res) => {
 });
 
 router.post('/category/:type/:id/review', isAuthenticated, async (req, res) => {
-  const { id } = req.params; // id is ContentID now
+  const { id } = req.params; // id is ContentID
   const { rating, comment } = req.body;
   const userID = req.session.user?.UserID;
 

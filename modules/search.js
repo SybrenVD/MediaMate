@@ -264,7 +264,6 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = [], con
       `;
     }
 
-    console.log('Generated SQL Query:', sqlQuery);
     console.log('Query parameters:', { query: sanitizedQuery, offset, pageSize, genres, contentType });
 
     const result = await request.query(sqlQuery).catch(err => {
@@ -272,7 +271,6 @@ async function searchAllContent(query, page = 1, pageSize = 40, genres = [], con
       throw new Error('SQL query failed');
     });
 
-    console.log('Query result recordset:', result.recordset);
 
     const searchResults = result.recordset.map(row => ({
       ItemID: row.ItemID,

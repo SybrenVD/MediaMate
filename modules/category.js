@@ -44,7 +44,7 @@ async function getCategoryContent(type, page = 1, pageSize = 20) {
       type: type.toLowerCase(),
       image: item.Image,
       name: truncateTitle(item.Title),
-      Genres: item.Genres || '',
+      Genres: item.Genres ? item.Genres.split(', ').map(genre => genre.trim()) : [], // Split genres into array
       ContentType: item.ContentType
     }));
 
@@ -59,4 +59,3 @@ async function getCategoryContent(type, page = 1, pageSize = 20) {
 }
 
 module.exports = { getCategoryContent };
-
