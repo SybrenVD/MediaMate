@@ -166,8 +166,8 @@ io.on("connection", (socket) => {
 server.listen(port, () => {
   //innerconnect met server-pc：http://<ip4adress>:${port}
   //dan ga je naar http://<ip4adress>:3000
-  // console.log(`Server running on http://10.195.217.55:${port}`);
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running on http://192.168.156.127:${port}`);
+  // console.log(`Server running on http://localhost:${port}`);
 });
 
 function normalizePort(val) {
