@@ -87,34 +87,42 @@
   </form>
 
   <!-- User Requests -->
-  <div class="mt-5">
-    <h2 class="mb-3">Your Requests</h2>
-    {{#if requests.length}}
-    <table class="table table-bordered table-striped">
-      <thead>
-        <tr>
-          <th>Request ID</th>
-          <th>Description</th>
-          <th>Status</th>
-          <th>Content Type</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each requests}}
-        <tr>
-          <td>{{this.RequestID}}</td>
-          <td>{{this.Description}}</td>
-          <td>{{this.Status}}</td>
-          <td>{{this.ContentType}}</td>
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>
-    {{else}}
-    <p class="text-center">You have no requests.</p>
-    {{/if}}
-  </div>
+<div class="mt-5">
+  <h2 class="mb-3">Your Requests</h2>
+  {{#if requests.length}}
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>Request ID</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Content Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each requests}}
+      <tr>
+        <td>{{this.RequestID}}</td>
+        <td>{{this.Description}}</td>
+        <td>
+          {{#ifEquals this.Status "Approved"}}
+            <span class="badge bg-success">Approved</span>
+          {{else ifEquals this.Status "Rejected"}}
+            <span class="badge bg-danger">Declined</span>
+          {{else}}
+            <span class="badge bg-warning text-dark">Pending</span>
+          {{/ifEquals}}
+        </td>
+        <td>{{this.ContentType}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+  {{else}}
+  <p class="text-center">You have no requests.</p>
+  {{/if}}
 </div>
+
 
 <script>
   function toggleEdit(fieldId) {

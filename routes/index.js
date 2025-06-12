@@ -855,14 +855,14 @@ router.post("/user", isAuthenticated, upload.single('image'), async (req, res) =
 
 // 添加收藏路由
 router.post('/favorites', isAuthenticated, async (req, res) => {
-  const { contentId, roomId } = req.body;
-  const userID = req.session.user.UserID;
-
-  try {
-    const pool = await poolPromise;
-
-    // 检查是否已收藏
-    const checkQuery = `
+    const { contentType, contentId, roomId } = req.body;
+    const userID = req.session.user.UserID;
+    
+    try {
+        const pool = await poolPromise;
+        
+        // 检查是否已收藏
+        const checkQuery = `
             SELECT * FROM Favorites 
             WHERE UserID = @UserID 
             AND (ContentID = @ContentID OR RoomID = @RoomID)
@@ -920,46 +920,63 @@ router.get("/favorites", isAuthenticated, async (req, res) => {
       .input('UserID', sql.Int, userID)
       .query(`
                 SELECT 
-                    f.FavoriteID,
-                    f.ContentID,
-                    f.RoomID,
-                    COALESCE(g.Title, m.Title, b.Title, c.ChatName) AS Title,
-                    COALESCE(g.Image, m.Image, b.Image, c.Image) AS Image,
-                    CASE 
-                        WHEN g.GameID IS NOT NULL THEN 'Game'
-                        WHEN m.MovieID IS NOT NULL THEN 'Movie'
-                        WHEN b.BookID IS NOT NULL THEN 'Book'
-                        WHEN c.RoomID IS NOT NULL THEN 'Community'
-                    END AS ContentType
-                FROM Favorites f
-                LEFT JOIN Games g ON f.ContentID = g.GameID
-                LEFT JOIN Movies m ON f.ContentID = m.MovieID
-                LEFT JOIN Books b ON f.ContentID = b.BookID
-                LEFT JOIN Communities c ON f.RoomID = c.RoomID
-                WHERE f.UserID = @UserID
+    f.FavoriteID,
+    f.ContentID,
+    f.RoomID,
+    COALESCE(g.Title, m.Title, b.Title, c.ChatName) AS Title,
+    COALESCE(g.Image, m.Image, b.Image, c.Image) AS Image,
+    CASE 
+        WHEN f.RoomID IS NOT NULL THEN 'Community'
+        WHEN g.GameID IS NOT NULL THEN 'Game'
+        WHEN m.MovieID IS NOT NULL THEN 'Movie'
+        WHEN b.BookID IS NOT NULL THEN 'Book'
+    END AS ContentType
+FROM Favorites f
+LEFT JOIN Games g ON f.ContentID = g.GameID
+LEFT JOIN Movies m ON f.ContentID = m.MovieID
+LEFT JOIN Books b ON f.ContentID = b.BookID
+LEFT JOIN Communities c ON f.RoomID = c.RoomID
+WHERE f.UserID = @UserID
             `);
+        
+        const deduplicateByRoomID = (arr) => {
+  const seen = new Set();
+  return arr.filter(item => {
+    if (seen.has(item.RoomID)) return false;
+    seen.add(item.RoomID);
+    return true;
+  });
+};
 
-    // 按类型分类
-    const favorites = {
-      games: result.recordset.filter(item => item.ContentType === 'Game'),
-      movies: result.recordset.filter(item => item.ContentType === 'Movie'),
-      books: result.recordset.filter(item => item.ContentType === 'Book'),
-      communities: result.recordset.filter(item => item.ContentType === 'Community')
-    };
+const favorites = {
+  games: result.recordset.filter(item => item.ContentType === 'Game'),
+  movies: result.recordset.filter(item => item.ContentType === 'Movie'),
+  books: result.recordset.filter(item => item.ContentType === 'Book'),
+  communities: deduplicateByRoomID(
+    result.recordset.filter(item => item.ContentType === 'Community')
+      .map(item => ({
+        ...item,
+        ChatName: item.Title,
+        Description: "",
+        isFavorite: true
+      }))
+  )
+};
 
-    res.render('fav-list', {
-      title: 'Favorites',
-      favorites,
-      user: req.session.user
-    });
-  } catch (err) {
-    console.error('Error fetching favorites:', err);
-    res.render('fav-list', {
-      title: 'Favorites',
-      favorites: { games: [], movies: [], books: [], communities: [] },
-      error: 'Failed to load favorites'
-    });
-  }
+        
+        res.render('fav-list', { 
+            title: 'Favorites',
+            favorites,
+            user: req.session.user
+        });
+    } catch (err) {
+        console.error('Error fetching favorites:', err);
+        res.render('fav-list', {
+            title: 'Favorites',
+            favorites: { games: [], movies: [], books: [], communities: [] },
+            error: 'Failed to load favorites'
+        });
+    }
 });
 
 //get add route
@@ -1047,7 +1064,7 @@ router.get("/admin-panel", isAuthenticated, isAdmin, async function (req, res) {
           u.Username
         FROM Requests r
         JOIN Users u ON r.UserID = u.UserID
-        WHERE r.Status IN ('Approved', 'Declined')
+        WHERE r.Status IN ('Approved', 'Rejected')
       `);
 
 
@@ -1100,15 +1117,19 @@ router.post("/admin-panel", isAuthenticated, isAdmin, upload.single("image"), as
     VALUES (@ContentType, @Title, @Description, @Image, @Status, @UserID)
   `);
 
+    
     // 2. Then insert into real content table
-    let insertContentQuery = "";
-    if (type === "Book") {
-      insertContentQuery = `INSERT INTO Books (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
-    } else if (type === "Movie") {
-      insertContentQuery = `INSERT INTO Movies (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
-    } else if (type === "Game") {
-      insertContentQuery = `INSERT INTO Games (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
-    }
+let insertContentQuery = "";
+if (type === "Book") {
+  insertContentQuery = `INSERT INTO Books (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
+} else if (type === "Movie") {
+  insertContentQuery = `INSERT INTO Movies (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
+} else if (type === "Game") {
+  insertContentQuery = `INSERT INTO Games (Title, Description, Image, AddedByUserID) VALUES (@Title, @Description, @Image, @UserID)`;
+} else {
+  console.error("Invalid type value received:", type);
+  return res.status(400).render("error", { message: "Invalid content type." });
+}
 
     await pool.request()
       .input("Title", sql.NVarChar, title)
@@ -1229,7 +1250,8 @@ router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res)
       // 3. Request
       await pool.request()
         .input("RequestID", sql.Int, requestId)
-        .query(`UPDATE Requests SET Status = 'Declined' WHERE RequestID = @RequestID`);
+        .query(`UPDATE Requests SET Status = 'Approved' WHERE RequestID = @RequestID`);
+
 
       return res.render('status', {
         message: 'Request accepted and added to content. Redirecting...',
@@ -1237,16 +1259,18 @@ router.post('/admin/edit/:id', isAdmin, upload.single('image'), async (req, res)
       });
     }
 
-    if (action === 'decline') {
-      await pool.request()
-        .input("RequestID", sql.Int, requestId)
-        .query(`DELETE FROM Requests WHERE RequestID = @RequestID`);
+if (action === 'decline') {
+    await pool.request()
+    .input("RequestID", sql.Int, requestId)
+    .query(`UPDATE Requests SET Status = 'Rejected' WHERE RequestID = @RequestID`);
 
-      return res.render('status', {
-        message: 'Request Declined. Redirecting to admin panel...',
-        redirect: '/admin-panel'
-      });
-    }
+
+  return res.render('status', {
+    message: 'Request Declined and marked as Declined. Redirecting to admin panel...',
+    redirect: '/admin-panel'
+  });
+}
+
   } catch (err) {
     console.error("Admin edit error:", err);
     res.status(500).render("error", { message: "Failed to process request" });
