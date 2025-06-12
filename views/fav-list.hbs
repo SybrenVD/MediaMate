@@ -13,13 +13,7 @@
     <div class="row row-cols-1 row-cols-md-3 g-4">
       {{#each favorites.games}}
         <div class="col">
-          <div class="card h-100">
-            <img src="{{this.Image}}" class="card-img-top" alt="{{this.Title}}">
-            <div class="card-body">
-              <h5 class="card-title">{{this.Title}}</h5>
-              <a href="/category/games/{{this.ContentID}}" class="btn btn-primary">View Details</a>
-            </div>
-          </div>
+        {{> card_alt this type=../type }}
         </div>
       {{else}}
         <div class="col-12 text-center">
@@ -35,13 +29,7 @@
     <div class="row row-cols-1 row-cols-md-3 g-4">
       {{#each favorites.movies}}
         <div class="col">
-          <div class="card h-100">
-            <img src="{{this.Image}}" class="card-img-top" alt="{{this.Title}}">
-            <div class="card-body">
-              <h5 class="card-title">{{this.Title}}</h5>
-              <a href="/category/movies/{{this.ContentID}}" class="btn btn-primary">View Details</a>
-            </div>
-          </div>
+        {{> card_alt this type=../type }}
         </div>
       {{else}}
         <div class="col-12 text-center">
@@ -57,13 +45,7 @@
     <div class="row row-cols-1 row-cols-md-3 g-4">
       {{#each favorites.books}}
         <div class="col">
-          <div class="card h-100">
-            <img src="{{this.Image}}" class="card-img-top" alt="{{this.Title}}">
-            <div class="card-body">
-              <h5 class="card-title">{{this.Title}}</h5>
-              <a href="/category/books/{{this.ContentID}}" class="btn btn-primary">View Details</a>
-            </div>
-          </div>
+        {{> card_alt this type=../type }}
         </div>
       {{else}}
         <div class="col-12 text-center">
@@ -78,18 +60,7 @@
     <h2 class="text-center my-4">Favorite Communities</h2>
     <div class="row row-cols-1 row-cols-md-3 g-4">
       {{#each favorites.communities}}
-        <div class="col">
-          <div class="card h-100">
-            <a href="/chatroom?RoomID={{this.RoomID}}">
-              <img src="{{this.Image}}" class="card-img-top" alt="{{this.Title}}">
-            </a>
-            <div class="card-body">
-              <h5 class="card-title">
-                <a href="/chatroom?RoomID={{this.RoomID}}">{{this.Title}}</a>
-              </h5>
-            </div>
-          </div>
-        </div>
+        {{> communitypartial}}
       {{else}}
         <div class="col-12 text-center">
           <p>No favorite communities yet</p>
