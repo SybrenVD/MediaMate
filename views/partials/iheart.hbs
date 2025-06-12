@@ -1,5 +1,5 @@
-<button type="button" class="btn btn-card favorite-btn" 
-        data-type="{{contentType}}" 
-        data-id="{{contentID}}">
-  <i class="bi {{#if isFavorite}}bi-heart-fill{{else}}bi-heart{{/if}}"></i>
+<button class="btn btn-sm favorite-btn" 
+  data-content-type="Community" 
+  data-room-id="{{this.RoomID}}">
+    <i class="bi {{#if this.isFavorite}}bi-heart-fill{{else}}bi-heart{{/if}}"></i>
 </button>
