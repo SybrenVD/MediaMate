@@ -50,6 +50,15 @@ h4 {
   border-radius: 8px;
   overflow: hidden;
   min-height: 340px;
+  transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out;
+}
+
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(0, 0, 0, 0.6);
+  transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out;
+  z-index: 5;
+  cursor: pointer;
 }
 
 .card-body {
